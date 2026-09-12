@@ -1,6 +1,6 @@
 import { AddWidgetButton } from '@/features/edit/addWidgetButton';
 import { EditModeButton } from '@/features/edit/editModeButton';
-import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
+import { TRAY_ICON_PX } from '@/features/edit/trayConfig';
 import { TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { useEditMode } from '@/hooks/useEditMode';
 import { theme as colours } from '@/styles/palette';
@@ -19,7 +19,6 @@ const BUTTON_PX = ICON_PX + 2 * BUTTON_PAD_PX;
 const RING_PAD_PX = 8;
 const RING_PX = BUTTON_PX + 2 * RING_PAD_PX;
 /** Tray buttons use a smaller icon, so the pill hanging under the ring is narrower. */
-const TRAY_ICON_PX = 20;
 const TRAY_PAD_PX = RING_PAD_PX / 2;
 const TRAY_PX = TRAY_ICON_PX + 2 * BUTTON_PAD_PX + 2 * TRAY_PAD_PX;
 /** Tray starts at the ring's centre; buttons begin one gap below the save button. */
@@ -42,7 +41,7 @@ const backdropSx = (editMode: boolean) => (theme: Theme) => ({
 
 /**
  * Edit toggle with the widget tools hanging under it: a ring grows around the save button and a
- * pill slides out below holding the add and interval buttons, which tuck back up under the ring
+ * pill slides out below holding the add buttons, which tuck back up under the ring
  * when edit mode ends.
  */
 export const EditTray = () => {
@@ -80,7 +79,6 @@ export const EditTray = () => {
             pt: `${TRAY_TOP_PX}px`,
             pb: `${TILE_GAP_PX}px`,
             alignItems: 'center',
-            '& .MuiSvgIcon-root': { fontSize: TRAY_ICON_PX },
             '& > *': {
               transformOrigin: 'top center',
               opacity: editMode ? 1 : 0,
@@ -92,7 +90,6 @@ export const EditTray = () => {
           <AddWidgetButton type='instrument' />
           <AddWidgetButton type='watchlist' />
           <AddWidgetButton type='orders' />
-          <UpdateIntervalButton />
         </Stack>
       </Collapse>
     </Box>

@@ -1,5 +1,6 @@
 import { EditTray } from '@/features/edit/editTray';
 import { StreamingButton } from '@/features/edit/streamingButton';
+import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
@@ -52,6 +53,7 @@ export const PageContent = () => {
         }}
       >
         <StreamingButton />
+        <UpdateIntervalButton />
         <EditTray />
       </Stack>
     </Box>

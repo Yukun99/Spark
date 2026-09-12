@@ -45,7 +45,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 - Scrolling: `html`/`body` never scroll (`overflow: hidden` in `styles.css`). The only scroll
   container is the grid area in `pageContent.tsx`, using OverlayScrollbars (floating bar, colours
   via `--os-*` CSS vars from the palette). Banner and action column stay fixed.
-- Shadows: use `shadowSx('sm' | 'md' | 'lg')` from `src/styles/shadows.ts` in `sx` (navy-tinted in
+- Shadows: use `shadowSx('sm' | 'md' | 'lg' | 'xl')` from `src/styles/shadows.ts` in `sx` (navy-tinted in
   light, cream-tinted in dark). Don't write `boxShadow` values inline.
 
 ## State, Data And Layout
