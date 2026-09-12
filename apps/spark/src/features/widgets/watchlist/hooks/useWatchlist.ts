@@ -1,5 +1,5 @@
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
-import type { WatchlistWidget } from '@/store/widgetsSlice';
+import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';
 import { useCallback, useState } from 'react';
 
 type WatchlistDialogKind = 'delete' | 'modify' | null;
@@ -12,10 +12,11 @@ export type UseWatchlistResult = {
   openModify: () => void;
   closeDialog: () => void;
   confirmDelete: () => void;
+  confirmWatchlist: (settings: WatchlistSettings) => void;
 };
 
 export const useWatchlist = (widget: WatchlistWidget): UseWatchlistResult => {
-  const { removeWidget } = useWidgets();
+  const { removeWidget, setWatchlist } = useWidgets();
   const [dialog, setDialog] = useState<WatchlistDialogKind>(null);
 
   const openDelete = useCallback(() => setDialog('delete'), []);
@@ -25,14 +26,22 @@ export const useWatchlist = (widget: WatchlistWidget): UseWatchlistResult => {
     setDialog(null);
     removeWidget(widget.id);
   }, [removeWidget, widget.id]);
+  const confirmWatchlist = useCallback(
+    (settings: WatchlistSettings) => {
+      setDialog(null);
+      setWatchlist(widget.id, settings);
+    },
+    [setWatchlist, widget.id],
+  );
 
   return {
-    title: `Watchlist (${widget.productIds.length})`,
+    title: `${widget.name} (${widget.productIds.length})`,
     productIds: widget.productIds,
     dialog,
     openDelete,
     openModify,
     closeDialog,
     confirmDelete,
+    confirmWatchlist,
   };
 };

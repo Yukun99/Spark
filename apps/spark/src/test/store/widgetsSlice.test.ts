@@ -5,6 +5,7 @@ import {
   moveWidget,
   removeWidget,
   resizeWidget,
+  setWatchlist,
   setWidgetInstrument,
   widgetsReducer,
   type WidgetsState,
@@ -32,6 +33,7 @@ describe('widgetsSlice', () => {
     let state = widgetsReducer(initial(), addWidget('watchlist'));
     expect(state.items[1]).toMatchObject({
       type: 'watchlist',
+      name: 'Watchlist',
       productIds: [],
       layout: { row: 1, col: 2, rowSpan: 2, colSpan: 2 },
     });
@@ -83,6 +85,18 @@ describe('widgetsSlice', () => {
     expect(state.items[1].layout).toMatchObject({ row: 1, col: 3, rowSpan: 3, colSpan: 4 });
     state = widgetsReducer(state, at(watchlist, { row: 2, col: 3, rowSpan: 2, colSpan: 4 }));
     expect(state.items[1].layout).toMatchObject({ row: 2, col: 3, rowSpan: 2, colSpan: 4 });
+  });
+
+  it('renames a watchlist and replaces its instruments, deduplicated', () => {
+    let state = widgetsReducer(initial(), addWidget('watchlist'));
+    const id = state.items[1].id;
+    state = widgetsReducer(state, setWatchlist({ id, name: ' Majors ', productIds: ['BTC-USD', 'ETH-USD', 'BTC-USD'] }));
+    expect(state.items[1]).toMatchObject({ name: 'Majors', productIds: ['BTC-USD', 'ETH-USD'] });
+
+    state = widgetsReducer(state, setWatchlist({ id, name: '  ', productIds: [] }));
+    expect(state.items[1]).toMatchObject({ name: 'Watchlist', productIds: [] });
+    state = widgetsReducer(state, setWatchlist({ id: 'initial', name: 'x', productIds: [] }));
+    expect(state.items[0]).not.toHaveProperty('name');
   });
 
   it('changes the tracked instrument', () => {

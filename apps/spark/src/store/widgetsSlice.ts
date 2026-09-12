@@ -14,6 +14,7 @@ export type WatchlistWidget = {
   id: string;
   type: 'watchlist';
   layout: WidgetLayout;
+  name: string;
   productIds: string[];
 };
 
@@ -24,6 +25,7 @@ export type WidgetsState = {
 };
 
 export const DEFAULT_PRODUCT_ID = 'BTC-USD';
+export const DEFAULT_WATCHLIST_NAME = 'Watchlist';
 
 const initialState: WidgetsState = {
   items: [
@@ -34,9 +36,11 @@ const initialState: WidgetsState = {
 const createWidget = (id: string, type: WidgetType, layout: WidgetLayout): Widget =>
   type === 'instrument'
     ? { id, type, layout, productId: DEFAULT_PRODUCT_ID }
-    : { id, type, layout, productIds: [] };
+    : { id, type, layout, name: DEFAULT_WATCHLIST_NAME, productIds: [] };
 
 export type AddWidgetPayload = { id: string; type: WidgetType; cell?: GridCell };
+
+export type WatchlistSettings = Pick<WatchlistWidget, 'name' | 'productIds'>;
 
 export const widgetsSlice = createSlice({
   name: 'widgets',
@@ -80,9 +84,22 @@ export const widgetsSlice = createSlice({
       const widget = state.items.find((item) => item.id === action.payload.id);
       if (widget?.type === 'instrument') widget.productId = action.payload.productId;
     },
+    setWatchlist: (state, action: PayloadAction<{ id: string } & WatchlistSettings>) => {
+      const { id, name, productIds } = action.payload;
+      const widget = state.items.find((item) => item.id === id);
+      if (widget?.type !== 'watchlist') return;
+      widget.name = name.trim() || DEFAULT_WATCHLIST_NAME;
+      widget.productIds = [...new Set(productIds)];
+    },
   },
 });
 
-export const { addWidget, removeWidget, moveWidget, resizeWidget, setWidgetInstrument } =
-  widgetsSlice.actions;
+export const {
+  addWidget,
+  removeWidget,
+  moveWidget,
+  resizeWidget,
+  setWidgetInstrument,
+  setWatchlist,
+} = widgetsSlice.actions;
 export const widgetsReducer = widgetsSlice.reducer;

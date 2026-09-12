@@ -17,8 +17,16 @@ export type WatchlistWidgetProps = {
 const SCROLLBAR_OPTIONS = { scrollbars: { autoHide: 'leave', autoHideDelay: 400 } } as const;
 
 export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
-  const { title, productIds, dialog, openDelete, openModify, closeDialog, confirmDelete } =
-    useWatchlist(widget);
+  const {
+    title,
+    productIds,
+    dialog,
+    openDelete,
+    openModify,
+    closeDialog,
+    confirmDelete,
+    confirmWatchlist,
+  } = useWatchlist(widget);
 
   return (
     <>
@@ -45,7 +53,9 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
       >
         The widget will be removed from the grid.
       </ConfirmDialog>
-      {dialog === 'modify' && <WatchlistDialog onConfirm={closeDialog} onCancel={closeDialog} />}
+      {dialog === 'modify' && (
+        <WatchlistDialog widget={widget} onConfirm={confirmWatchlist} onCancel={closeDialog} />
+      )}
     </>
   );
 };

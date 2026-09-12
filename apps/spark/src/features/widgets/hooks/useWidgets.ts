@@ -6,7 +6,9 @@ import {
   moveWidget as moveWidgetAction,
   removeWidget as removeWidgetAction,
   resizeWidget as resizeWidgetAction,
+  setWatchlist as setWatchlistAction,
   setWidgetInstrument,
+  type WatchlistSettings,
   type Widget,
 } from '@/store/widgetsSlice';
 import { useCallback } from 'react';
@@ -18,6 +20,7 @@ export type UseWidgetsResult = {
   moveWidget: (id: string, cell: GridCell) => void;
   resizeWidget: (id: string, layout: WidgetLayout) => void;
   setInstrument: (id: string, productId: string) => void;
+  setWatchlist: (id: string, settings: WatchlistSettings) => void;
 };
 
 export const useWidgets = (): UseWidgetsResult => {
@@ -42,5 +45,10 @@ export const useWidgets = (): UseWidgetsResult => {
     [dispatch],
   );
 
-  return { widgets, addWidget, removeWidget, moveWidget, resizeWidget, setInstrument };
+  const setWatchlist = useCallback(
+    (id: string, settings: WatchlistSettings) => dispatch(setWatchlistAction({ id, ...settings })),
+    [dispatch],
+  );
+
+  return { widgets, addWidget, removeWidget, moveWidget, resizeWidget, setInstrument, setWatchlist };
 };
