@@ -1,0 +1,8 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+
+allowBuilds:
+  nx: true
+  '@swc/core': true
+  esbuild: true
