@@ -4,6 +4,7 @@ import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
+import { removeWidget } from '@/store/widgetsSlice';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 
@@ -11,8 +12,15 @@ const GRID_WIDTH = 600;
 const GRID_HEIGHT = 300;
 const CELL = 100;
 
-const renderFrame = ({ editMode = true, tickAt }: { editMode?: boolean; tickAt?: number } = {}) => {
+/** Store with only the seeded BTC widget, so drags and resizes have free cells around it. */
+const createBareStore = () => {
   const store = createAppStore();
+  store.dispatch(removeWidget('common'));
+  return store;
+};
+
+const renderFrame = ({ editMode = true, tickAt }: { editMode?: boolean; tickAt?: number } = {}) => {
+  const store = createBareStore();
   if (editMode) store.dispatch(toggleEditMode());
   const widget = store.getState().widgets.items[0];
   const onExpand = vi.fn();
@@ -103,7 +111,7 @@ describe('WidgetFrame drag', () => {
   });
 
   it('snaps the size one cell at a time from the edge bars, staying inside the grid', () => {
-    const store = createAppStore();
+    const store = createBareStore();
     store.dispatch(toggleEditMode());
     const Framed = () => {
       const { widgets } = useWidgets();

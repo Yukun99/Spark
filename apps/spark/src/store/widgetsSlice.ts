@@ -26,10 +26,32 @@ export type WidgetsState = {
 
 export const DEFAULT_PRODUCT_ID = 'BTC-USD';
 export const DEFAULT_WATCHLIST_NAME = 'Watchlist';
+export const COMMON_WATCHLIST_NAME = 'Common';
+export const COMMON_PRODUCT_IDS = [
+  'BTC-USD',
+  'ETH-USD',
+  'SOL-USD',
+  'XRP-USD',
+  'DOGE-USD',
+  'ADA-USD',
+  'AVAX-USD',
+  'LINK-USD',
+  'DOT-USD',
+  'LTC-USD',
+  'BCH-USD',
+  'UNI-USD',
+];
 
 const initialState: WidgetsState = {
   items: [
     { id: 'initial', type: 'instrument', layout: { row: 1, col: 1 }, productId: DEFAULT_PRODUCT_ID },
+    {
+      id: 'common',
+      type: 'watchlist',
+      layout: { row: 1, col: 2, ...WIDGET_SIZES.watchlist },
+      name: COMMON_WATCHLIST_NAME,
+      productIds: COMMON_PRODUCT_IDS,
+    },
   ],
 };
 

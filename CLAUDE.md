@@ -105,7 +105,8 @@ All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`,
 
 Current state: `apps/spark/src/main.tsx` bootstraps React with the Redux `Provider`, MUI
 `ThemeProvider` + `CssBaseline`, and renders `App` (`src/app.tsx`): a `Banner` plus `PageContent`
-(the widget grid with instrument widgets, a divider and an action column with edit/add buttons). Brand colours live in
+(the widget grid, a divider and an action column with edit/add buttons). `widgetsSlice.ts` seeds a
+BTC-USD instrument widget plus a `Common` watchlist (`COMMON_PRODUCT_IDS`) beside it. Brand colours live in
 `src/styles/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, black, white, plus a
 `gray` ramp 10-100). Trading, multi-instrument widgets and the update-interval control are still to come.
 

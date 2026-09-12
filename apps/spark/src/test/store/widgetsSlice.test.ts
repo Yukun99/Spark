@@ -2,6 +2,8 @@ import { GRID_COLS, GRID_ROWS } from '@/features/grid/gridConfig';
 import type { WidgetLayout } from '@/features/grid/gridTypes';
 import {
   addWidget,
+  COMMON_PRODUCT_IDS,
+  COMMON_WATCHLIST_NAME,
   moveWidget,
   removeWidget,
   resizeWidget,
@@ -12,16 +14,25 @@ import {
 } from '@/store/widgetsSlice';
 
 const initial = () => widgetsReducer(undefined, { type: 'init' });
+/** Seed state with only the BTC widget, so placement tests start from a mostly empty grid. */
+const bare = () => widgetsReducer(initial(), removeWidget('common'));
 
 describe('widgetsSlice', () => {
-  it('seeds one BTC widget in the first cell', () => {
+  it('seeds a BTC widget in the first cell and a Common watchlist beside it', () => {
     expect(initial().items).toEqual([
       expect.objectContaining({ productId: 'BTC-USD', layout: { row: 1, col: 1 } }),
+      expect.objectContaining({
+        type: 'watchlist',
+        name: COMMON_WATCHLIST_NAME,
+        productIds: COMMON_PRODUCT_IDS,
+        layout: { row: 1, col: 2, rowSpan: 2, colSpan: 2 },
+      }),
     ]);
+    expect(COMMON_PRODUCT_IDS).toEqual(expect.arrayContaining(['BTC-USD', 'ETH-USD']));
   });
 
   it('adds widgets into the first free cell and stops when the grid is full', () => {
-    let state: WidgetsState = initial();
+    let state: WidgetsState = bare();
     state = widgetsReducer(state, addWidget('instrument'));
     expect(state.items[1].layout).toEqual({ row: 1, col: 2, rowSpan: 1, colSpan: 1 });
 
@@ -30,7 +41,7 @@ describe('widgetsSlice', () => {
   });
 
   it('adds an empty 2x2 watchlist where it fits, or at a requested free cell', () => {
-    let state = widgetsReducer(initial(), addWidget('watchlist'));
+    let state = widgetsReducer(bare(), addWidget('watchlist'));
     expect(state.items[1]).toMatchObject({
       type: 'watchlist',
       name: 'Watchlist',
@@ -46,11 +57,11 @@ describe('widgetsSlice', () => {
 
   it('removes a widget by id', () => {
     const state = widgetsReducer(initial(), removeWidget('initial'));
-    expect(state.items).toHaveLength(0);
+    expect(state.items.map((widget) => widget.id)).toEqual(['common']);
   });
 
   it('moves onto free cells but rejects occupied or out-of-range targets', () => {
-    let state = widgetsReducer(initial(), addWidget('instrument'));
+    let state = widgetsReducer(bare(), addWidget('instrument'));
     const second = state.items[1].id;
 
     state = widgetsReducer(state, moveWidget({ id: second, row: 3, col: 6 }));
@@ -64,7 +75,7 @@ describe('widgetsSlice', () => {
   });
 
   it('resizes within the grid onto free cells, never below the type minimum', () => {
-    let state = widgetsReducer(initial(), addWidget('watchlist', { row: 1, col: 3 }));
+    let state = widgetsReducer(bare(), addWidget('watchlist', { row: 1, col: 3 }));
     const watchlist = state.items[1].id;
 
     const at = (id: string, layout: Partial<WidgetLayout>) =>
@@ -88,7 +99,7 @@ describe('widgetsSlice', () => {
   });
 
   it('renames a watchlist and replaces its instruments, deduplicated', () => {
-    let state = widgetsReducer(initial(), addWidget('watchlist'));
+    let state = widgetsReducer(bare(), addWidget('watchlist'));
     const id = state.items[1].id;
     state = widgetsReducer(state, setWatchlist({ id, name: ' Majors ', productIds: ['BTC-USD', 'ETH-USD', 'BTC-USD'] }));
     expect(state.items[1]).toMatchObject({ name: 'Majors', productIds: ['BTC-USD', 'ETH-USD'] });
