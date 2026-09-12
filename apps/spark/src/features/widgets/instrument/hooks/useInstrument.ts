@@ -1,10 +1,10 @@
-import type { Ticker } from '@/connections/coinbase';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
+import { formatPrice, formatUpdatedAt } from '@/features/widgets/instrument/tickerFormat';
 import type { InstrumentWidget } from '@/store/widgetsSlice';
 import { useCallback, useState } from 'react';
 
-type InstrumentDialogKind = 'delete' | 'modify' | null;
+type InstrumentDialogKind = 'delete' | 'modify' | 'details' | null;
 
 export type UseInstrumentResult = {
   bid: string;
@@ -13,32 +13,10 @@ export type UseInstrumentResult = {
   dialog: InstrumentDialogKind;
   openDelete: () => void;
   openModify: () => void;
+  openDetails: () => void;
   closeDialog: () => void;
   confirmDelete: () => void;
   confirmInstrument: (productId: string) => void;
-};
-
-const priceFormat = new Intl.NumberFormat('en-US', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 8,
-});
-
-const formatPrice = (value: number | undefined) =>
-  value === undefined ? '--' : priceFormat.format(value);
-
-const timeFormat = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  fractionalSecondDigits: 3,
-  hour12: false,
-});
-
-/** Exchange timestamp of the tick when present, otherwise the time it arrived. */
-const formatUpdatedAt = (ticker: Ticker | undefined) => {
-  if (!ticker) return '--';
-  const exchangeTime = Date.parse(ticker.time);
-  return timeFormat.format(Number.isNaN(exchangeTime) ? ticker.receivedAt : exchangeTime);
 };
 
 export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => {
@@ -48,6 +26,7 @@ export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => 
 
   const openDelete = useCallback(() => setDialog('delete'), []);
   const openModify = useCallback(() => setDialog('modify'), []);
+  const openDetails = useCallback(() => setDialog('details'), []);
   const closeDialog = useCallback(() => setDialog(null), []);
   const confirmDelete = useCallback(() => {
     setDialog(null);
@@ -68,6 +47,7 @@ export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => 
     dialog,
     openDelete,
     openModify,
+    openDetails,
     closeDialog,
     confirmDelete,
     confirmInstrument,

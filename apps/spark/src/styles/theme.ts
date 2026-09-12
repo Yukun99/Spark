@@ -4,6 +4,7 @@ import { createTheme } from '@mui/material/styles';
 
 const primary = { main: colours.purple, contrastText: colours.cream };
 const common = { black: colours.black, white: colours.white };
+const DIALOG_BACKDROP_BLUR_PX = 4;
 
 export const theme = createTheme({
   cssVariables: { colorSchemeSelector: 'data-mui-color-scheme' },
@@ -28,7 +29,10 @@ export const theme = createTheme({
   },
   components: {
     MuiModal: { defaultProps: { disableScrollLock: true } },
-    MuiDialog: { defaultProps: { disableScrollLock: true } },
+    MuiDialog: {
+      defaultProps: { disableScrollLock: true },
+      styleOverrides: { backdrop: { backdropFilter: `blur(${DIALOG_BACKDROP_BLUR_PX}px)` } },
+    },
     MuiPaper: {
       styleOverrides: {
         root: ({ theme }) => ({

@@ -1,7 +1,8 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
-import { BidAskRow } from '@/features/widgets/bidAskRow';
-import { InstrumentDialog } from '@/features/widgets/instrumentDialog';
-import { useInstrument } from '@/features/widgets/hooks/useInstrument';
+import { BidAskRow } from '@/features/widgets/instrument/bidAskRow';
+import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
+import { InstrumentSearchDialog } from '@/features/widgets/instrument/dialog/instrumentSearchDialog';
+import { useInstrument } from '@/features/widgets/instrument/hooks/useInstrument';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
 import type { InstrumentWidget as InstrumentWidgetModel } from '@/store/widgetsSlice';
@@ -18,6 +19,7 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
     dialog,
     openDelete,
     openModify,
+    openDetails,
     closeDialog,
     confirmDelete,
     confirmInstrument,
@@ -25,7 +27,13 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
 
   return (
     <>
-      <WidgetFrame widget={widget} name={widget.productId} onDelete={openDelete} onModify={openModify}>
+      <WidgetFrame
+        widget={widget}
+        name={widget.productId}
+        onDelete={openDelete}
+        onModify={openModify}
+        onExpand={openDetails}
+      >
         <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{widget.productId}</WidgetLabel>
         <BidAskRow bid={bid} ask={ask} />
       </WidgetFrame>
@@ -39,11 +47,14 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         The {widget.productId} widget will be removed from the grid.
       </ConfirmDialog>
       {dialog === 'modify' && (
-        <InstrumentDialog
+        <InstrumentSearchDialog
           productId={widget.productId}
           onConfirm={confirmInstrument}
           onCancel={closeDialog}
         />
+      )}
+      {dialog === 'details' && (
+        <InstrumentDialog productId={widget.productId} onClose={closeDialog} />
       )}
     </>
   );

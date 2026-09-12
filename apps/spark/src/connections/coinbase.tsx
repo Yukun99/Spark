@@ -15,13 +15,25 @@ export type CoinbaseProduct = {
   status: string;
 };
 
+export type TradeSide = 'buy' | 'sell';
+
 export type Ticker = {
   productId: string;
   bid: number;
   ask: number;
+  bidSize: number;
+  askSize: number;
   price: number;
+  lastSize: number;
+  side: TradeSide | undefined;
+  tradeId: number;
   time: string;
   receivedAt: number;
+  open24h: number;
+  high24h: number;
+  low24h: number;
+  volume24h: number;
+  volume30d: number;
 };
 
 type TickerMessage = {
@@ -29,11 +41,27 @@ type TickerMessage = {
   product_id: string;
   best_bid: string;
   best_ask: string;
+  best_bid_size: string;
+  best_ask_size: string;
   price: string;
+  last_size: string;
+  side: string;
+  trade_id: number;
   time: string;
+  open_24h: string;
+  high_24h: string;
+  low_24h: string;
+  volume_24h: string;
+  volume_30d: string;
 };
 
 type Listener = () => void;
+
+const subscriptionMessage = (type: 'subscribe' | 'unsubscribe', productIds: string[]) => ({
+  type,
+  product_ids: productIds,
+  channels: ['ticker'],
+});
 
 let productsPromise: Promise<CoinbaseProduct[]> | undefined;
 
@@ -65,9 +93,19 @@ export const parseTickerMessage = (raw: unknown, receivedAt = Date.now()): Ticke
     productId: message.product_id,
     bid,
     ask,
+    bidSize: Number(message.best_bid_size),
+    askSize: Number(message.best_ask_size),
     price: Number(message.price),
+    lastSize: Number(message.last_size),
+    side: message.side === 'buy' || message.side === 'sell' ? message.side : undefined,
+    tradeId: Number(message.trade_id),
     time: message.time ?? '',
     receivedAt,
+    open24h: Number(message.open_24h),
+    high24h: Number(message.high_24h),
+    low24h: Number(message.low_24h),
+    volume24h: Number(message.volume_24h),
+    volume30d: Number(message.volume_30d),
   };
 };
 
@@ -83,6 +121,7 @@ class CoinbaseFeed {
   private readonly dirty = new Set<string>();
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private updateIntervalMs = DEFAULT_UPDATE_INTERVAL_MS;
+  private focusedProductId: string | null = null;
   private reconnectDelay = RECONNECT_MIN_MS;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -96,12 +135,27 @@ class CoinbaseFeed {
     this.scheduleFlush();
   };
 
+  /**
+   * While a product is focused, only that product stays subscribed on the socket; every other
+   * product is paused (listeners kept, last ticker kept) and resumed when focus clears.
+   */
+  setFocus = (productId: string | null) => {
+    if (productId === this.focusedProductId) return;
+    const before = this.activeProductIds();
+    this.focusedProductId = productId;
+    const after = new Set(this.activeProductIds());
+    const paused = before.filter((id) => !after.has(id));
+    const resumed = [...after].filter((id) => !before.includes(id));
+    if (paused.length > 0) this.send(subscriptionMessage('unsubscribe', paused));
+    if (resumed.length > 0) this.send(subscriptionMessage('subscribe', resumed));
+  };
+
   subscribe = (productId: string, listener: Listener): (() => void) => {
     let listeners = this.listeners.get(productId);
     if (!listeners) {
       listeners = new Set();
       this.listeners.set(productId, listeners);
-      this.send({ type: 'subscribe', product_ids: [productId], channels: ['ticker'] });
+      if (this.isActive(productId)) this.send(subscriptionMessage('subscribe', [productId]));
     }
     listeners.add(listener);
     this.ensureSocket();
@@ -111,9 +165,17 @@ class CoinbaseFeed {
       if (listeners.size > 0) return;
       this.listeners.delete(productId);
       this.tickers.delete(productId);
-      this.send({ type: 'unsubscribe', product_ids: [productId], channels: ['ticker'] });
+      if (this.isActive(productId)) this.send(subscriptionMessage('unsubscribe', [productId]));
     };
   };
+
+  private isActive(productId: string) {
+    return this.focusedProductId === null || this.focusedProductId === productId;
+  }
+
+  private activeProductIds() {
+    return [...this.listeners.keys()].filter((id) => this.isActive(id));
+  }
 
   private ensureSocket() {
     if (this.socket) return;
@@ -121,11 +183,9 @@ class CoinbaseFeed {
     this.socket = socket;
     socket.onopen = () => {
       this.reconnectDelay = RECONNECT_MIN_MS;
-      const productIds = [...this.listeners.keys()];
+      const productIds = this.activeProductIds();
       if (productIds.length > 0) {
-        socket.send(
-          JSON.stringify({ type: 'subscribe', product_ids: productIds, channels: ['ticker'] }),
-        );
+        socket.send(JSON.stringify(subscriptionMessage('subscribe', productIds)));
       }
     };
     socket.onmessage = (event: MessageEvent<string>) => this.onMessage(event.data);

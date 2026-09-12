@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 const MAX_SUGGESTIONS = 5;
 
-export type InstrumentDialogProps = {
+export type InstrumentSearchDialogProps = {
   productId: string;
   onConfirm: (productId: string) => void;
   onCancel: () => void;
@@ -20,7 +20,11 @@ const filterProducts = (options: CoinbaseProduct[], { inputValue }: { inputValue
 };
 
 /** Mounted only while open, so `productId` seeds the initial selection. */
-export const InstrumentDialog = ({ productId, onConfirm, onCancel }: InstrumentDialogProps) => {
+export const InstrumentSearchDialog = ({
+  productId,
+  onConfirm,
+  onCancel,
+}: InstrumentSearchDialogProps) => {
   const { products, loading, error } = useCoinbaseProducts();
   const [selected, setSelected] = useState<string | null>(productId);
   const value = products.find((product) => product.id === selected) ?? null;

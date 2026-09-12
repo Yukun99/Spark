@@ -10,21 +10,32 @@ import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { useCallback, type ReactNode } from 'react';
-
+import { useCallback, type MouseEvent, type ReactNode } from 'react';
 
 export type WidgetFrameProps = {
   widget: Widget;
   name: string;
   onDelete: () => void;
   onModify: () => void;
+  onExpand?: () => void;
   children: ReactNode;
 };
 
-/** Card chrome shared by all widgets: drag-to-move, delete and modify actions in edit mode. */
-export const WidgetFrame = ({ widget, name, onDelete, onModify, children }: WidgetFrameProps) => {
+/**
+ * Card chrome shared by all widgets: drag-to-move, delete and modify actions in edit mode;
+ * outside edit mode, clicking the card or its corner icon calls `onExpand`.
+ */
+export const WidgetFrame = ({
+  widget,
+  name,
+  onDelete,
+  onModify,
+  onExpand,
+  children,
+}: WidgetFrameProps) => {
   const { editMode } = useEditMode();
   const { moveWidget } = useWidgets();
   const { setDragTarget } = useDragTarget();
@@ -38,11 +49,20 @@ export const WidgetFrame = ({ widget, name, onDelete, onModify, children }: Widg
     onHover: setDragTarget,
     onDrop,
   });
+  const expandable = !editMode && onExpand !== undefined;
+  const onExpandClick = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onExpand?.();
+    },
+    [onExpand],
+  );
 
   return (
     <GridWidget layout={widget.layout}>
       <Box
         {...handlers}
+        onClick={expandable ? onExpand : undefined}
         data-testid='widget-frame'
         sx={[
           shadowSx('sm'),
@@ -58,6 +78,7 @@ export const WidgetFrame = ({ widget, name, onDelete, onModify, children }: Widg
             transform: `translate(${offset.dx}px, ${offset.dy}px)`,
             zIndex: dragging ? 1 : 'auto',
             ...(editMode && { cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none', touchAction: 'none' }),
+            ...(expandable && { cursor: 'pointer' }),
             ...theme.applyStyles('dark', { bgcolor: colours.navy }),
           }),
         ]}
@@ -79,7 +100,19 @@ export const WidgetFrame = ({ widget, name, onDelete, onModify, children }: Widg
             </Stack>
           </>
         ) : (
-          children
+          <>
+            {expandable && (
+              <ClearButton
+                rounded
+                aria-label='Expand widget'
+                onClick={onExpandClick}
+                sx={{ position: 'absolute', top: 8, right: 8, p: 0.5 }}
+              >
+                <FullscreenIcon sx={{ fontSize: 16 }} />
+              </ClearButton>
+            )}
+            {children}
+          </>
         )}
       </Box>
     </GridWidget>

@@ -3,7 +3,7 @@ import { EditModeButton } from '@/features/edit/editModeButton';
 import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
-import { InstrumentWidget } from '@/features/widgets/instrument';
+import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
 import { useEditMode } from '@/hooks/useEditMode';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { Widget } from '@/store/widgetsSlice';

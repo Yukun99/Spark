@@ -1,4 +1,4 @@
-import { coinbaseFeed, parseTickerMessage } from '@/connections/coinbase';
+import { coinbaseFeed, getCoinbaseProducts, parseTickerMessage } from '@/connections/coinbase';
 
 describe('parseTickerMessage', () => {
   it('parses a ticker message into numbers', () => {
@@ -11,13 +11,14 @@ describe('parseTickerMessage', () => {
         price: '100.6',
         time: '2026-09-12T00:00:00Z',
       }, 42),
-    ).toEqual({
+    ).toMatchObject({
       productId: 'BTC-USD',
       bid: 100.5,
       ask: 100.7,
       price: 100.6,
       time: '2026-09-12T00:00:00Z',
       receivedAt: 42,
+      side: undefined,
     });
   });
 
@@ -80,5 +81,90 @@ describe('coinbaseFeed', () => {
     expect(listener).toHaveBeenCalledTimes(3);
 
     unsubscribe();
+  });
+
+  it('shares one socket subscription between listeners of the same product', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const unsubscribeFirst = coinbaseFeed.subscribe('BTC-USD', first);
+    const send = FakeSocket.instance?.send;
+    send?.mockClear();
+    const unsubscribeSecond = coinbaseFeed.subscribe('BTC-USD', second);
+    expect(send).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+
+    unsubscribeFirst();
+    expect(send).not.toHaveBeenCalled();
+    unsubscribeSecond();
+    expect(JSON.parse(send?.mock.calls[0][0])).toMatchObject({
+      type: 'unsubscribe',
+      product_ids: ['BTC-USD'],
+    });
+  });
+
+  it('pauses every other product while one is focused and resumes them after', () => {
+    const unsubscribeBtc = coinbaseFeed.subscribe('BTC-USD', vi.fn());
+    const unsubscribeEth = coinbaseFeed.subscribe('ETH-USD', vi.fn());
+    const send = FakeSocket.instance?.send;
+    send?.mockClear();
+
+    coinbaseFeed.setFocus('BTC-USD');
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(send?.mock.calls[0][0])).toMatchObject({
+      type: 'unsubscribe',
+      product_ids: ['ETH-USD'],
+    });
+
+    coinbaseFeed.setFocus(null);
+    expect(JSON.parse(send?.mock.calls[1][0])).toMatchObject({
+      type: 'subscribe',
+      product_ids: ['ETH-USD'],
+    });
+
+    unsubscribeBtc();
+    unsubscribeEth();
+  });
+});
+
+describe('getCoinbaseProducts', () => {
+  const product = (id: string, status = 'online') => ({
+    id,
+    base_currency: id.split('-')[0],
+    quote_currency: id.split('-')[1],
+    display_name: id.replace('-', '/'),
+    status,
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('retries after a failed request, then filters, sorts and caches the result', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 500 })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            product('ETH-USD'),
+            product('BTC-EUR'),
+            product('BTC-USDT'),
+            product('SOL-USD', 'delisted'),
+            product('ADA-USDC'),
+          ]),
+      });
+    vi.stubGlobal('fetch', fetch);
+
+    await expect(getCoinbaseProducts()).rejects.toThrow('Coinbase products request failed: 500');
+
+    const products = await getCoinbaseProducts();
+    expect(products.map((item) => item.id)).toEqual(['ADA-USDC', 'BTC-USDT', 'ETH-USD']);
+
+    await getCoinbaseProducts();
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
