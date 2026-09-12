@@ -22,9 +22,6 @@ describe('WidgetGrid', () => {
       </WidgetGrid>,
     );
     expect(screen.getAllByTestId('grid-placeholder')).toHaveLength(GRID_ROWS * GRID_COLS - 2);
-    expect(screen.getAllByTestId('grid-placeholder-line')).toHaveLength(
-      (GRID_ROWS * GRID_COLS - 2) * 5,
-    );
   });
 
   it('places a widget on the requested cells', () => {

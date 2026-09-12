@@ -1,6 +1,7 @@
 import { canPlace, findFreeCell } from '@/features/grid/gridOccupancy';
 import type { GridCell, WidgetLayout } from '@/features/grid/gridTypes';
 import { WIDGET_MIN_SIZES, WIDGET_SIZES, type WidgetType } from '@/features/widgets/widgetSizes';
+import { DEFAULT_PRODUCT_ID, DEFAULT_WATCHLIST_NAME, SEED_WIDGETS } from '@/store/widgetSeed';
 import { createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit';
 
 export type InstrumentWidget = {
@@ -30,38 +31,7 @@ export type WidgetsState = {
   items: Widget[];
 };
 
-export const DEFAULT_PRODUCT_ID = 'BTC-USD';
-export const DEFAULT_WATCHLIST_NAME = 'Watchlist';
-export const COMMON_WATCHLIST_NAME = 'Common';
-export const COMMON_PRODUCT_IDS = [
-  'BTC-USD',
-  'ETH-USD',
-  'SOL-USD',
-  'XRP-USD',
-  'DOGE-USD',
-  'ADA-USD',
-  'AVAX-USD',
-  'LINK-USD',
-  'DOT-USD',
-  'LTC-USD',
-  'BCH-USD',
-  'UNI-USD',
-];
-
-const initialState: WidgetsState = {
-  items: [
-    { id: 'initial', type: 'instrument', layout: { row: 1, col: 5 }, productId: DEFAULT_PRODUCT_ID },
-    { id: 'eth', type: 'instrument', layout: { row: 1, col: 6 }, productId: 'ETH-USD' },
-    {
-      id: 'common',
-      type: 'watchlist',
-      layout: { row: 2, col: 5, rowSpan: 2, colSpan: 2 },
-      name: COMMON_WATCHLIST_NAME,
-      productIds: COMMON_PRODUCT_IDS,
-    },
-    { id: 'orders', type: 'orders', layout: { row: 1, col: 1, rowSpan: 3, colSpan: 4 } },
-  ],
-};
+const initialState: WidgetsState = { items: SEED_WIDGETS };
 
 const createWidget = (id: string, type: WidgetType, layout: WidgetLayout): Widget => {
   switch (type) {

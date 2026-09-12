@@ -39,9 +39,15 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   usage. Icons come from `@mui/icons-material`.
 - Mode-dependent colours: use `theme.applyStyles('dark', {...})` inside `sx`/style overrides,
   importing values from `palette.ts` rather than writing raw hex.
-- Fonts come from `src/styles/fonts.ts`: `fonts.ui` (Inter, set as the MUI default) and
-  `fonts.display` (Source Serif 4) for the banner title. Both load via the Google Fonts link in
-  `index.html`.
+- Fonts come from `src/styles/fonts.ts`: `fonts.ui` (Inter Variable, set as the MUI default) and
+  `fonts.display` (Source Serif 4 Variable) for the banner title. Both are self-hosted
+  (`@fontsource-variable`, imported in `src/styles.css`).
+- Startup: `src/styles/appShell.ts` builds the static banner plus one pulsing skeleton card per
+  `SEED_WIDGETS` entry (HTML, critical CSS, colour-scheme script) that the `appShell` plugin in `vite.config.mts` injects into `index.html`, so the title
+  paints before the bundle runs. Keep it in step with `Banner`, `PageContent` and `WidgetFrame`. Files it imports must use relative
+  paths (the Vite config has no `@/` alias). Dialogs load lazily (`src/components/lazyComponent.tsx`,
+  `dialogs/lazyDialog.tsx`, per-feature `lazyDialogs.ts`); tooltips stay eager because swapping
+  in a lazy wrapper remounts the button and can drop a click.
 - Scrolling: `html`/`body` never scroll (`overflow: hidden` in `styles.css`). The only scroll
   container is the grid area in `pageContent.tsx`, using OverlayScrollbars (floating bar, colours
   via `--os-*` CSS vars from the palette). Banner and action column stay fixed.
@@ -106,7 +112,7 @@ All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`,
 
 Current state: `apps/spark/src/main.tsx` bootstraps React with the Redux `Provider`, MUI
 `ThemeProvider` + `CssBaseline`, and renders `App` (`src/app.tsx`): a `Banner` plus `PageContent`
-(the widget grid, a divider and an action column with edit/add buttons). `widgetsSlice.ts` seeds
+(the widget grid, a divider and an action column with edit/add buttons). `widgetSeed.ts` (`SEED_WIDGETS`, seeded by `widgetsSlice.ts`) places
 BTC-USD and ETH-USD instrument widgets top right with a 2x2 `Common` watchlist (`COMMON_PRODUCT_IDS`)
 under them. Brand colours live in
 `src/styles/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, black, white, plus a

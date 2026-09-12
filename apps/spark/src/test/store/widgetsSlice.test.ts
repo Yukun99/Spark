@@ -1,9 +1,8 @@
+import { COMMON_PRODUCT_IDS, COMMON_WATCHLIST_NAME } from '@/store/widgetSeed';
 import { GRID_COLS, GRID_ROWS } from '@/features/grid/gridConfig';
 import type { WidgetLayout } from '@/features/grid/gridTypes';
 import {
   addWidget,
-  COMMON_PRODUCT_IDS,
-  COMMON_WATCHLIST_NAME,
   moveWidget,
   removeWidget,
   resizeWidget,

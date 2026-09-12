@@ -1,5 +1,5 @@
-import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
-import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
+import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
+import { LazyPlaceOrderDialog } from '@/features/widgets/instrument/dialog/lazyDialogs';
 import { useOrdersWidget } from '@/features/widgets/orders/hooks/useOrdersWidget';
 import { ORDERS_COLUMNS, OrdersHeader, OrdersRow } from '@/features/widgets/orders/ordersRow';
 import { STRIP_TEXT_PX } from '@/features/widgets/valueStrip';
@@ -58,15 +58,15 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
           )}
         </WidgetScrollArea>
       </WidgetFrame>
-      <ConfirmDialog
+      <LazyConfirmDialog
         open={deleting}
         title='Delete widget?'
         onConfirm={confirmDelete}
         onCancel={closeDialog}
       >
         The widget will be removed from the grid.
-      </ConfirmDialog>
-      <ConfirmDialog
+      </LazyConfirmDialog>
+      <LazyConfirmDialog
         open={cancelling}
         title='Cancel order?'
         onConfirm={confirmCancel}
@@ -74,8 +74,8 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
       >
         {selected !== null &&
           `The ${selected.side} order for ${selected.productId} will be cancelled. Fulfilled amount will not be affected.`}
-      </ConfirmDialog>
-      {orderForm !== null && <PlaceOrderDialog {...orderForm} onClose={closeDialog} />}
+      </LazyConfirmDialog>
+      {orderForm !== null && <LazyPlaceOrderDialog {...orderForm} onClose={closeDialog} />}
     </>
   );
 };

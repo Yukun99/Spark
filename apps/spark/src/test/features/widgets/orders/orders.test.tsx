@@ -177,7 +177,7 @@ describe('OrdersWidget', () => {
     const row = screen.getAllByTestId('order-row').find((item) => item.textContent?.startsWith('ETH-USD'))!;
 
     await user.click(within(row).getByRole('button', { name: 'Cancel order' }));
-    const dialog = screen.getByRole('dialog');
+    const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Cancel order?');
     expect(dialog).toHaveTextContent('sell order for ETH-USD');
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
@@ -186,7 +186,7 @@ describe('OrdersWidget', () => {
 
     await user.click(within(row).getByRole('button', { name: 'Cancel order' }));
     expect(rowGlows()).not.toContain(true);
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirm' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirm' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(store.getState().orders.items.find((order) => order.id === source.id)).toEqual({
       ...source,
@@ -208,7 +208,7 @@ describe('OrdersWidget', () => {
     const row = screen.getAllByTestId('order-row').find((item) => item.textContent?.startsWith('ETH-USD'))!;
     await user.click(within(row).getByRole('button', { name: 'Modify order' }));
 
-    const dialog = screen.getByRole('dialog');
+    const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Modify Order');
     expect(within(dialog).getByRole('button', { name: 'SELL' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(dialog).getByRole('button', { name: 'SELL' })).toBeDisabled();
@@ -245,7 +245,7 @@ describe('OrdersWidget', () => {
     const row = screen.getAllByTestId('order-row').find((item) => item.textContent?.startsWith('ETH-USD'))!;
     await user.click(within(row).getByRole('button', { name: 'Copy order' }));
 
-    const dialog = screen.getByRole('dialog');
+    const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Place Order');
     expect(within(dialog).getByLabelText('ETH-USD details')).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'SELL' })).toHaveAttribute('aria-pressed', 'true');
@@ -277,11 +277,11 @@ describe('OrdersWidget', () => {
   it('offers delete but no modify in edit mode', async () => {
     const user = userEvent.setup();
     const store = renderOrders();
-    act(() => store.dispatch(toggleEditMode()));
+    await act(() => store.dispatch(toggleEditMode()));
     expect(await screen.findByRole('button', { name: 'Delete widget' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Modify widget' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete widget' }));
-    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    await user.click(await screen.findByRole('button', { name: 'Confirm' }));
     expect(store.getState().widgets.items.some((widget) => widget.type === 'orders')).toBe(false);
   });
 });

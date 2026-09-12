@@ -95,7 +95,7 @@ describe('InstrumentWidget', () => {
     await user.click(within(details).getByRole('button', { name: 'SELL' }));
 
     expect(screen.queryByRole('dialog', { name: 'BTC-USD details' })).not.toBeInTheDocument();
-    const order = screen.getByRole('dialog');
+    const order = await screen.findByRole('dialog');
     expect(order).toHaveTextContent('Place Order');
     expect(within(order).getByRole('textbox', { name: 'Price' })).toHaveValue('100.5');
     expect(setFocus).toHaveBeenLastCalledWith('BTC-USD');
@@ -145,7 +145,7 @@ describe('InstrumentWidget', () => {
     expect(screen.queryByText('100.50')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Delete widget' }));
-    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    await user.click(await screen.findByRole('button', { name: 'Confirm' }));
     expect(store.getState().widgets.items.map((widget) => widget.id)).toEqual(['eth', 'common', 'orders']);
   });
 });

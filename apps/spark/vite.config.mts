@@ -1,7 +1,43 @@
 /// <reference types='vitest' />
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite';
+// noinspection ES6PreferShortImport
+import { appShellCss, appShellHtml, colorSchemeScript } from './src/styles/appShell';
+
+const DISPLAY_FONT_FILE = /source-serif-4-latin-wght-normal.*\.woff2$/;
+
+/** Paints the banner from index.html before the bundle runs and preloads the title font. */
+const appShell = (): Plugin => ({
+  name: 'spark:app-shell',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html, ctx) => {
+      const fontFile = Object.keys(ctx.bundle ?? {}).find((file) => DISPLAY_FONT_FILE.test(file));
+      const tags: HtmlTagDescriptor[] = [
+        { tag: 'script', children: colorSchemeScript, injectTo: 'head-prepend' },
+        { tag: 'style', children: appShellCss, injectTo: 'head-prepend' },
+      ];
+      if (fontFile) {
+        tags.push({
+          tag: 'link',
+          attrs: {
+            rel: 'preload',
+            href: `/${fontFile}`,
+            as: 'font',
+            type: 'font/woff2',
+            crossorigin: true,
+          },
+          injectTo: 'head',
+        });
+      }
+      return {
+        html: html.replace('<div id="root"></div>', `<div id="root">${appShellHtml}</div>`),
+        tags,
+      };
+    },
+  },
+});
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
@@ -19,7 +55,7 @@ export default defineConfig(() => ({
       '@': resolve(import.meta.dirname, 'src'),
     },
   },
-  plugins: [react()],
+  plugins: [react(), appShell()],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [],

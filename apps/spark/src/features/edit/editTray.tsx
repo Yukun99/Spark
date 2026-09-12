@@ -1,6 +1,12 @@
 import { AddWidgetButton } from '@/features/edit/addWidgetButton';
 import { EditModeButton } from '@/features/edit/editModeButton';
-import { TRAY_ICON_PX } from '@/features/edit/trayConfig';
+import {
+  BUTTON_PAD_PX,
+  BUTTON_PX,
+  RING_PAD_PX,
+  RING_PX,
+  TRAY_ICON_PX,
+} from '@/features/edit/trayConfig';
 import { TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { useEditMode } from '@/hooks/useEditMode';
 import { theme as colours } from '@/styles/palette';
@@ -11,13 +17,6 @@ import type { Theme } from '@mui/material/styles';
 
 const REVEAL_MS = 200;
 const EASING = 'ease-out';
-/** MUI icon default size and the padding the rounded action buttons wrap it in. */
-const ICON_PX = 24;
-const BUTTON_PAD_PX = 8;
-const BUTTON_PX = ICON_PX + 2 * BUTTON_PAD_PX;
-/** Ring drawn around the save button in edit mode. */
-const RING_PAD_PX = 8;
-const RING_PX = BUTTON_PX + 2 * RING_PAD_PX;
 /** Tray buttons use a smaller icon, so the pill hanging under the ring is narrower. */
 const TRAY_PAD_PX = RING_PAD_PX / 2;
 const TRAY_PX = TRAY_ICON_PX + 2 * BUTTON_PAD_PX + 2 * TRAY_PAD_PX;

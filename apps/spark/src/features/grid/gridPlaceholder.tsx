@@ -1,6 +1,6 @@
 import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
 import type { GridCell, WidgetLayout } from '@/features/grid/gridTypes';
-import { gray, theme as colours } from '@/styles/palette';
+import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import { TILE_GAP_PX, TILE_RADIUS_PX } from '@/features/grid/gridConfig';
 import Box from '@mui/material/Box';
@@ -8,8 +8,6 @@ import Box from '@mui/material/Box';
 export type GridPlaceholderProps = {
   cell: GridCell;
 };
-
-const LINE_COUNT = 5;
 
 const covers = (layout: WidgetLayout | null, { row, col }: GridCell) =>
   layout !== null &&
@@ -31,25 +29,13 @@ export const GridPlaceholder = ({ cell }: GridPlaceholderProps) => {
           gridRowStart: cell.row,
           gridColumnStart: cell.col,
           m: `${TILE_GAP_PX}px`,
-          p: 3,
           borderRadius: `${TILE_RADIUS_PX}px`,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-evenly',
           opacity: hidden ? 0 : 1,
           transition: 'opacity 150ms ease-out',
           bgcolor: colours.cream,
           ...theme.applyStyles('dark', { bgcolor: colours.navy }),
         }),
       ]}
-    >
-      {Array.from({ length: LINE_COUNT }, (_, i) => (
-        <Box
-          key={i}
-          data-testid='grid-placeholder-line'
-          sx={{ height: '1.5px', bgcolor: gray[50] }}
-        />
-      ))}
-    </Box>
+    />
   );
 };

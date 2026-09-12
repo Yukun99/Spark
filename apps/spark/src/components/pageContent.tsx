@@ -1,4 +1,5 @@
 import { EditTray } from '@/features/edit/editTray';
+import { ACTION_COLUMN_WIDTH_PX } from '@/features/edit/trayConfig';
 import { StreamingButton } from '@/features/edit/streamingButton';
 import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
@@ -46,6 +47,7 @@ export const PageContent = () => {
       <Stack
         component='aside'
         sx={{
+          width: ACTION_COLUMN_WIDTH_PX,
           paddingX: `${TILE_GAP_PX}px`,
           paddingY: `${TILE_GAP_PX * 2}px`,
           alignItems: 'center',

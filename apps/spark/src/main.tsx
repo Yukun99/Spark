@@ -2,7 +2,6 @@ import { App } from '@/app';
 import { store } from '@/store/store';
 import { theme } from '@/styles/theme';
 import CssBaseline from '@mui/material/CssBaseline';
-import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { ThemeProvider } from '@mui/material/styles';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -17,7 +16,6 @@ if (!container) {
 
 createRoot(container).render(
   <StrictMode>
-    <InitColorSchemeScript />
     <Provider store={store}>
       <ThemeProvider theme={theme} defaultMode='system'>
         <CssBaseline />

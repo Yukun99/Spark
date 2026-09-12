@@ -1,5 +1,12 @@
-import { theme as colours } from '@/styles/palette';
-import { alpha, type CSSObject, type Theme } from '@mui/material/styles';
+import type { CSSObject, Theme } from '@mui/material/styles';
+// Relative import: `appShell.ts` pulls this into the Vite config, where the `@/` alias is absent.
+import { theme as colours } from './palette';
+
+/** `#RRGGBB` to `rgba(r, g, b, a)`, formatted like MUI's `alpha`. */
+const alpha = (hex: string, a: number) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+};
 
 const buildShadows = (colour: string) => ({
   sm: `0 1px 3px ${alpha(colour, 0.2)}`,

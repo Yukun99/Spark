@@ -1,11 +1,12 @@
 import { ColorModeToggle } from '@/components/buttons/colorModeToggle';
 import { BANNER_HEIGHT } from '@/features/grid/gridConfig';
-import { fonts } from '@/styles/fonts';
+import { APP_TITLE, bannerTitleSx } from '@/styles/appShell';
 import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
+/** Must match the static shell in `appShell.ts`, which paints this banner before the bundle runs. */
 export const Banner = () => (
   <Box
     component='header'
@@ -22,11 +23,8 @@ export const Banner = () => (
       }),
     ]}
   >
-    <Typography
-      component='h1'
-      sx={{ fontFamily: fonts.display, fontSize: 30, fontWeight: 500, letterSpacing: '0.08em' }}
-    >
-      Trading App
+    <Typography component='h1' sx={bannerTitleSx}>
+      {APP_TITLE}
     </Typography>
     <ColorModeToggle />
   </Box>

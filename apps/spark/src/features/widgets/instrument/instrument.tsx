@@ -1,9 +1,11 @@
-import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
+import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
 import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
-import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
 import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
-import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
-import { InstrumentSearchDialog } from '@/features/widgets/instrument/dialog/instrumentSearchDialog';
+import {
+  LazyInstrumentDialog,
+  LazyInstrumentSearchDialog,
+  LazyPlaceOrderDialog,
+} from '@/features/widgets/instrument/dialog/lazyDialogs';
 import { useInstrument } from '@/features/widgets/instrument/hooks/useInstrument';
 import { ValuePairRow } from '@/features/widgets/instrument/valuePairRow';
 import { ValueStrip } from '@/features/widgets/valueStrip';
@@ -64,26 +66,26 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
           />
         </ValueStrip>
       </WidgetFrame>
-      <ConfirmDialog
+      <LazyConfirmDialog
         open={dialog === 'delete'}
         title='Delete widget?'
         onConfirm={confirmDelete}
         onCancel={closeDialog}
       >
         The widget will be removed from the grid.
-      </ConfirmDialog>
+      </LazyConfirmDialog>
       {dialog === 'modify' && (
-        <InstrumentSearchDialog
+        <LazyInstrumentSearchDialog
           productId={widget.productId}
           onConfirm={confirmInstrument}
           onCancel={closeDialog}
         />
       )}
       {dialog === 'details' && (
-        <InstrumentDialog productId={widget.productId} onTrade={openOrder} onClose={closeDialog} />
+        <LazyInstrumentDialog productId={widget.productId} onTrade={openOrder} onClose={closeDialog} />
       )}
       {dialog === 'order' && (
-        <PlaceOrderDialog productId={widget.productId} side={orderSide} onClose={closeDialog} />
+        <LazyPlaceOrderDialog productId={widget.productId} side={orderSide} onClose={closeDialog} />
       )}
     </>
   );
