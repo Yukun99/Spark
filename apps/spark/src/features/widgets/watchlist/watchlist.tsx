@@ -7,17 +7,15 @@ import { WatchlistHeader } from '@/features/widgets/watchlist/watchlistHeader';
 import { WATCHLIST_COLUMNS, WatchlistRow } from '@/features/widgets/watchlist/watchlistRow';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
+import { WidgetScrollArea } from '@/features/widgets/widgetScrollArea';
 import type { WatchlistWidget as WatchlistWidgetModel } from '@/store/widgetsSlice';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 
 export type WatchlistWidgetProps = {
   widget: WatchlistWidgetModel;
 };
-
-const SCROLLBAR_OPTIONS = { scrollbars: { autoHide: 'leave', autoHideDelay: 400 } } as const;
 
 export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
   const {
@@ -40,22 +38,20 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
     <>
       <WidgetFrame widget={widget} name={title} onDelete={openDelete} onModify={openModify}>
         <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{title}</WidgetLabel>
-        <Box sx={{ flex: 1, minHeight: 0 }}>
-          <OverlayScrollbarsComponent defer options={SCROLLBAR_OPTIONS} style={{ height: '100%' }}>
-            {productIds.length === 0 ? (
-              <Typography sx={{ fontSize: 12, color: gray[50], textAlign: 'center' }}>
-                No instruments yet
-              </Typography>
-            ) : (
-              <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: 1 }}>
-                <WatchlistHeader />
-                {productIds.map((productId) => (
-                  <WatchlistRow key={productId} productId={productId} onOpen={openDetails} />
-                ))}
-              </Box>
-            )}
-          </OverlayScrollbarsComponent>
-        </Box>
+        <WidgetScrollArea>
+          {productIds.length === 0 ? (
+            <Typography sx={{ fontSize: 12, color: gray[50], textAlign: 'center' }}>
+              No instruments yet
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: 1 }}>
+              <WatchlistHeader />
+              {productIds.map((productId) => (
+                <WatchlistRow key={productId} productId={productId} onOpen={openDetails} />
+              ))}
+            </Box>
+          )}
+        </WidgetScrollArea>
       </WidgetFrame>
       <ConfirmDialog
         open={dialog === 'delete'}

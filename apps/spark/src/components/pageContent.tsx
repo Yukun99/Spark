@@ -11,6 +11,7 @@ import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { useEditMode } from '@/hooks/useEditMode';
 import type { Widget } from '@/store/widgetsSlice';
 import { gray } from '@/styles/palette';
+import { SCROLLBAR_OPTIONS, scrollbarSx } from '@/styles/scrollbar';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
@@ -19,8 +20,6 @@ import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { useMemo } from 'react';
 
 const REVEAL_MS = 200;
-
-const SCROLLBAR_OPTIONS = { scrollbars: { autoHide: 'leave', autoHideDelay: 400 } } as const;
 
 const renderWidget = (widget: Widget) => {
   switch (widget.type) {
@@ -41,16 +40,7 @@ export const PageContent = () => {
   return (
     <Box component='main' sx={{ display: 'flex', height: `calc(100vh - ${BANNER_HEIGHT})` }}>
       <Box
-        sx={{
-          flex: 1,
-          minWidth: 0,
-          '& .os-scrollbar': {
-            '--os-size': '8px',
-            '--os-handle-bg': gray[50],
-            '--os-handle-bg-hover': gray[60],
-            '--os-handle-bg-active': gray[70],
-          },
-        }}
+        sx={{ flex: 1, minWidth: 0, ...scrollbarSx }}
       >
         <OverlayScrollbarsComponent defer options={SCROLLBAR_OPTIONS} style={{ height: '100%' }}>
           <Box sx={{ height: '100%', p: `${TILE_GAP_PX}px` }}>

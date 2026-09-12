@@ -5,6 +5,7 @@ import { usePlaceOrderDialog } from '@/features/widgets/instrument/dialog/hooks/
 import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
 import { ORDER_TYPES, TIME_IN_FORCE_OPTIONS, type OrderType } from '@/store/ordersSlice';
 import { gray, status } from '@/styles/palette';
+import { SCROLLBAR_OPTIONS, SCROLLBAR_OVERHANG_PX, scrollbarSx } from '@/styles/scrollbar';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
@@ -38,7 +39,6 @@ const PAPER_SX = { width: '75vw', minHeight: '75vh' } as const;
 const CONTENT_SX = { display: 'flex', gap: 2, pb: 2 } as const;
 const FORM_FLEX = 55;
 const DETAILS_FLEX = 45;
-const SCROLLBAR_OPTIONS = { scrollbars: { autoHide: 'leave', autoHideDelay: 400 } } as const;
 const divider = <Divider sx={{ borderColor: gray[50] }} />;
 
 /** Caption under a field: gray for hints, red for errors; always rendered so rows keep their height. */
@@ -149,13 +149,13 @@ export const PlaceOrderDialog = ({ productId, side, onClose }: PlaceOrderDialogP
             {productId}
           </Typography>
           {divider}
-          <OverlayScrollbarsComponent
-            defer
-            options={SCROLLBAR_OPTIONS}
-            style={{ flex: '1 1 auto', minHeight: 0 }}
-          >
-            <DetailFields sections={order.sections} columns={DETAIL_COLUMNS} />
-          </OverlayScrollbarsComponent>
+          <Box sx={{ flex: '1 1 auto', minHeight: 0, mr: `-${SCROLLBAR_OVERHANG_PX}px`, ...scrollbarSx }}>
+            <OverlayScrollbarsComponent defer options={SCROLLBAR_OPTIONS} style={{ height: '100%' }}>
+              <Box sx={{ pr: `${SCROLLBAR_OVERHANG_PX}px` }}>
+                <DetailFields sections={order.sections} columns={DETAIL_COLUMNS} />
+              </Box>
+            </OverlayScrollbarsComponent>
+          </Box>
         </Box>
       </Box>
     </ConfirmDialog>

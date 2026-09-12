@@ -19,10 +19,10 @@ export type OrdersRowProps = {
 
 /**
  * Parent grid columns shared by the header and every row:
- * instrument | status | price | fulfilment | timestamp | actions.
- * Actions hug their content; the rest share the width equally.
+ * instrument | status | price | fulfilment | submission time | actions.
+ * Actions hug their buttons; the rest share the width in proportion to their widest values.
  */
-export const ORDERS_COLUMNS = 'repeat(5, 1fr) auto';
+export const ORDERS_COLUMNS = '9fr 20fr 7fr 13fr 13fr auto';
 
 /** Subgrid row spanning every parent column. */
 const rowSx = {
