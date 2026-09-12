@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
+import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
 import { InstrumentSearchDialog } from '@/features/widgets/instrument/dialog/instrumentSearchDialog';
 import { useInstrument } from '@/features/widgets/instrument/hooks/useInstrument';
@@ -47,7 +48,11 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
           />
           <ValuePairRow
             left={{ label: 'Price', value: lastPrice }}
-            right={{ label: 'Type', value: lastSide, labelFirst: false }}
+            right={{
+              label: 'Type',
+              value: <TransactionTypeDisplay side={lastSide} />,
+              labelFirst: false,
+            }}
           />
         </Stack>
       </WidgetFrame>

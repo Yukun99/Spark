@@ -1,7 +1,8 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
 import { useWatchlist } from '@/features/widgets/watchlist/hooks/useWatchlist';
 import { WatchlistDialog } from '@/features/widgets/watchlist/dialog/watchlistDialog';
-import { WatchlistRow } from '@/features/widgets/watchlist/watchlistRow';
+import { WatchlistHeader } from '@/features/widgets/watchlist/watchlistHeader';
+import { WATCHLIST_COLUMNS, WatchlistRow } from '@/features/widgets/watchlist/watchlistRow';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
 import type { WatchlistWidget as WatchlistWidgetModel } from '@/store/widgetsSlice';
@@ -39,7 +40,12 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
                 No instruments yet
               </Typography>
             ) : (
-              productIds.map((productId) => <WatchlistRow key={productId} productId={productId} />)
+              <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: 1 }}>
+                <WatchlistHeader />
+                {productIds.map((productId) => (
+                  <WatchlistRow key={productId} productId={productId} />
+                ))}
+              </Box>
             )}
           </OverlayScrollbarsComponent>
         </Box>

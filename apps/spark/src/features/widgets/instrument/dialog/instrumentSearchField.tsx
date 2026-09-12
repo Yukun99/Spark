@@ -11,12 +11,13 @@ export type InstrumentSearchFieldProps = {
   value: string | null;
   onChange: (productId: string | null) => void;
   autoFocus?: boolean;
-  /** Shorter field with a placeholder instead of a label, for stacked rows. */
-  compact?: boolean;
 };
 
 /** Products whose id starts with the typed text, alphabetical, capped at five. */
-const filterProducts = (options: CoinbaseProduct[], { inputValue }: { inputValue: string }) => {
+export const filterProducts = (
+  options: CoinbaseProduct[],
+  { inputValue }: { inputValue: string },
+) => {
   const query = inputValue.trim().toUpperCase();
   return options.filter((product) => product.id.startsWith(query)).slice(0, MAX_SUGGESTIONS);
 };
@@ -29,7 +30,6 @@ export const InstrumentSearchField = ({
   value,
   onChange,
   autoFocus = false,
-  compact = false,
 }: InstrumentSearchFieldProps) => {
   const selected = products.find((product) => product.id === value) ?? null;
 
@@ -38,7 +38,6 @@ export const InstrumentSearchField = ({
       autoHighlight
       openOnFocus
       fullWidth
-      size={compact ? 'small' : 'medium'}
       options={products}
       loading={loading}
       value={selected}
@@ -51,11 +50,10 @@ export const InstrumentSearchField = ({
           {...params}
           autoFocus={autoFocus}
           onFocus={(event) => event.target.select()}
-          label={compact ? undefined : 'Search instruments'}
-          placeholder={compact ? 'Search instruments' : undefined}
+          label='Search instruments'
           error={error !== null}
           helperText={error ?? undefined}
-          margin={compact ? 'none' : 'dense'}
+          margin='dense'
         />
       )}
     />

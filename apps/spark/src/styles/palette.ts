@@ -25,7 +25,13 @@ export const glow = {
   dark: 'rgba(106, 27, 154, 0.45)',
 } as const;
 
-export const palette = { theme, gray, glow } as const;
+/** Buy/sell chip backgrounds: pale on light mode (navy text), deep on dark mode (cream text). */
+export const trade = {
+  buy: { light: '#A5D6A7', dark: '#2E7D32' },
+  sell: { light: '#EF9A9A', dark: '#C62828' },
+} as const;
+
+export const palette = { theme, gray, glow, trade } as const;
 
 export type ThemeColour = keyof typeof theme;
 export type GrayStep = keyof typeof gray;

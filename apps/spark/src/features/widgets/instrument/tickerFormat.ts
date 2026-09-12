@@ -38,9 +38,6 @@ export const formatPercent = (value: number | undefined) =>
 
 export const formatInteger = (value: number | undefined) => (isValue(value) ? String(value) : EMPTY);
 
-export const formatSide = (side: Ticker['side']) =>
-  side === undefined ? EMPTY : side.charAt(0).toUpperCase() + side.slice(1);
-
 export const formatTime = (value: number | undefined) =>
   isValue(value) ? timeFormat.format(value) : EMPTY;
 

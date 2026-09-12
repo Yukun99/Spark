@@ -4,7 +4,7 @@ import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
 import { addWidget, setWatchlist } from '@/store/widgetsSlice';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -17,7 +17,7 @@ const product = (id: string): CoinbaseProduct => ({
 });
 
 const tickers: Record<string, Partial<Ticker>> = {
-  'BTC-USD': { bid: 100.5, ask: 101 },
+  'BTC-USD': { bid: 100.5, ask: 101, price: 100.75, side: 'buy', receivedAt: 1_000 },
   'ETH-USD': { bid: 10.25, ask: 10.5 },
 };
 
@@ -58,39 +58,83 @@ describe('WatchlistWidget', () => {
     expect(screen.getByText('No instruments yet')).toBeInTheDocument();
   });
 
-  it('lists each instrument with its bid and ask', () => {
+  it('lists each instrument under column headers with bid/ask and price/type', () => {
     renderWatchlist(['BTC-USD', 'ETH-USD']);
     expect(screen.getByText('Watchlist (2)')).toBeInTheDocument();
+    for (const header of ['Instrument', 'Bid / Ask', 'Price / Type']) {
+      expect(screen.getByText(header)).toBeInTheDocument();
+    }
     const rows = screen.getAllByTestId('watchlist-row');
     expect(rows.map((row) => row.textContent)).toEqual([
-      'BTC-USD 100.50 / 101.00',
-      'ETH-USD 10.25 / 10.50',
+      'BTC-USD100.50 / 101.00100.75 / Buy',
+      'ETH-USD10.25 / 10.50-- / --',
     ]);
   });
 
-  it('renames and adds instruments through the edit dialog', async () => {
-    const user = userEvent.setup();
-    const { store, id } = renderWatchlist(['BTC-USD']);
-    store.dispatch(toggleEditMode());
+  it('glows only the row that has received a tick, and not in edit mode', () => {
+    const { store } = renderWatchlist(['BTC-USD', 'ETH-USD']);
+    const [btc, eth] = screen.getAllByTestId('watchlist-row');
+    expect(within(btc).getByTestId('freshness-glow')).toBeInTheDocument();
+    expect(within(eth).queryByTestId('freshness-glow')).not.toBeInTheDocument();
+    act(() => store.dispatch(toggleEditMode()));
+    expect(screen.queryByTestId('freshness-glow')).not.toBeInTheDocument();
+  });
 
+  const openDialog = async (user: ReturnType<typeof userEvent.setup>, productIds: string[]) => {
+    const { store, id } = renderWatchlist(productIds);
+    store.dispatch(toggleEditMode());
     await user.click(await screen.findByRole('button', { name: 'Modify widget' }));
     const dialog = await screen.findByRole('dialog', { name: 'Edit watchlist' });
+    const rows = () => within(dialog).getAllByRole('combobox');
+    const confirm = () => within(dialog).getByRole('button', { name: 'Confirm' });
+    return { store, id, dialog, rows, confirm };
+  };
+
+  it('renames and adds instruments through the edit dialog, always leaving a blank row', async () => {
+    const user = userEvent.setup();
+    const { store, id, dialog, rows, confirm } = await openDialog(user, ['BTC-USD']);
     const nameField = within(dialog).getByLabelText('Name');
     expect(nameField).toHaveValue('Watchlist');
-    expect(within(dialog).getAllByRole('combobox')).toHaveLength(1);
+    expect(rows()).toHaveLength(2);
+    expect(rows()[0]).toHaveValue('BTC-USD');
 
     await user.clear(nameField);
     await user.type(nameField, 'Majors');
-    await user.click(within(dialog).getByRole('button', { name: 'Add instrument' }));
-    const inputs = within(dialog).getAllByRole('combobox');
-    expect(inputs).toHaveLength(2);
-    await user.type(inputs[1], 'eth');
+    await user.type(rows()[1], 'eth');
     await user.click(await screen.findByRole('option', { name: 'ETH-USD' }));
-    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+    expect(rows()).toHaveLength(3);
+    expect(rows()[2]).toHaveValue('');
+    await user.click(confirm());
 
     expect(store.getState().widgets.items.find((item) => item.id === id)).toMatchObject({
       name: 'Majors',
       productIds: ['BTC-USD', 'ETH-USD'],
+    });
+  });
+
+  it('flags unknown text on blur, blocks confirm until fixed, and removes rows', async () => {
+    const user = userEvent.setup();
+    const { store, id, dialog, rows, confirm } = await openDialog(user, ['BTC-USD', 'ETH-USD']);
+    expect(rows()).toHaveLength(3);
+
+    await user.type(rows()[2], 'zzz');
+    expect(confirm()).toBeDisabled();
+    expect(rows()[2]).not.toHaveAttribute('aria-invalid', 'true');
+    await user.tab();
+    expect(rows()[2]).toHaveAttribute('aria-invalid', 'true');
+    expect(confirm()).toBeDisabled();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Remove zzz' }));
+    expect(rows()).toHaveLength(3);
+    expect(rows()[2]).toHaveValue('');
+    expect(confirm()).toBeEnabled();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Remove BTC-USD' }));
+    expect(rows()).toHaveLength(2);
+    expect(rows()[0]).toHaveValue('ETH-USD');
+    await user.click(confirm());
+    expect(store.getState().widgets.items.find((item) => item.id === id)).toMatchObject({
+      productIds: ['ETH-USD'],
     });
   });
 });

@@ -1,10 +1,13 @@
-import { gray, theme as colours } from '@/styles/palette';
+import { STRIP_TEXT_PX, ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
+import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import type { ReactNode } from 'react';
 
 export type ValuePairSide = {
   label: string;
-  value: string;
+  /** Strings go on a chip; anything else (e.g. a trade side chip) renders as given. */
+  value: ReactNode;
   labelFirst?: boolean;
 };
 
@@ -13,26 +16,12 @@ export type ValuePairRowProps = {
   right: ValuePairSide;
 };
 
-const TEXT_PX = 12;
-
 const Label = ({ children }: { children: string }) => (
-  <Typography sx={{ fontSize: TEXT_PX }}>{children}</Typography>
+  <Typography sx={{ fontSize: STRIP_TEXT_PX }}>{children}</Typography>
 );
 
-/** Value on a chip in the card colour so it stands out from the row strip. */
-const Value = ({ children }: { children: string }) => (
-  <Typography
-    sx={(theme) => ({
-      fontSize: TEXT_PX,
-      px: 0.75,
-      borderRadius: '3px',
-      bgcolor: colours.cream,
-      ...theme.applyStyles('dark', { bgcolor: colours.navy }),
-    })}
-  >
-    {children}
-  </Typography>
-);
+const Value = ({ value }: Pick<ValuePairSide, 'value'>) =>
+  typeof value === 'string' ? <ValueChip>{value}</ValueChip> : value;
 
 const Side = ({ label, value, labelFirst = true }: ValuePairSide) => (
   <Box
@@ -48,11 +37,11 @@ const Side = ({ label, value, labelFirst = true }: ValuePairSide) => (
     {labelFirst ? (
       <>
         <Label>{label}</Label>
-        <Value>{value}</Value>
+        <Value value={value} />
       </>
     ) : (
       <>
-        <Value>{value}</Value>
+        <Value value={value} />
         <Label>{label}</Label>
       </>
     )}
@@ -61,19 +50,9 @@ const Side = ({ label, value, labelFirst = true }: ValuePairSide) => (
 
 /** Two label/value pairs side by side on a tinted strip, split by a thin divider. */
 export const ValuePairRow = ({ left, right }: ValuePairRowProps) => (
-  <Box
-    sx={(theme) => ({
-      display: 'flex',
-      alignItems: 'stretch',
-      width: '100%',
-      p: 1,
-      borderRadius: '3px',
-      bgcolor: gray[20],
-      ...theme.applyStyles('dark', { bgcolor: gray[70] }),
-    })}
-  >
+  <ValueStrip sx={{ display: 'flex', alignItems: 'stretch' }}>
     <Side {...left} />
     <Box sx={{ width: '1px', mx: 1, bgcolor: gray[50] }} />
     <Side {...right} />
-  </Box>
+  </ValueStrip>
 );

@@ -1,11 +1,7 @@
+import type { TradeSide } from '@/connections/coinbase';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
-import {
-  formatPrice,
-  formatSide,
-  formatUpdatedAt,
-  tickerTime,
-} from '@/features/widgets/instrument/tickerFormat';
+import { formatPrice, formatUpdatedAt, tickerTime } from '@/features/widgets/instrument/tickerFormat';
 import type { InstrumentWidget } from '@/store/widgetsSlice';
 import { useCallback, useState } from 'react';
 
@@ -15,7 +11,7 @@ export type UseInstrumentResult = {
   bid: string;
   ask: string;
   lastPrice: string;
-  lastSide: string;
+  lastSide: TradeSide | undefined;
   updatedAt: string;
   tickAt: number | undefined;
   dialog: InstrumentDialogKind;
@@ -52,7 +48,7 @@ export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => 
     bid: formatPrice(ticker?.bid),
     ask: formatPrice(ticker?.ask),
     lastPrice: formatPrice(ticker?.price),
-    lastSide: formatSide(ticker?.side),
+    lastSide: ticker?.side,
     updatedAt: formatUpdatedAt(ticker),
     tickAt: tickerTime(ticker),
     dialog,

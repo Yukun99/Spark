@@ -1,10 +1,8 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
-import { InstrumentSearchField } from '@/features/widgets/instrument/dialog/instrumentSearchField';
 import { useWatchlistDialog } from '@/features/widgets/watchlist/dialog/hooks/useWatchlistDialog';
+import { WatchlistRowField } from '@/features/widgets/watchlist/dialog/watchlistRowField';
 import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';
 import { gray } from '@/styles/palette';
-import AddIcon from '@mui/icons-material/Add';
-import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -22,8 +20,20 @@ const CONTENT_SX = { display: 'flex', flexDirection: 'column', overflow: 'hidden
 
 /** Mounted only while open, so the widget's name and instruments seed the draft. */
 export const WatchlistDialog = ({ widget, onConfirm, onCancel }: WatchlistDialogProps) => {
-  const { products, loading, error, name, setName, rows, setRow, addRow, canConfirm, confirm } =
-    useWatchlistDialog({ widget, onConfirm });
+  const {
+    products,
+    loading,
+    error,
+    name,
+    setName,
+    rows,
+    setRowInput,
+    selectRow,
+    blurRow,
+    removeRow,
+    canConfirm,
+    confirm,
+  } = useWatchlistDialog({ widget, onConfirm });
 
   return (
     <ConfirmDialog
@@ -52,33 +62,18 @@ export const WatchlistDialog = ({ widget, onConfirm, onCancel }: WatchlistDialog
       >
         <Stack spacing={0.5}>
           {rows.map((row, index) => (
-            <InstrumentSearchField
-              key={index}
-              compact
+            <WatchlistRowField
+              key={row.key}
+              row={row}
               products={products}
               loading={loading}
               error={error}
-              value={row}
-              onChange={(productId) => setRow(index, productId)}
+              onInput={(input) => setRowInput(index, input)}
+              onSelect={(productId) => selectRow(index, productId)}
+              onBlur={() => blurRow(index)}
+              onRemove={() => removeRow(index)}
             />
           ))}
-          <Box
-            role='button'
-            aria-label='Add instrument'
-            onClick={addRow}
-            sx={(theme) => ({
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              py: 1,
-              borderRadius: '3px',
-              cursor: 'pointer',
-              bgcolor: gray[20],
-              ...theme.applyStyles('dark', { bgcolor: gray[80] }),
-            })}
-          >
-            <AddIcon />
-          </Box>
         </Stack>
       </OverlayScrollbarsComponent>
     </ConfirmDialog>

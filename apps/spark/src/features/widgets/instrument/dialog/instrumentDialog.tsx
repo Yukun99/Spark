@@ -1,4 +1,5 @@
 import { ClearButton } from '@/components/buttons/clearButton';
+import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { useInstrumentDialog } from '@/features/widgets/instrument/dialog/hooks/useInstrumentDialog';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
 import { gray } from '@/styles/palette';
@@ -16,7 +17,7 @@ export type InstrumentDialogProps = {
 
 const FIELD_FONT_PX = 14;
 const FIELD_WIDTH_PX = 250;
-const FIELD_HEIGHT_PX = 52;
+const FIELD_HEIGHT_PX = 60;
 const LABEL_OPACITY = 0.6;
 
 const divider = <Divider sx={{ borderColor: gray[50] }} />;
@@ -71,17 +72,25 @@ export const InstrumentDialog = ({ productId, onClose }: InstrumentDialogProps) 
                   >
                     {field.label}
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: FIELD_FONT_PX,
-                      lineHeight: 1,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {field.value}
-                  </Typography>
+                  {'side' in field ? (
+                    <TransactionTypeDisplay
+                      side={field.side}
+                      fontSize={FIELD_FONT_PX}
+                      sx={{ alignSelf: 'flex-start' }}
+                    />
+                  ) : (
+                    <Typography
+                      sx={{
+                        fontSize: FIELD_FONT_PX,
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {field.value}
+                    </Typography>
+                  )}
                 </Box>
               ))}
             </Box>

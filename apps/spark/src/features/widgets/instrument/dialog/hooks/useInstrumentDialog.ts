@@ -1,10 +1,9 @@
-import { coinbaseFeed, type Ticker } from '@/connections/coinbase';
+import { coinbaseFeed, type Ticker, type TradeSide } from '@/connections/coinbase';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import {
   formatInteger,
   formatPercent,
   formatPrice,
-  formatSide,
   formatSize,
   formatTime,
   formatUpdatedAt,
@@ -12,7 +11,9 @@ import {
 } from '@/features/widgets/instrument/tickerFormat';
 import { useEffect, useMemo } from 'react';
 
-export type DetailField = { label: string; value: string };
+export type DetailField =
+  | { label: string; value: string }
+  | { label: string; side: TradeSide | undefined };
 
 export type DetailSection = { id: string; fields: DetailField[] };
 
@@ -44,7 +45,7 @@ const buildSections = (ticker: Ticker | undefined): DetailSection[] => {
       fields: [
         { label: 'Last Trade Price', value: formatPrice(ticker?.price) },
         { label: 'Last Trade Amount', value: formatSize(ticker?.lastSize) },
-        { label: 'Transaction Type', value: formatSide(ticker?.side) },
+        { label: 'Transaction Type', side: ticker?.side },
         { label: 'Last Trade ID', value: formatInteger(ticker?.tradeId) },
         { label: 'Last Trade Time', value: formatTime(tickerTime(ticker)) },
       ],
