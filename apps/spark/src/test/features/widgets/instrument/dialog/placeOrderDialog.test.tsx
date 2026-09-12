@@ -178,7 +178,7 @@ describe('PlaceOrderDialog', () => {
     expect(screen.getByRole('button', { name: 'SELL' })).toBeDisabled();
     await user.clear(field('Size'));
     await user.type(field('Size'), '2');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(confirmButton());
 
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(store.getState().orders.items).toHaveLength(count);

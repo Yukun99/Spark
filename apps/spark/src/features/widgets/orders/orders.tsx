@@ -17,8 +17,21 @@ export type OrdersWidgetProps = {
 
 /** Placed orders as a table, newest first. */
 export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
-  const { title, rows, deleting, orderForm, openDelete, openCopy, openEdit, closeDialog, confirmDelete } =
-    useOrdersWidget(widget);
+  const {
+    title,
+    rows,
+    deleting,
+    cancelling,
+    selected,
+    orderForm,
+    openDelete,
+    openCopy,
+    openEdit,
+    openCancel,
+    closeDialog,
+    confirmDelete,
+    confirmCancel,
+  } = useOrdersWidget(widget);
 
   return (
     <>
@@ -33,7 +46,13 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
             <Box sx={{ display: 'grid', gridTemplateColumns: ORDERS_COLUMNS, rowGap: 1 }}>
               <OrdersHeader />
               {rows.map((row) => (
-                <OrdersRow key={row.key} row={row} onCopy={openCopy} onEdit={openEdit} />
+                <OrdersRow
+                  key={row.key}
+                  row={row}
+                  onCopy={openCopy}
+                  onEdit={openEdit}
+                  onCancel={openCancel}
+                />
               ))}
             </Box>
           )}
@@ -42,11 +61,19 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
       <ConfirmDialog
         open={deleting}
         title='Delete widget?'
-        confirmLabel='Delete'
         onConfirm={confirmDelete}
         onCancel={closeDialog}
       >
         The widget will be removed from the grid.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={cancelling}
+        title='Cancel order?'
+        onConfirm={confirmCancel}
+        onCancel={closeDialog}
+      >
+        {selected !== null &&
+          `The ${selected.side} order for ${selected.productId} will be cancelled. Fulfilled amount will not be affected.`}
       </ConfirmDialog>
       {orderForm !== null && <PlaceOrderDialog {...orderForm} onClose={closeDialog} />}
     </>

@@ -67,7 +67,6 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
       <ConfirmDialog
         open={dialog === 'delete'}
         title='Delete widget?'
-        confirmLabel='Delete'
         onConfirm={confirmDelete}
         onCancel={closeDialog}
       >

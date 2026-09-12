@@ -31,7 +31,7 @@ export type OrderRow = {
   order: Order;
 };
 
-type OrdersDialogKind = 'delete' | 'copy' | 'edit' | null;
+type OrdersDialogKind = 'delete' | 'copy' | 'edit' | 'cancel' | null;
 
 /** Props for the order form the widget currently shows, minus its close handler. */
 export type OrderFormProps = Omit<PlaceOrderDialogProps, 'onClose'>;
@@ -40,13 +40,18 @@ export type UseOrdersWidgetResult = {
   title: string;
   rows: OrderRow[];
   deleting: boolean;
+  cancelling: boolean;
+  /** Last order an action was opened on; stays set so a closing dialog keeps its text. */
+  selected: Order | null;
   /** Set while copying or editing an order. */
   orderForm: OrderFormProps | null;
   openDelete: () => void;
   openCopy: (row: OrderRow) => void;
   openEdit: (row: OrderRow) => void;
+  openCancel: (row: OrderRow) => void;
   closeDialog: () => void;
   confirmDelete: () => void;
+  confirmCancel: () => void;
 };
 
 const glowAt = (order: Order) => {
@@ -83,7 +88,7 @@ const orderForm = (kind: OrdersDialogKind, order: Order): OrderFormProps | null 
 };
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
-  const { orders } = useOrders();
+  const { orders, cancelOrder } = useOrders();
   const { removeWidget } = useWidgets();
   const [dialog, setDialog] = useState<OrdersDialogKind>(null);
   const [selected, setSelected] = useState<Order | null>(null);
@@ -97,11 +102,19 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     setSelected(row.order);
     setDialog('edit');
   }, []);
+  const openCancel = useCallback((row: OrderRow) => {
+    setSelected(row.order);
+    setDialog('cancel');
+  }, []);
   const closeDialog = useCallback(() => setDialog(null), []);
   const confirmDelete = useCallback(() => {
     setDialog(null);
     removeWidget(widget.id);
   }, [removeWidget, widget.id]);
+  const confirmCancel = useCallback(() => {
+    setDialog(null);
+    if (selected !== null) cancelOrder(selected.id);
+  }, [cancelOrder, selected]);
 
   const rows = useMemo(() => [...orders].reverse().map(orderRow), [orders]);
   const form = useMemo(
@@ -113,11 +126,15 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     title: 'Orders',
     rows,
     deleting: dialog === 'delete',
+    cancelling: dialog === 'cancel',
+    selected,
     orderForm: form,
     openDelete,
     openCopy,
     openEdit,
+    openCancel,
     closeDialog,
     confirmDelete,
+    confirmCancel,
   };
 };

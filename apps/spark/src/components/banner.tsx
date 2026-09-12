@@ -24,7 +24,7 @@ export const Banner = () => (
   >
     <Typography
       component='h1'
-      sx={{ fontFamily: fonts.display, fontSize: 60, fontWeight: 500, letterSpacing: '0.08em' }}
+      sx={{ fontFamily: fonts.display, fontSize: 30, fontWeight: 500, letterSpacing: '0.08em' }}
     >
       Trading App
     </Typography>

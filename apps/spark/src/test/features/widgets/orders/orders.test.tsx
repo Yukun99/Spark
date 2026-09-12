@@ -3,7 +3,7 @@ import { OrdersWidget } from '@/features/widgets/orders/orders';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { addOrder } from '@/store/ordersSlice';
 import { createAppStore } from '@/store/store';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -152,19 +152,52 @@ describe('OrdersWidget', () => {
     expect(bars).toContain('0');
   });
 
-  it('has copy, modify and cancel actions on every row, modify only while the order is open', () => {
+  it('has copy, modify and cancel actions on every row, modify and cancel only while open', () => {
     const store = renderOrders();
     const orders = store.getState().orders.items;
     for (const name of ['Copy order', 'Modify order', 'Cancel order']) {
       expect(screen.getAllByRole('button', { name })).toHaveLength(orders.length);
     }
     const open = orders.filter((order) => ['pending', 'fulfilling'].includes(order.status));
-    const enabled = screen
-      .getAllByRole('button', { name: 'Modify order' })
-      .filter((button) => !(button as HTMLButtonElement).disabled);
-    expect(enabled).toHaveLength(open.length);
+    for (const name of ['Modify order', 'Cancel order']) {
+      const enabled = screen
+        .getAllByRole('button', { name })
+        .filter((button) => !(button as HTMLButtonElement).disabled);
+      expect(enabled).toHaveLength(open.length);
+    }
+    expect(screen.getAllByRole('button', { name: 'Copy order' }).some((b) => (b as HTMLButtonElement).disabled)).toBe(false);
     expect(open.length).toBeGreaterThan(0);
     expect(open.length).toBeLessThan(orders.length);
+  });
+
+  it('cancels an order after confirmation, keeping it if the user backs out', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders();
+    const source = store.getState().orders.items.find((order) => order.productId === 'ETH-USD')!;
+    const row = screen.getAllByTestId('order-row').find((item) => item.textContent?.startsWith('ETH-USD'))!;
+
+    await user.click(within(row).getByRole('button', { name: 'Cancel order' }));
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Cancel order?');
+    expect(dialog).toHaveTextContent('sell order for ETH-USD');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(store.getState().orders.items.find((order) => order.id === source.id)).toEqual(source);
+
+    await user.click(within(row).getByRole('button', { name: 'Cancel order' }));
+    expect(rowGlows()).not.toContain(true);
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirm' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(store.getState().orders.items.find((order) => order.id === source.id)).toEqual({
+      ...source,
+      status: 'cancelled',
+      updatedAt: expect.any(Number),
+    });
+    expect(row).toHaveTextContent('cancelled');
+    expect(row).toHaveTextContent('0.75 / 2');
+    expect(within(row).getByRole('button', { name: 'Cancel order' })).toBeDisabled();
+    expect(within(row).getByRole('button', { name: 'Modify order' })).toBeDisabled();
+    expect(rowGlows().filter(Boolean)).toHaveLength(1);
   });
 
   it('modifies an order in place, offering the unfilled size and keeping the fill', async () => {
@@ -190,7 +223,7 @@ describe('OrdersWidget', () => {
 
     const count = store.getState().orders.items.length;
     expect(rowGlows()).not.toContain(true);
-    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(store.getState().orders.items).toHaveLength(count);
     expect(store.getState().orders.items.find((order) => order.id === source.id)).toEqual({
@@ -248,7 +281,7 @@ describe('OrdersWidget', () => {
     expect(await screen.findByRole('button', { name: 'Delete widget' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Modify widget' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete widget' }));
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
     expect(store.getState().widgets.items.some((widget) => widget.type === 'orders')).toBe(false);
   });
 });

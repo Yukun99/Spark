@@ -17,6 +17,7 @@ export type OrdersRowProps = {
   row: OrderRow;
   onCopy: (row: OrderRow) => void;
   onEdit: (row: OrderRow) => void;
+  onCancel: (row: OrderRow) => void;
 };
 
 /**
@@ -111,7 +112,7 @@ export const OrdersHeader = () => (
 );
 
 /** One order on a tinted strip; its cells sit on the parent grid so columns line up. */
-export const OrdersRow = ({ row, onCopy, onEdit }: OrdersRowProps) => (
+export const OrdersRow = ({ row, onCopy, onEdit, onCancel }: OrdersRowProps) => (
   <ValueStrip data-testid='order-row' sx={{ ...rowSx, position: 'relative', overflow: 'hidden' }}>
     {row.glowAt !== undefined && <FreshnessGlow tickAt={row.glowAt} />}
     <ValueChip sx={chipSx}>{row.instrument}</ValueChip>
@@ -146,7 +147,7 @@ export const OrdersRow = ({ row, onCopy, onEdit }: OrdersRowProps) => (
       <ActionButton label='Modify order' disabled={!row.open} onClick={() => onEdit(row)}>
         <EditIcon sx={actionIconSx} />
       </ActionButton>
-      <ActionButton label='Cancel order'>
+      <ActionButton label='Cancel order' disabled={!row.open} onClick={() => onCancel(row)}>
         <CloseIcon sx={actionIconSx} />
       </ActionButton>
     </Stack>

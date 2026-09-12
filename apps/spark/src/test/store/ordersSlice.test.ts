@@ -1,4 +1,4 @@
-import { addOrder, ordersReducer, updateOrder, type OrderDraft } from '@/store/ordersSlice';
+import { addOrder, cancelOrder, ordersReducer, updateOrder, type OrderDraft } from '@/store/ordersSlice';
 
 const draft: OrderDraft = {
   productId: 'BTC-USD',
@@ -69,6 +69,27 @@ describe('ordersSlice', () => {
       expect(ordersReducer(initial, updateOrder({ id: final.id, changes }))).toBe(initial);
     }
     expect(ordersReducer(initial, updateOrder({ id: 'missing', changes }))).toBe(initial);
+    vi.useRealTimers();
+  });
+
+  it('cancels only open orders, keeping what was filled', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-12T12:00:00Z'));
+    const initial = ordersReducer(undefined, { type: 'init' });
+    for (const status of ['pending', 'fulfilling'] as const) {
+      const open = initial.items.find((order) => order.status === status)!;
+      const cancelled = ordersReducer(initial, cancelOrder(open.id)).items.find((o) => o.id === open.id);
+      expect(cancelled).toEqual({
+        ...open,
+        status: 'cancelled',
+        updatedAt: Date.parse('2026-09-12T12:00:00Z'),
+      });
+    }
+    for (const status of ['fulfilled', 'cancelled'] as const) {
+      const final = initial.items.find((order) => order.status === status)!;
+      expect(ordersReducer(initial, cancelOrder(final.id))).toBe(initial);
+    }
+    expect(ordersReducer(initial, cancelOrder('missing'))).toBe(initial);
     vi.useRealTimers();
   });
 });

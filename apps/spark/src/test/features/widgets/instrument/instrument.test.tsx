@@ -145,7 +145,7 @@ describe('InstrumentWidget', () => {
     expect(screen.queryByText('100.50')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Delete widget' }));
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
     expect(store.getState().widgets.items.map((widget) => widget.id)).toEqual(['eth', 'common', 'orders']);
   });
 });

@@ -10,7 +10,6 @@ import type { ReactNode } from 'react';
 export type ConfirmDialogProps = {
   open: boolean;
   title: string;
-  confirmLabel?: string;
   confirmDisabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -28,7 +27,6 @@ const toArray = (sx: SxProps<Theme> | undefined) => (Array.isArray(sx) ? sx : [s
 export const ConfirmDialog = ({
   open,
   title,
-  confirmLabel = 'Confirm',
   confirmDisabled = false,
   onConfirm,
   onCancel,
@@ -53,7 +51,7 @@ export const ConfirmDialog = ({
     <DialogActions sx={[{ px: 3, pb: 3, gap: 1 }, ...toArray(actionsSx)]}>
       <OutlinedButton onClick={onCancel}>Cancel</OutlinedButton>
       <FilledButton onClick={onConfirm} disabled={confirmDisabled}>
-        {confirmLabel}
+        Confirm
       </FilledButton>
     </DialogActions>
   </Dialog>

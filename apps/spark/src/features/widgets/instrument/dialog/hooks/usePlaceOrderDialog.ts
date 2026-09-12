@@ -27,7 +27,6 @@ export type UsePlaceOrderDialogParams = {
 
 export type UsePlaceOrderDialogResult = {
   title: string;
-  confirmLabel: string;
   /** True while modifying an order: its side cannot change. */
   sideLocked: boolean;
   side: TradeSide;
@@ -121,7 +120,6 @@ export const usePlaceOrderDialog = ({
 
   return {
     title: editing === undefined ? 'Place Order' : 'Modify Order',
-    confirmLabel: editing === undefined ? 'Confirm' : 'Save',
     sideLocked: editing !== undefined,
     side,
     setSide,

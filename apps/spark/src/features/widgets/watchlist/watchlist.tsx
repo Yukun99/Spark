@@ -56,7 +56,6 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
       <ConfirmDialog
         open={dialog === 'delete'}
         title='Delete widget?'
-        confirmLabel='Delete'
         onConfirm={confirmDelete}
         onCancel={closeDialog}
       >

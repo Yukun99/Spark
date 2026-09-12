@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   addOrder,
+  cancelOrder,
   updateOrder,
   type Order,
   type OrderChanges,
@@ -12,6 +13,7 @@ export type UseOrdersResult = {
   orders: Order[];
   placeOrder: (draft: OrderDraft) => void;
   modifyOrder: (id: string, changes: OrderChanges) => void;
+  cancelOrder: (id: string) => void;
 };
 
 export const useOrders = (): UseOrdersResult => {
@@ -23,5 +25,7 @@ export const useOrders = (): UseOrdersResult => {
     [dispatch],
   );
 
-  return { orders, placeOrder, modifyOrder };
+  const cancel = useCallback((id: string) => dispatch(cancelOrder(id)), [dispatch]);
+
+  return { orders, placeOrder, modifyOrder, cancelOrder: cancel };
 };

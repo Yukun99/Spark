@@ -103,7 +103,6 @@ export const PlaceOrderDialog = ({
     <ConfirmDialog
       open
       title={order.title}
-      confirmLabel={order.confirmLabel}
       maxWidth={false}
       paperSx={PAPER_SX}
       confirmDisabled={!order.canConfirm}

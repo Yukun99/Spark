@@ -105,8 +105,16 @@ export const ordersSlice = createSlice({
       },
       prepare: (payload: UpdateOrderPayload) => ({ payload: { ...payload, updatedAt: Date.now() } }),
     },
+    cancelOrder: {
+      reducer: (state, action: PayloadAction<{ id: string; updatedAt: number }>) => {
+        const { id, updatedAt } = action.payload;
+        const order = state.items.find((item) => item.id === id);
+        if (order !== undefined && isOrderOpen(order)) Object.assign(order, { status: 'cancelled', updatedAt });
+      },
+      prepare: (id: string) => ({ payload: { id, updatedAt: Date.now() } }),
+    },
   },
 });
 
-export const { addOrder, updateOrder } = ordersSlice.actions;
+export const { addOrder, updateOrder, cancelOrder } = ordersSlice.actions;
 export const ordersReducer = ordersSlice.reducer;
