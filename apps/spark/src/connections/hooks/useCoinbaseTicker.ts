@@ -1,13 +1,9 @@
 import { coinbaseFeed, type Ticker } from '@/connections/coinbase';
-import { useUpdateInterval } from '@/hooks/useUpdateInterval';
-import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useCoinbaseSettingsSync } from '@/connections/hooks/useCoinbaseSettingsSync';
+import { useCallback, useSyncExternalStore } from 'react';
 
 export const useCoinbaseTicker = (productId: string): Ticker | undefined => {
-  const { updateIntervalMs } = useUpdateInterval();
-
-  useEffect(() => {
-    coinbaseFeed.setUpdateInterval(updateIntervalMs);
-  }, [updateIntervalMs]);
+  useCoinbaseSettingsSync();
 
   const subscribe = useCallback(
     (listener: () => void) => coinbaseFeed.subscribe(productId, listener),

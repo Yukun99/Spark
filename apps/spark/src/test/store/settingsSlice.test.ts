@@ -2,6 +2,7 @@ import {
   cycleUpdateInterval,
   setUpdateInterval,
   settingsReducer,
+  toggleStreaming,
   UPDATE_INTERVAL_OPTIONS_MS,
 } from '@/store/settingsSlice';
 
@@ -22,5 +23,13 @@ describe('settingsSlice', () => {
       cycleUpdateInterval(),
     );
     expect(state.updateIntervalMs).toBe(250);
+  });
+
+  it('starts streaming and toggles it off and on', () => {
+    const initial = settingsReducer(undefined, { type: 'init' });
+    expect(initial.streaming).toBe(true);
+    const off = settingsReducer(initial, toggleStreaming());
+    expect(off.streaming).toBe(false);
+    expect(settingsReducer(off, toggleStreaming()).streaming).toBe(true);
   });
 });

@@ -18,11 +18,11 @@ const Heading = ({ children, align = 'start' }: HeadingProps) => (
 export const WatchlistHeader = () => (
   <Box sx={{ ...watchlistRowSx, px: 1 }}>
     <Heading>Instrument</Heading>
-    <Heading align='end'>Bid</Heading>
+    <Heading align='end'>Bid Price</Heading>
     <WatchlistDivider />
-    <Heading>Ask</Heading>
-    <Heading align='end'>Price</Heading>
+    <Heading>Ask Price</Heading>
+    <Heading align='end'>Last Price</Heading>
     <WatchlistDivider />
-    <Heading>Size</Heading>
+    <Heading>Last Size</Heading>
   </Box>
 );

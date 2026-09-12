@@ -127,6 +127,29 @@ describe('coinbaseFeed', () => {
     unsubscribeBtc();
     unsubscribeEth();
   });
+
+  it('unsubscribes everything while streaming is off and resubscribes when it is back on', () => {
+    const listener = vi.fn();
+    const unsubscribe = coinbaseFeed.subscribe('BTC-USD', listener);
+    tick(1);
+    const send = FakeSocket.instance?.send;
+    send?.mockClear();
+
+    coinbaseFeed.setStreaming(false);
+    expect(JSON.parse(send?.mock.calls[0][0])).toMatchObject({
+      type: 'unsubscribe',
+      product_ids: ['BTC-USD'],
+    });
+    expect(coinbaseFeed.getTicker('BTC-USD')?.bid).toBe(1);
+
+    coinbaseFeed.setStreaming(true);
+    expect(JSON.parse(send?.mock.calls[1][0])).toMatchObject({
+      type: 'subscribe',
+      product_ids: ['BTC-USD'],
+    });
+
+    unsubscribe();
+  });
 });
 
 describe('getCoinbaseProducts', () => {

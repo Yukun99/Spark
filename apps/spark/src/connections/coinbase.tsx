@@ -122,6 +122,7 @@ class CoinbaseFeed {
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private updateIntervalMs = DEFAULT_UPDATE_INTERVAL_MS;
   private focusedProductId: string | null = null;
+  private streaming = true;
   private reconnectDelay = RECONNECT_MIN_MS;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -141,14 +142,29 @@ class CoinbaseFeed {
    */
   setFocus = (productId: string | null) => {
     if (productId === this.focusedProductId) return;
+    this.updateActive(() => {
+      this.focusedProductId = productId;
+    });
+  };
+
+  /** While streaming is off, no product stays subscribed on the socket; all resume when it is on. */
+  setStreaming = (streaming: boolean) => {
+    if (streaming === this.streaming) return;
+    this.updateActive(() => {
+      this.streaming = streaming;
+    });
+  };
+
+  /** Applies a change to what counts as active and sends only the socket subscription diff. */
+  private updateActive(change: () => void) {
     const before = this.activeProductIds();
-    this.focusedProductId = productId;
+    change();
     const after = new Set(this.activeProductIds());
     const paused = before.filter((id) => !after.has(id));
     const resumed = [...after].filter((id) => !before.includes(id));
     if (paused.length > 0) this.send(subscriptionMessage('unsubscribe', paused));
     if (resumed.length > 0) this.send(subscriptionMessage('subscribe', resumed));
-  };
+  }
 
   subscribe = (productId: string, listener: Listener): (() => void) => {
     let listeners = this.listeners.get(productId);
@@ -170,6 +186,7 @@ class CoinbaseFeed {
   };
 
   private isActive(productId: string) {
+    if (!this.streaming) return false;
     return this.focusedProductId === null || this.focusedProductId === productId;
   }
 

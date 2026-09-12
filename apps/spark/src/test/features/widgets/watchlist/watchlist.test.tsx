@@ -27,6 +27,7 @@ vi.mock('@/connections/coinbase', () => ({
     subscribe: () => () => undefined,
     getTicker: (productId: string) => tickers[productId],
     setUpdateInterval: () => undefined,
+    setStreaming: () => undefined,
     setFocus: () => undefined,
   },
   getCoinbaseProducts: () => Promise.resolve(['BTC-USD', 'ETH-USD', 'SOL-USD'].map(product)),
@@ -64,7 +65,7 @@ describe('WatchlistWidget', () => {
     const refreshed = `Last Refresh: ${formatTime(1_000)}`;
     expect(screen.getByText('Watchlist (2)')).toBeInTheDocument();
     expect(screen.getAllByText(refreshed)).toHaveLength(2);
-    for (const header of ['Instrument', 'Bid', 'Ask', 'Price', 'Size']) {
+    for (const header of ['Instrument', 'Bid Price', 'Ask Price', 'Last Price', 'Last Size']) {
       expect(screen.getByText(header)).toBeInTheDocument();
     }
     const rows = screen.getAllByTestId('watchlist-row');

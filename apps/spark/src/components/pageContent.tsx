@@ -1,12 +1,13 @@
 import { AddWidgetButton } from '@/features/edit/addWidgetButton';
 import { EditModeButton } from '@/features/edit/editModeButton';
+import { StreamingButton } from '@/features/edit/streamingButton';
 import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
+import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
 import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { useEditMode } from '@/hooks/useEditMode';
-import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { Widget } from '@/store/widgetsSlice';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
@@ -55,7 +56,16 @@ export const PageContent = () => {
         </OverlayScrollbarsComponent>
       </Box>
       <Divider orientation='vertical' flexItem sx={{ borderColor: gray[50] }} />
-      <Stack component='aside' sx={{ p: `${TILE_GAP_PX}px`, alignItems: 'center' }}>
+      <Stack
+        component='aside'
+        sx={{
+          paddingX: `${TILE_GAP_PX}px`,
+          paddingY: `${TILE_GAP_PX * 2}px`,
+          alignItems: 'center',
+          gap: `${TILE_GAP_PX}px`,
+        }}
+      >
+        <StreamingButton />
         <EditModeButton />
         <Collapse in={editMode} timeout={REVEAL_MS}>
           <Stack

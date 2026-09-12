@@ -44,13 +44,13 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{widget.productId}</WidgetLabel>
         <Stack spacing={1}>
           <ValuePairRow
-            left={{ label: 'Bid', value: bid }}
-            right={{ label: 'Ask', value: ask }}
+            left={{ label: 'Bid Price', value: bid }}
+            right={{ label: 'Ask Price', value: ask }}
           />
           <ValuePairRow
-            left={{ label: 'Price', value: lastPrice }}
+            left={{ label: 'Last Price', value: lastPrice }}
             right={{
-              label: 'Size',
+              label: 'Last Size',
               value: <TransactionTypeDisplay side={lastSide} label={lastSize} />,
             }}
           />

@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type SettingsState = {
   updateIntervalMs: number;
+  streaming: boolean;
 };
 
 export const UPDATE_INTERVAL_OPTIONS_MS = [250, 500, 1000, 2000, 5000, 10000] as const;
@@ -10,6 +11,7 @@ export const DEFAULT_UPDATE_INTERVAL_MS = 1000;
 
 const initialState: SettingsState = {
   updateIntervalMs: DEFAULT_UPDATE_INTERVAL_MS,
+  streaming: true,
 };
 
 export const settingsSlice = createSlice({
@@ -26,8 +28,11 @@ export const settingsSlice = createSlice({
       state.updateIntervalMs =
         UPDATE_INTERVAL_OPTIONS_MS[(index + 1) % UPDATE_INTERVAL_OPTIONS_MS.length];
     },
+    toggleStreaming: (state) => {
+      state.streaming = !state.streaming;
+    },
   },
 });
 
-export const { setUpdateInterval, cycleUpdateInterval } = settingsSlice.actions;
+export const { setUpdateInterval, cycleUpdateInterval, toggleStreaming } = settingsSlice.actions;
 export const settingsReducer = settingsSlice.reducer;

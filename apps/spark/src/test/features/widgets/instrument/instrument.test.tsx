@@ -33,6 +33,7 @@ vi.mock('@/connections/coinbase', () => ({
     subscribe: () => () => undefined,
     getTicker: () => ticker,
     setUpdateInterval: () => undefined,
+    setStreaming: () => undefined,
     setFocus: (productId: string | null) => setFocus(productId),
   },
   getCoinbaseProducts: () => Promise.resolve([]),
@@ -58,9 +59,9 @@ describe('InstrumentWidget', () => {
     expect(screen.getByText('BTC-USD')).toBeInTheDocument();
     expect(screen.getByText('100.50')).toBeInTheDocument();
     expect(screen.getByText('101.00')).toBeInTheDocument();
-    expect(screen.getByText('Price')).toBeInTheDocument();
+    expect(screen.getByText('Last Price')).toBeInTheDocument();
     expect(screen.getByText('100.70')).toBeInTheDocument();
-    expect(screen.getByText('Size')).toBeInTheDocument();
+    expect(screen.getByText('Last Size')).toBeInTheDocument();
     expect(screen.getByText('0.01')).toHaveAttribute('data-side', 'buy');
   });
 
