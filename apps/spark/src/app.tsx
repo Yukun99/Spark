@@ -1,8 +1,9 @@
-import { ColorModeToggle } from '@/components/buttons/colorModeToggle';
-import Box from '@mui/material/Box';
+import { Banner } from '@/components/banner';
+import { PageContent } from '@/components/pageContent';
 
 export const App = () => (
-  <Box component='main' sx={{ p: 2 }}>
-    <ColorModeToggle />
-  </Box>
+  <>
+    <Banner />
+    <PageContent />
+  </>
 );

@@ -1,10 +1,12 @@
 import { App } from '@/app';
-import { theme } from '@/style/theme';
+import { store } from '@/store/store';
+import { theme } from '@/styles/theme';
 import CssBaseline from '@mui/material/CssBaseline';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { ThemeProvider } from '@mui/material/styles';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
 
 const container = document.getElementById('root');
 
@@ -15,9 +17,11 @@ if (!container) {
 createRoot(container).render(
   <StrictMode>
     <InitColorSchemeScript />
-    <ThemeProvider theme={theme} defaultMode='system'>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider theme={theme} defaultMode='system'>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    </Provider>
   </StrictMode>,
 );

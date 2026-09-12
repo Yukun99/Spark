@@ -1,7 +1,8 @@
-import { theme as colours } from '@/style/palette';
+import { gray, theme as colours } from '@/styles/palette';
 import { createTheme } from '@mui/material/styles';
 
 const primary = { main: colours.purple, contrastText: colours.cream };
+const common = { black: colours.black, white: colours.white };
 
 export const theme = createTheme({
   cssVariables: { colorSchemeSelector: 'data-mui-color-scheme' },
@@ -9,14 +10,16 @@ export const theme = createTheme({
     light: {
       palette: {
         primary,
-        background: { default: colours.cream },
+        common,
+        background: { default: gray[10] },
         text: { primary: colours.navy },
       },
     },
     dark: {
       palette: {
         primary,
-        background: { default: colours.navy },
+        common,
+        background: { default: gray[80] },
         text: { primary: colours.cream },
       },
     },
@@ -42,6 +45,12 @@ export const theme = createTheme({
           color: colours.cream,
           '&:hover': { backgroundColor: colours.purple },
         },
+        text: ({ theme }) => ({
+          backgroundColor: 'transparent',
+          color: colours.navy,
+          '&:hover': { backgroundColor: 'transparent' },
+          ...theme.applyStyles('dark', { color: colours.cream }),
+        }),
       },
     },
   },

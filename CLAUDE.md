@@ -25,14 +25,30 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 
 ## Colours And Theming
 
-- Every colour in the app comes from `apps/spark/src/style/palette.ts`. Never hardcode a hex/rgba
+- Every colour in the app comes from `apps/spark/src/styles/palette.ts`. Never hardcode a hex/rgba
   in a component or style; add new colours to `palette.ts` first, then reference them.
-- Light/dark mode lives in `apps/spark/src/style/theme.ts` (MUI `colorSchemes`). Defaults to the
+- Light/dark mode lives in `apps/spark/src/styles/theme.ts` (MUI `colorSchemes`). Defaults to the
   OS preference; `useColorMode` (`src/hooks/useColorMode.ts`) toggles it and MUI persists the
-  choice in localStorage. Page background: cream in light, navy in dark.
-- Buttons: use `OutlinedButton` (purple border, cream fill, navy text) or `FilledButton` (purple
-  fill, cream text) from `src/components/`. Their styles live in `theme.ts` (`MuiButton`
-  overrides); don't restyle per usage. Icons come from `@mui/icons-material`.
+  choice in localStorage. Light: page `gray[10]`, header cream. Dark: page `gray[80]`, header navy.
+- Buttons: use `OutlinedButton` (purple border, cream fill, navy text), `FilledButton` (purple
+  fill, cream text) or `ClearButton` (no fill; navy text in light, cream in dark) from
+  `src/components/buttons/`. Their styles live in `theme.ts` (`MuiButton` overrides); don't restyle per
+  usage. Icons come from `@mui/icons-material`.
+- Mode-dependent colours: use `theme.applyStyles('dark', {...})` inside `sx`/style overrides,
+  importing values from `palette.ts` rather than writing raw hex.
+- Shadows: use `shadowSx('sm' | 'md' | 'lg')` from `src/styles/shadows.ts` in `sx` (navy-tinted in
+  light, cream-tinted in dark). Don't write `boxShadow` values inline.
+
+## State And Layout
+
+- Redux Toolkit store in `src/store/` (`store.ts`, one `<name>Slice.ts` per slice, typed
+  `useAppDispatch`/`useAppSelector` in `hooks.ts`). Components never import the store directly;
+  wrap access in a `use<Feature>` hook under `src/hooks/`.
+- Features live in `src/features/<feature>/`. The page body is the `WidgetGrid` from
+  `src/features/grid/` (size in `gridConfig.ts`); each gridded widget gets its own feature folder
+  and is placed with `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans
+  default to 1).
+- Shared UI (banner, buttons, page chrome) stays in `src/components/`; styling in `src/styles/`.
 
 ## Naming
 
@@ -59,10 +75,11 @@ shared libraries; the root ESLint config enforces `@nx/enforce-module-boundaries
 All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`, `@nx/eslint`,
 `@nx/js/typescript`); there is no `project.json`. Root `package.json` has no scripts, so use `pnpm nx`.
 
-Current state: `apps/spark/src/main.tsx` bootstraps React with the MUI `ThemeProvider` +
-`CssBaseline` and renders a placeholder `App` (`src/app.tsx`). Brand colours live in
-`src/style/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, plus black/white opacity
-ramps). Ticker, store and data layer still need to be created.
+Current state: `apps/spark/src/main.tsx` bootstraps React with the Redux `Provider`, MUI
+`ThemeProvider` + `CssBaseline`, and renders `App` (`src/app.tsx`): a `Banner` plus `PageContent`
+(the widget grid, a divider and an action column with the edit-mode button). Brand colours live in
+`src/styles/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, black, white, plus a
+`gray` ramp 10-100). Ticker widgets and the data layer still need to be created.
 
 ## Commands
 
@@ -99,7 +116,7 @@ so `pnpm exec vitest` at the root runs all projects.
   `tsconfig.app.json` and `tsconfig.spec.json`; keep all three in sync if it changes.
 - Tests live under `src/test/`, mirroring the source path: `src/components/foo.tsx` is tested by
   `src/test/components/foo.test.tsx`. They run in jsdom with `globals: true`, so `describe/it/expect`
-  need no import. `@testing-library/react`, `user-event` and `jest-dom` (via `src/testSetup.ts`) are
+  need no import. `@testing-library/react`, `user-event` and `jest-dom` (via `src/test/testSetup.ts`) are
   set up. Test files are excluded from `tsconfig.app.json` and typed via `tsconfig.spec.json`.
 - TypeScript is strict with `noUnusedLocals`, `noImplicitReturns`, `noImplicitOverride`; the app
   uses `module: esnext` / `moduleResolution: bundler` (overriding the base `nodenext`).
