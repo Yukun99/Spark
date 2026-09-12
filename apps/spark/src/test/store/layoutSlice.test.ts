@@ -1,4 +1,4 @@
-import { layoutReducer, setDragTarget, toggleEditMode } from '@/store/layoutSlice';
+import { layoutReducer, setDragSource, setDragTarget, toggleEditMode } from '@/store/layoutSlice';
 
 describe('layoutSlice', () => {
   it('starts with edit mode off and toggles it', () => {
@@ -20,5 +20,12 @@ describe('layoutSlice', () => {
     expect(same.dragTarget).toBe(state.dragTarget);
 
     expect(layoutReducer(state, toggleEditMode()).dragTarget).toBeNull();
+  });
+
+  it('tracks the drag source and clears it when edit mode toggles', () => {
+    let state = layoutReducer(undefined, { type: 'init' });
+    state = layoutReducer(state, setDragSource({ row: 1, col: 1, rowSpan: 2, colSpan: 2 }));
+    expect(state.dragSource).toEqual({ row: 1, col: 1, rowSpan: 2, colSpan: 2 });
+    expect(layoutReducer(state, toggleEditMode()).dragSource).toBeNull();
   });
 });

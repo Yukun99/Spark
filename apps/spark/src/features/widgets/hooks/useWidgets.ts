@@ -1,9 +1,11 @@
-import type { GridCell } from '@/features/grid/gridTypes';
+import type { GridCell, WidgetLayout } from '@/features/grid/gridTypes';
+import type { WidgetType } from '@/features/widgets/widgetSizes';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  addInstrumentWidget,
+  addWidget as addWidgetAction,
   moveWidget as moveWidgetAction,
   removeWidget as removeWidgetAction,
+  resizeWidget as resizeWidgetAction,
   setWidgetInstrument,
   type Widget,
 } from '@/store/widgetsSlice';
@@ -11,9 +13,10 @@ import { useCallback } from 'react';
 
 export type UseWidgetsResult = {
   widgets: Widget[];
-  addWidget: () => void;
+  addWidget: (type: WidgetType, cell?: GridCell) => void;
   removeWidget: (id: string) => void;
   moveWidget: (id: string, cell: GridCell) => void;
+  resizeWidget: (id: string, layout: WidgetLayout) => void;
   setInstrument: (id: string, productId: string) => void;
 };
 
@@ -21,10 +24,17 @@ export const useWidgets = (): UseWidgetsResult => {
   const widgets = useAppSelector((state) => state.widgets.items);
   const dispatch = useAppDispatch();
 
-  const addWidget = useCallback(() => dispatch(addInstrumentWidget()), [dispatch]);
+  const addWidget = useCallback(
+    (type: WidgetType, cell?: GridCell) => dispatch(addWidgetAction(type, cell)),
+    [dispatch],
+  );
   const removeWidget = useCallback((id: string) => dispatch(removeWidgetAction(id)), [dispatch]);
   const moveWidget = useCallback(
     (id: string, cell: GridCell) => dispatch(moveWidgetAction({ id, ...cell })),
+    [dispatch],
+  );
+  const resizeWidget = useCallback(
+    (id: string, layout: WidgetLayout) => dispatch(resizeWidgetAction({ id, ...layout })),
     [dispatch],
   );
   const setInstrument = useCallback(
@@ -32,5 +42,5 @@ export const useWidgets = (): UseWidgetsResult => {
     [dispatch],
   );
 
-  return { widgets, addWidget, removeWidget, moveWidget, setInstrument };
+  return { widgets, addWidget, removeWidget, moveWidget, resizeWidget, setInstrument };
 };

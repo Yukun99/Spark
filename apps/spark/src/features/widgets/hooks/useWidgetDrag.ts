@@ -13,8 +13,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 export type UseWidgetDragParams = {
   layout: WidgetLayout;
   enabled: boolean;
+  onStart: () => void;
   onHover: (target: WidgetLayout | null) => void;
   onDrop: (cell: GridCell) => void;
+  onEnd: () => void;
 };
 
 export type UseWidgetDragResult = {
@@ -30,7 +32,14 @@ export type UseWidgetDragResult = {
 };
 
 /** Pointer-drag a widget, report the hovered grid area, and snap to it on release. */
-export const useWidgetDrag = ({ layout, enabled, onHover, onDrop }: UseWidgetDragParams): UseWidgetDragResult => {
+export const useWidgetDrag = ({
+  layout,
+  enabled,
+  onStart,
+  onHover,
+  onDrop,
+  onEnd,
+}: UseWidgetDragParams): UseWidgetDragResult => {
   const origin = useRef<DragOrigin | null>(null);
   const moved = useRef(false);
   const [offset, setOffset] = useState(NO_OFFSET);
@@ -65,8 +74,10 @@ export const useWidgetDrag = ({ layout, enabled, onHover, onDrop }: UseWidgetDra
       };
       event.currentTarget.setPointerCapture(event.pointerId);
       setDragging(true);
+      onStart();
+      onHover(layout);
     },
-    [enabled],
+    [enabled, layout, onHover, onStart],
   );
 
   const onPointerMove = useCallback(
@@ -87,7 +98,8 @@ export const useWidgetDrag = ({ layout, enabled, onHover, onDrop }: UseWidgetDra
     setOffset(NO_OFFSET);
     setDragging(false);
     onHover(null);
-  }, [onHover]);
+    onEnd();
+  }, [onEnd, onHover]);
 
   const onPointerUp = useCallback(
     (event: PointerEvent<HTMLElement>) => {

@@ -4,6 +4,7 @@ import { GridWidget } from '@/features/grid/gridWidget';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
 import { useWidgetDrag } from '@/features/widgets/hooks/useWidgetDrag';
+import { ResizeHandles } from '@/features/widgets/resizeHandles';
 import { LABEL_FONT_PX, LABEL_LINE_PX, WidgetLabel } from '@/features/widgets/widgetLabel';
 import { useEditMode } from '@/hooks/useEditMode';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
@@ -17,7 +18,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { useCallback, type MouseEvent, type ReactNode } from 'react';
 
-const CARD_PADDING = 2;
+const CARD_PADDING_PX = 16;
 
 export type WidgetFrameProps = {
   widget: Widget;
@@ -45,16 +46,20 @@ export const WidgetFrame = ({
 }: WidgetFrameProps) => {
   const { editMode } = useEditMode();
   const { moveWidget } = useWidgets();
-  const { setDragTarget } = useDragTarget();
+  const { setDragSource, setDragTarget } = useDragTarget();
   const onDrop = useCallback(
     (cell: { row: number; col: number }) => moveWidget(widget.id, cell),
     [moveWidget, widget.id],
   );
+  const onDragStart = useCallback(() => setDragSource(widget.layout), [setDragSource, widget.layout]);
+  const onDragEnd = useCallback(() => setDragSource(null), [setDragSource]);
   const { dragging, offset, handlers } = useWidgetDrag({
     layout: widget.layout,
     enabled: editMode,
+    onStart: onDragStart,
     onHover: setDragTarget,
     onDrop,
+    onEnd: onDragEnd,
   });
   const expandable = !editMode && onExpand !== undefined;
   const onExpandClick = useCallback(
@@ -66,7 +71,7 @@ export const WidgetFrame = ({
   );
 
   return (
-    <GridWidget layout={widget.layout}>
+    <GridWidget layout={widget.layout} raised={dragging}>
       <Box
         {...handlers}
         onClick={expandable ? onExpand : undefined}
@@ -76,14 +81,13 @@ export const WidgetFrame = ({
           (theme) => ({
             position: 'absolute',
             inset: TILE_GAP_PX,
-            p: CARD_PADDING,
+            p: `${CARD_PADDING_PX}px`,
             borderRadius: `${TILE_RADIUS_PX}px`,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
             bgcolor: colours.cream,
             transform: `translate(${offset.dx}px, ${offset.dy}px)`,
-            zIndex: dragging ? 1 : 'auto',
             ...(editMode && { cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none', touchAction: 'none' }),
             ...(expandable && { cursor: 'pointer' }),
             ...theme.applyStyles('dark', { bgcolor: colours.navy }),
@@ -91,6 +95,7 @@ export const WidgetFrame = ({
         ]}
       >
         {!editMode && tickAt !== undefined && <FreshnessGlow tickAt={tickAt} />}
+        {editMode && <ResizeHandles widget={widget} paddingPx={CARD_PADDING_PX} />}
         {editMode ? (
           <>
             <WidgetLabel>{name}</WidgetLabel>

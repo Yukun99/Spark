@@ -58,7 +58,7 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         onConfirm={confirmDelete}
         onCancel={closeDialog}
       >
-        The {widget.productId} widget will be removed from the grid.
+        The widget will be removed from the grid.
       </ConfirmDialog>
       {dialog === 'modify' && (
         <InstrumentSearchDialog

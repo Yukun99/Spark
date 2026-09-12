@@ -4,6 +4,7 @@ import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
+import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { useEditMode } from '@/hooks/useEditMode';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { Widget } from '@/store/widgetsSlice';
@@ -23,6 +24,8 @@ const renderWidget = (widget: Widget) => {
   switch (widget.type) {
     case 'instrument':
       return <InstrumentWidget key={widget.id} widget={widget} />;
+    case 'watchlist':
+      return <WatchlistWidget key={widget.id} widget={widget} />;
   }
 };
 
@@ -65,7 +68,8 @@ export const PageContent = () => {
               transition: `opacity ${REVEAL_MS}ms ease-out, transform ${REVEAL_MS}ms ease-out`,
             }}
           >
-            <AddWidgetButton />
+            <AddWidgetButton type='instrument' />
+            <AddWidgetButton type='watchlist' />
             <UpdateIntervalButton />
           </Stack>
         </Collapse>

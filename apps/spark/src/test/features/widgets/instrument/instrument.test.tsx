@@ -41,6 +41,7 @@ vi.mock('@/connections/coinbase', () => ({
 const renderWidget = () => {
   const store = createAppStore();
   const widget = store.getState().widgets.items[0];
+  if (widget.type !== 'instrument') throw new Error('expected an instrument widget');
   render(
     <Provider store={store}>
       <WidgetGrid layouts={[widget.layout]}>
