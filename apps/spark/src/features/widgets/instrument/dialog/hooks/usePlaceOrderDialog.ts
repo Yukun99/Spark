@@ -6,7 +6,7 @@ import {
   type DetailSection,
 } from '@/features/widgets/instrument/dialog/detailSections';
 import { validateAmount } from '@/features/widgets/instrument/dialog/orderValidation';
-import { formatPrice, tickerTime } from '@/features/widgets/instrument/tickerFormat';
+import { formatPrice } from '@/features/widgets/instrument/tickerFormat';
 import { useOrders } from '@/hooks/useOrders';
 import type { OrderType, TimeInForce } from '@/store/ordersSlice';
 import { useCallback, useMemo, useState } from 'react';
@@ -102,10 +102,9 @@ export const usePlaceOrderDialog = ({
       price: Number(price),
       size: Number(size),
       provider: COINBASE_PROVIDER,
-      priceAt: tickerTime(ticker),
     });
     onClose();
-  }, [canConfirm, onClose, placeOrder, price, productId, side, size, ticker, timeInForce, type]);
+  }, [canConfirm, onClose, placeOrder, price, productId, side, size, timeInForce, type]);
 
   return {
     side,

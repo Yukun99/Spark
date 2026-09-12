@@ -66,7 +66,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   `gridConfig.ts`, occupancy helpers). `widgets/` holds the widgets: `widgetFrame.tsx` is the shared
   card chrome (drag-to-move, delete/modify in edit mode, `freshnessGlow.tsx` purple wash that
   restarts on each tick and fades over 10s, `resizeHandles.tsx` four edge bars in edit mode that
-  snap spans one cell at a time) and each widget has its own subfolder (`instrument/`,
+  snap spans one cell at a time) and each widget has its own subfolder (`instrument/`, `orders/`,
   `watchlist/`) with its hook under `hooks/` and its dialogs under `dialog/` (the watchlist dialog
   reuses `instrument/dialog/instrumentSearchField.tsx` for its rows). Widget types and
   their minimum/initial spans live in `widgetSizes.ts`. Widgets render inside

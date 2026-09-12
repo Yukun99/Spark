@@ -82,9 +82,9 @@ describe('InstrumentWidget', () => {
     await user.type(within(dialog).getByRole('textbox', { name: 'Size' }), '2');
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(store.getState().orders.items).toEqual([
+    expect(store.getState().orders.items.at(-1)).toEqual(
       expect.objectContaining({ productId: 'BTC-USD', side: 'buy', price: 101, size: 2 }),
-    ]);
+    );
   });
 
   it('swaps the details dialog for the order dialog when SELL is clicked inside it', async () => {
@@ -146,6 +146,6 @@ describe('InstrumentWidget', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete widget' }));
     await user.click(screen.getByRole('button', { name: 'Delete' }));
-    expect(store.getState().widgets.items.map((widget) => widget.id)).toEqual(['eth', 'common']);
+    expect(store.getState().widgets.items.map((widget) => widget.id)).toEqual(['eth', 'common', 'orders']);
   });
 });

@@ -17,6 +17,7 @@ const createBareStore = () => {
   const store = createAppStore();
   store.dispatch(removeWidget('common'));
   store.dispatch(removeWidget('eth'));
+  store.dispatch(removeWidget('orders'));
   store.dispatch(moveWidget({ id: 'initial', row: 1, col: 1 }));
   return store;
 };

@@ -24,14 +24,15 @@ export type WidgetFrameProps = {
   widget: Widget;
   name: string;
   onDelete: () => void;
-  onModify: () => void;
+  onModify?: () => void;
   onExpand?: () => void;
   tickAt?: number;
   children: ReactNode;
 };
 
 /**
- * Card chrome shared by all widgets: drag-to-move, delete and modify actions in edit mode;
+ * Card chrome shared by all widgets: drag-to-move, delete and (when `onModify` is given) modify
+ * actions in edit mode;
  * outside edit mode, clicking the card or its corner icon calls `onExpand`, and `tickAt`
  * restarts a purple glow that fades while no new tick arrives.
  */
@@ -116,9 +117,11 @@ export const WidgetFrame = ({
                 alignItems: 'center',
               }}
             >
-              <ClearButton rounded aria-label='Modify widget' onClick={onModify} sx={{ p: 1 }}>
-                <EditIcon />
-              </ClearButton>
+              {onModify && (
+                <ClearButton rounded aria-label='Modify widget' onClick={onModify} sx={{ p: 1 }}>
+                  <EditIcon />
+                </ClearButton>
+              )}
               <ClearButton rounded aria-label='Delete widget' onClick={onDelete} sx={{ p: 1 }}>
                 <CloseIcon />
               </ClearButton>

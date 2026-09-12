@@ -3,7 +3,7 @@ import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
-import { addWidget, setWatchlist } from '@/store/widgetsSlice';
+import { addWidget, removeWidget, setWatchlist } from '@/store/widgetsSlice';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
@@ -34,6 +34,7 @@ vi.mock('@/connections/coinbase', () => ({
 
 const renderWatchlist = (productIds: string[] = []) => {
   const store = createAppStore();
+  store.dispatch(removeWidget('orders'));
   store.dispatch(addWidget('watchlist'));
   const id = store.getState().widgets.items.at(-1)!.id;
   store.dispatch(setWatchlist({ id, name: 'Watchlist', productIds }));

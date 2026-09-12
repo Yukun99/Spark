@@ -135,12 +135,14 @@ describe('PlaceOrderDialog', () => {
   it('stores the order on confirm and closes; cancel stores nothing', async () => {
     const user = userEvent.setup();
     const { store, onClose } = renderDialog('sell');
+    const seeded = store.getState().orders.items.length;
     await user.type(field('Size'), '0.25');
     await user.click(screen.getByRole('radio', { name: 'IOC' }));
     await user.click(confirmButton());
 
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(store.getState().orders.items).toEqual([
+    expect(store.getState().orders.items).toHaveLength(seeded + 1);
+    expect(store.getState().orders.items.at(-1)).toEqual(
       expect.objectContaining({
         productId: 'BTC-USD',
         side: 'sell',
@@ -149,12 +151,11 @@ describe('PlaceOrderDialog', () => {
         price: 100.5,
         size: 0.25,
         provider: 'Coinbase',
-        priceAt: Date.parse('2026-09-12T13:45:12.345Z'),
       }),
-    ]);
+    );
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalledTimes(2);
-    expect(store.getState().orders.items).toHaveLength(1);
+    expect(store.getState().orders.items).toHaveLength(seeded + 1);
   });
 });

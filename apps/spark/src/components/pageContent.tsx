@@ -6,6 +6,7 @@ import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
+import { OrdersWidget } from '@/features/widgets/orders/orders';
 import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { useEditMode } from '@/hooks/useEditMode';
 import type { Widget } from '@/store/widgetsSlice';
@@ -27,6 +28,8 @@ const renderWidget = (widget: Widget) => {
       return <InstrumentWidget key={widget.id} widget={widget} />;
     case 'watchlist':
       return <WatchlistWidget key={widget.id} widget={widget} />;
+    case 'orders':
+      return <OrdersWidget key={widget.id} widget={widget} />;
   }
 };
 
@@ -80,6 +83,7 @@ export const PageContent = () => {
           >
             <AddWidgetButton type='instrument' />
             <AddWidgetButton type='watchlist' />
+            <AddWidgetButton type='orders' />
             <UpdateIntervalButton />
           </Stack>
         </Collapse>

@@ -18,7 +18,13 @@ export type WatchlistWidget = {
   productIds: string[];
 };
 
-export type Widget = InstrumentWidget | WatchlistWidget;
+export type OrdersWidget = {
+  id: string;
+  type: 'orders';
+  layout: WidgetLayout;
+};
+
+export type Widget = InstrumentWidget | WatchlistWidget | OrdersWidget;
 
 export type WidgetsState = {
   items: Widget[];
@@ -53,13 +59,20 @@ const initialState: WidgetsState = {
       name: COMMON_WATCHLIST_NAME,
       productIds: COMMON_PRODUCT_IDS,
     },
+    { id: 'orders', type: 'orders', layout: { row: 1, col: 1, rowSpan: 3, colSpan: 4 } },
   ],
 };
 
-const createWidget = (id: string, type: WidgetType, layout: WidgetLayout): Widget =>
-  type === 'instrument'
-    ? { id, type, layout, productId: DEFAULT_PRODUCT_ID }
-    : { id, type, layout, name: DEFAULT_WATCHLIST_NAME, productIds: [] };
+const createWidget = (id: string, type: WidgetType, layout: WidgetLayout): Widget => {
+  switch (type) {
+    case 'instrument':
+      return { id, type, layout, productId: DEFAULT_PRODUCT_ID };
+    case 'watchlist':
+      return { id, type, layout, name: DEFAULT_WATCHLIST_NAME, productIds: [] };
+    case 'orders':
+      return { id, type, layout };
+  }
+};
 
 export type AddWidgetPayload = { id: string; type: WidgetType; cell?: GridCell };
 
