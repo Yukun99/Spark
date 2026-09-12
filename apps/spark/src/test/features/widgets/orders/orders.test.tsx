@@ -22,26 +22,33 @@ const renderOrders = () => {
 };
 
 const rowCells = () =>
+  screen.getAllByTestId('order-row').map((row) =>
+    Array.from(row.children)
+      .filter((cell) => cell.getAttribute('data-testid') !== 'freshness-glow')
+      .map((cell) => cell.textContent),
+  );
+
+const rowGlows = () =>
   screen
     .getAllByTestId('order-row')
-    .map((row) => Array.from(row.children).map((cell) => cell.textContent));
+    .map((row) => row.querySelector('[data-testid="freshness-glow"]') !== null);
 
 describe('OrdersWidget', () => {
   it('has a header and a row per stored order, newest first', () => {
     const store = renderOrders();
     const seeded = store.getState().orders.items;
     expect(screen.getByText('Orders')).toBeInTheDocument();
-    for (const heading of ['Txn Type', 'Status', 'Price', 'Fulfilment', 'Timestamp', 'Actions']) {
+    for (const heading of ['Instrument', 'Status', 'Price', 'Fulfilment', 'Submission Time', 'Actions']) {
       expect(screen.getByText(heading)).toBeInTheDocument();
     }
     const rows = rowCells();
     expect(rows).toHaveLength(seeded.length);
-    expect(rows[0][1]).toContain(seeded.at(-1)!.productId);
+    expect(rows[0][0]).toBe(seeded.at(-1)!.productId);
     expect(rows).toContainEqual([
-      'Sell',
-      'ETH-USD 37.50% fulfilling',
-      'limit 2,540.00',
-      '0.75 / 2 Coinbase',
+      'ETH-USD',
+      'Sellfulfilling37.50%',
+      'limit2,540.00',
+      'Coinbase0.75 / 2',
       expect.stringMatching(/^\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2}$/),
       '',
     ]);
@@ -68,22 +75,50 @@ describe('OrdersWidget', () => {
     const rows = rowCells();
     expect(rows).toHaveLength(store.getState().orders.items.length);
     expect(rows[0]).toEqual([
-      'Sell',
-      'ETH-USD 0.00% pending',
-      'market 100.50',
-      '0 / 0.25 Coinbase',
+      'ETH-USD',
+      'Sellpending0.00%',
+      'market100.50',
+      'Coinbase0 / 0.25',
       '12/09/2026, 10:30:00',
       '',
     ]);
     expect(rows[1]).toEqual([
-      'Buy',
-      'BTC-USD 0.00% pending',
-      'market 100.50',
-      '0 / 2 Coinbase',
+      'BTC-USD',
+      'Buypending0.00%',
+      'market100.50',
+      'Coinbase0 / 2',
       '12/09/2026, 10:30:00',
       '',
     ]);
     vi.useRealTimers();
+  });
+
+  it('flashes only the orders placed just now', () => {
+    const store = renderOrders();
+    expect(rowGlows()).not.toContain(true);
+    act(() => {
+      store.dispatch(
+        addOrder({
+          productId: 'BTC-USD',
+          side: 'buy',
+          type: 'market',
+          timeInForce: 'GTC',
+          price: 1,
+          size: 1,
+          provider: 'Coinbase',
+        }),
+      );
+    });
+    const glows = rowGlows();
+    expect(glows[0]).toBe(true);
+    expect(glows.slice(1)).not.toContain(true);
+  });
+
+  it('shows the filled share on a progress bar', () => {
+    renderOrders();
+    const bars = screen.getAllByRole('progressbar').map((bar) => bar.getAttribute('aria-valuenow'));
+    expect(bars).toContain('38');
+    expect(bars).toContain('0');
   });
 
   it('has copy, modify and cancel actions on every row', () => {
