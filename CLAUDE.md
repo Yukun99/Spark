@@ -23,6 +23,17 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   does not make obvious. Short doc comments on helper functions are fine. Keep every comment as
   short as possible.
 
+## Colours And Theming
+
+- Every colour in the app comes from `apps/spark/src/style/palette.ts`. Never hardcode a hex/rgba
+  in a component or style; add new colours to `palette.ts` first, then reference them.
+- Light/dark mode lives in `apps/spark/src/style/theme.ts` (MUI `colorSchemes`). Defaults to the
+  OS preference; `useColorMode` (`src/hooks/useColorMode.ts`) toggles it and MUI persists the
+  choice in localStorage. Page background: cream in light, navy in dark.
+- Buttons: use `OutlinedButton` (purple border, cream fill, navy text) or `FilledButton` (purple
+  fill, cream text) from `src/components/`. Their styles live in `theme.ts` (`MuiButton`
+  overrides); don't restyle per usage. Icons come from `@mui/icons-material`.
+
 ## Naming
 
 | Thing                              | Convention             | Example                                |
@@ -48,10 +59,10 @@ shared libraries; the root ESLint config enforces `@nx/enforce-module-boundaries
 All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`, `@nx/eslint`,
 `@nx/js/typescript`); there is no `project.json`. Root `package.json` has no scripts, so use `pnpm nx`.
 
-Current state: the scaffolded app was stripped down. `apps/spark/index.html` still references
-`/src/main.tsx` and `/src/styles.css`, neither of which exists yet; the only source file is
-`apps/spark/src/style/palette.ts` (brand colours: navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`,
-plus black/white opacity ramps). Entry point and app code still need to be created.
+Current state: `apps/spark/src/main.tsx` bootstraps React with the MUI `ThemeProvider` +
+`CssBaseline` and renders a placeholder `App` (`src/app.tsx`). Brand colours live in
+`src/style/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, plus black/white opacity
+ramps). Ticker, store and data layer still need to be created.
 
 ## Commands
 
@@ -86,10 +97,10 @@ so `pnpm exec vitest` at the root runs all projects.
 
 - Path alias `@/*` maps to `apps/spark/src/*`. It is declared in `vite.config.mts`,
   `tsconfig.app.json` and `tsconfig.spec.json`; keep all three in sync if it changes.
-- Tests live next to source as `*.test.tsx` / `*.spec.tsx` under `src/` (or `tests/`), run in jsdom
-  with `globals: true`, so `describe/it/expect` need no import. `@testing-library/react`,
-  `user-event` and `jest-dom` are installed. Test files are excluded from `tsconfig.app.json` and
-  typed via `tsconfig.spec.json`.
+- Tests live under `src/test/`, mirroring the source path: `src/components/foo.tsx` is tested by
+  `src/test/components/foo.test.tsx`. They run in jsdom with `globals: true`, so `describe/it/expect`
+  need no import. `@testing-library/react`, `user-event` and `jest-dom` (via `src/testSetup.ts`) are
+  set up. Test files are excluded from `tsconfig.app.json` and typed via `tsconfig.spec.json`.
 - TypeScript is strict with `noUnusedLocals`, `noImplicitReturns`, `noImplicitOverride`; the app
   uses `module: esnext` / `moduleResolution: bundler` (overriding the base `nodenext`).
 - Prettier (on save): printWidth 100, single quotes (also in JSX), trailing commas, LF endings, and
