@@ -36,10 +36,10 @@ vi.mock('@/connections/coinbase', () => ({
 const renderWatchlist = (productIds: string[] = []) => {
   const store = createAppStore();
   store.dispatch(addWidget('watchlist'));
-  const id = store.getState().widgets.items[1].id;
+  const id = store.getState().widgets.items.at(-1)!.id;
   store.dispatch(setWatchlist({ id, name: 'Watchlist', productIds }));
   const Bound = () => {
-    const widget = store.getState().widgets.items[1];
+    const widget = store.getState().widgets.items.at(-1)!;
     if (widget.type !== 'watchlist') throw new Error('expected a watchlist widget');
     return <WatchlistWidget widget={widget} />;
   };

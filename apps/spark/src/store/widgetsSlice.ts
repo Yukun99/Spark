@@ -1,6 +1,6 @@
 import { canPlace, findFreeCell } from '@/features/grid/gridOccupancy';
 import type { GridCell, WidgetLayout } from '@/features/grid/gridTypes';
-import { WIDGET_SIZES, type WidgetType } from '@/features/widgets/widgetSizes';
+import { WIDGET_MIN_SIZES, WIDGET_SIZES, type WidgetType } from '@/features/widgets/widgetSizes';
 import { createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit';
 
 export type InstrumentWidget = {
@@ -44,11 +44,12 @@ export const COMMON_PRODUCT_IDS = [
 
 const initialState: WidgetsState = {
   items: [
-    { id: 'initial', type: 'instrument', layout: { row: 1, col: 1 }, productId: DEFAULT_PRODUCT_ID },
+    { id: 'initial', type: 'instrument', layout: { row: 1, col: 5 }, productId: DEFAULT_PRODUCT_ID },
+    { id: 'eth', type: 'instrument', layout: { row: 1, col: 6 }, productId: 'ETH-USD' },
     {
       id: 'common',
       type: 'watchlist',
-      layout: { row: 1, col: 2, ...WIDGET_SIZES.watchlist },
+      layout: { row: 2, col: 5, ...WIDGET_SIZES.watchlist },
       name: COMMON_WATCHLIST_NAME,
       productIds: COMMON_PRODUCT_IDS,
     },
@@ -97,7 +98,7 @@ export const widgetsSlice = createSlice({
       const { id, ...target } = action.payload;
       const widget = state.items.find((item) => item.id === id);
       if (!widget) return;
-      const min = WIDGET_SIZES[widget.type];
+      const min = WIDGET_MIN_SIZES[widget.type];
       if ((target.rowSpan ?? 1) < min.rowSpan || (target.colSpan ?? 1) < min.colSpan) return;
       const others = state.items.filter((item) => item.id !== id).map((item) => item.layout);
       if (canPlace(others, target)) widget.layout = target;

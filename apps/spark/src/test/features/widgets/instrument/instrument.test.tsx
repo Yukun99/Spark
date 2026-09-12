@@ -146,6 +146,6 @@ describe('InstrumentWidget', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete widget' }));
     await user.click(screen.getByRole('button', { name: 'Delete' }));
-    expect(store.getState().widgets.items.map((widget) => widget.id)).toEqual(['common']);
+    expect(store.getState().widgets.items.map((widget) => widget.id)).toEqual(['eth', 'common']);
   });
 });

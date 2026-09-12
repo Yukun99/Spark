@@ -40,9 +40,8 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 - Mode-dependent colours: use `theme.applyStyles('dark', {...})` inside `sx`/style overrides,
   importing values from `palette.ts` rather than writing raw hex.
 - Fonts come from `src/styles/fonts.ts`: `fonts.ui` (Inter, set as the MUI default) and
-  `fonts.display` (Harmonias Demo, falling back to Source Serif 4) for the banner title. Inter and
-  Source Serif 4 load via the Google Fonts link in `index.html`; Harmonias Demo is bundled at
-  `public/fonts/harmonias-demo.ttf` (`@font-face` in `styles.css`; demo licence, personal use only).
+  `fonts.display` (Source Serif 4) for the banner title. Both load via the Google Fonts link in
+  `index.html`.
 - Scrolling: `html`/`body` never scroll (`overflow: hidden` in `styles.css`). The only scroll
   container is the grid area in `pageContent.tsx`, using OverlayScrollbars (floating bar, colours
   via `--os-*` CSS vars from the palette). Banner and action column stay fixed.
@@ -106,8 +105,9 @@ All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`,
 
 Current state: `apps/spark/src/main.tsx` bootstraps React with the Redux `Provider`, MUI
 `ThemeProvider` + `CssBaseline`, and renders `App` (`src/app.tsx`): a `Banner` plus `PageContent`
-(the widget grid, a divider and an action column with edit/add buttons). `widgetsSlice.ts` seeds a
-BTC-USD instrument widget plus a `Common` watchlist (`COMMON_PRODUCT_IDS`) beside it. Brand colours live in
+(the widget grid, a divider and an action column with edit/add buttons). `widgetsSlice.ts` seeds
+BTC-USD and ETH-USD instrument widgets top right with a 2x2 `Common` watchlist (`COMMON_PRODUCT_IDS`)
+under them. Brand colours live in
 `src/styles/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, black, white, plus a
 `gray` ramp 10-100). Trading, multi-instrument widgets and the update-interval control are still to come.
 

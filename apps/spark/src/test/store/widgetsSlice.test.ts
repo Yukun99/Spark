@@ -14,18 +14,23 @@ import {
 } from '@/store/widgetsSlice';
 
 const initial = () => widgetsReducer(undefined, { type: 'init' });
-/** Seed state with only the BTC widget, so placement tests start from a mostly empty grid. */
-const bare = () => widgetsReducer(initial(), removeWidget('common'));
+/** Only the BTC widget, moved to the first cell, so placement tests start from a mostly empty grid. */
+const bare = () =>
+  [removeWidget('common'), removeWidget('eth'), moveWidget({ id: 'initial', row: 1, col: 1 })].reduce(
+    widgetsReducer,
+    initial(),
+  );
 
 describe('widgetsSlice', () => {
-  it('seeds a BTC widget in the first cell and a Common watchlist beside it', () => {
+  it('seeds BTC and ETH widgets top right with a Common watchlist under them', () => {
     expect(initial().items).toEqual([
-      expect.objectContaining({ productId: 'BTC-USD', layout: { row: 1, col: 1 } }),
+      expect.objectContaining({ productId: 'BTC-USD', layout: { row: 1, col: 5 } }),
+      expect.objectContaining({ productId: 'ETH-USD', layout: { row: 1, col: 6 } }),
       expect.objectContaining({
         type: 'watchlist',
         name: COMMON_WATCHLIST_NAME,
         productIds: COMMON_PRODUCT_IDS,
-        layout: { row: 1, col: 2, rowSpan: 2, colSpan: 2 },
+        layout: { row: 2, col: 5, rowSpan: 2, colSpan: 2 },
       }),
     ]);
     expect(COMMON_PRODUCT_IDS).toEqual(expect.arrayContaining(['BTC-USD', 'ETH-USD']));
@@ -57,7 +62,7 @@ describe('widgetsSlice', () => {
 
   it('removes a widget by id', () => {
     const state = widgetsReducer(initial(), removeWidget('initial'));
-    expect(state.items.map((widget) => widget.id)).toEqual(['common']);
+    expect(state.items.map((widget) => widget.id)).toEqual(['eth', 'common']);
   });
 
   it('moves onto free cells but rejects occupied or out-of-range targets', () => {
@@ -90,8 +95,10 @@ describe('widgetsSlice', () => {
     state = widgetsReducer(state, at('initial', { row: 0, rowSpan: 3, colSpan: 2 }));
     expect(state.items[0].layout).toMatchObject({ row: 1, rowSpan: 2, colSpan: 2 });
 
-    state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 1, colSpan: 2 }));
+    state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 1, colSpan: 1 }));
     expect(state.items[1].layout).toMatchObject({ rowSpan: 2, colSpan: 2 });
+    state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 1, colSpan: 2 }));
+    expect(state.items[1].layout).toMatchObject({ rowSpan: 1, colSpan: 2 });
     state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 3, colSpan: 4 }));
     expect(state.items[1].layout).toMatchObject({ row: 1, col: 3, rowSpan: 3, colSpan: 4 });
     state = widgetsReducer(state, at(watchlist, { row: 2, col: 3, rowSpan: 2, colSpan: 4 }));

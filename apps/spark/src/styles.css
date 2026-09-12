@@ -1,11 +1,3 @@
-@font-face {
-  font-family: 'Harmonias Demo';
-  src: url('/fonts/harmonias-demo.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 *,
 *::before,
 *::after {

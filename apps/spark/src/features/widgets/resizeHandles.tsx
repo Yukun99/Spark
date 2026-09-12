@@ -1,7 +1,7 @@
 import type { WidgetLayout } from '@/features/grid/gridTypes';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { useWidgetResize, type ResizeEdge } from '@/features/widgets/hooks/useWidgetResize';
-import { WIDGET_SIZES } from '@/features/widgets/widgetSizes';
+import { WIDGET_MIN_SIZES } from '@/features/widgets/widgetSizes';
 import type { Widget } from '@/store/widgetsSlice';
 import { theme as colours } from '@/styles/palette';
 import Box from '@mui/material/Box';
@@ -54,7 +54,7 @@ export const ResizeHandles = ({ widget, paddingPx }: ResizeHandlesProps) => {
   );
   const { handlersFor } = useWidgetResize({
     layout: widget.layout,
-    minSize: WIDGET_SIZES[widget.type],
+    minSize: WIDGET_MIN_SIZES[widget.type],
     onResize,
   });
 

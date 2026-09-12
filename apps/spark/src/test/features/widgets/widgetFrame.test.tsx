@@ -4,7 +4,7 @@ import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
-import { removeWidget } from '@/store/widgetsSlice';
+import { moveWidget, removeWidget } from '@/store/widgetsSlice';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 
@@ -12,10 +12,12 @@ const GRID_WIDTH = 600;
 const GRID_HEIGHT = 300;
 const CELL = 100;
 
-/** Store with only the seeded BTC widget, so drags and resizes have free cells around it. */
+/** Only the seeded BTC widget, moved to the first cell, so drags and resizes have free cells around it. */
 const createBareStore = () => {
   const store = createAppStore();
   store.dispatch(removeWidget('common'));
+  store.dispatch(removeWidget('eth'));
+  store.dispatch(moveWidget({ id: 'initial', row: 1, col: 1 }));
   return store;
 };
 

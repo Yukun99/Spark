@@ -9,3 +9,9 @@ export const WIDGET_SIZES: Record<WidgetType, WidgetSize> = {
   instrument: { rowSpan: 1, colSpan: 1 },
   watchlist: { rowSpan: 2, colSpan: 2 },
 };
+
+/** Smallest footprint a widget type can be resized down to. */
+export const WIDGET_MIN_SIZES: Record<WidgetType, WidgetSize> = {
+  instrument: { rowSpan: 1, colSpan: 1 },
+  watchlist: { rowSpan: 1, colSpan: 2 },
+};

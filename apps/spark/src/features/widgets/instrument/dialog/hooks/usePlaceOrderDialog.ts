@@ -1,11 +1,15 @@
 import { COINBASE_PROVIDER, type Ticker, type TradeSide } from '@/connections/coinbase';
 import { useCoinbaseFocus } from '@/connections/hooks/useCoinbaseFocus';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
+import {
+  buildSections,
+  type DetailSection,
+} from '@/features/widgets/instrument/dialog/detailSections';
 import { validateAmount } from '@/features/widgets/instrument/dialog/orderValidation';
 import { formatPrice, tickerTime } from '@/features/widgets/instrument/tickerFormat';
 import { useOrders } from '@/hooks/useOrders';
 import type { OrderType, TimeInForce } from '@/store/ordersSlice';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export type UsePlaceOrderDialogParams = {
   productId: string;
@@ -30,6 +34,8 @@ export type UsePlaceOrderDialogResult = {
   sizeError: string | null;
   estimatedValue: string;
   provider: string;
+  /** Live details of the instrument, shown beside the form. */
+  sections: DetailSection[];
   canConfirm: boolean;
   confirm: () => void;
 };
@@ -84,6 +90,7 @@ export const usePlaceOrderDialog = ({
   const canConfirm = priceInvalid === null && sizeInvalid === null;
   const value = Number(price) * Number(size);
   const estimatedValue = formatPrice(canConfirm ? value : undefined);
+  const sections = useMemo(() => buildSections(ticker), [ticker]);
 
   const confirm = useCallback(() => {
     if (!canConfirm) return;
@@ -115,6 +122,7 @@ export const usePlaceOrderDialog = ({
     sizeError: sizeTouched ? sizeInvalid : null,
     estimatedValue,
     provider: COINBASE_PROVIDER,
+    sections,
     canConfirm,
     confirm,
   };

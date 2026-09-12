@@ -93,8 +93,15 @@ describe('PlaceOrderDialog', () => {
     expect(screen.getByRole('button', { name: 'BUY' })).toHaveAttribute('aria-pressed', 'true');
     expect(field('Price')).toHaveValue('101');
     expect(field('Price')).toBeDisabled();
-    expect(field('Instrument')).toHaveValue('BTC-USD');
+    expect(screen.queryByRole('textbox', { name: 'Instrument' })).not.toBeInTheDocument();
     expect(field('Provider')).toHaveValue('Coinbase');
+
+    const details = screen.getByLabelText('BTC-USD details');
+    expect(details).toHaveTextContent('BTC-USD');
+    expect(details).toHaveTextContent('Bid Size0.5');
+    expect(details).toHaveTextContent('24H Volume1,000');
+    tick({ bidSize: 0.75 });
+    expect(details).toHaveTextContent('Bid Size0.75');
 
     await user.click(screen.getByRole('button', { name: 'SELL' }));
     expect(screen.getByRole('button', { name: 'SELL' })).toHaveAttribute('aria-pressed', 'true');
