@@ -129,6 +129,13 @@ pnpm nx test spark -- --watch
 The root `vitest.config.mts` is a workspace runner that picks up every project's `vite.config.mts`,
 so `pnpm exec vitest` at the root runs all projects.
 
+## Deploy
+
+Pushing to `master` (or manual dispatch) runs `.github/workflows/deploy.yml`: lint,
+typecheck, test, build, then FTPS upload of `apps/spark/dist` to `~/public_html/website_896e8816`
+on the web host via `SamKirkland/FTP-Deploy-Action`. Secrets: `FTP_SERVER`, `FTP_USERNAME`,
+`FTP_PASSWORD`, `FTP_SERVER_DIR`.
+
 ## Conventions The Tooling Enforces
 
 - Path alias `@/*` maps to `apps/spark/src/*`. It is declared in `vite.config.mts`,
