@@ -1,38 +1,39 @@
+import type { TradeSide } from '@/connections/coinbase';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
-import { formatPrice, formatSize, formatTime } from '@/features/widgets/instrument/tickerFormat';
-import { formatFill } from '@/features/widgets/orders/orderFormat';
+import { formatPrice, formatSize } from '@/features/widgets/instrument/tickerFormat';
+import { formatDateTime, formatFill } from '@/features/widgets/orders/orderFormat';
 import { useOrders } from '@/hooks/useOrders';
 import type { Order } from '@/store/ordersSlice';
 import type { OrdersWidget } from '@/store/widgetsSlice';
 import { useCallback, useMemo, useState } from 'react';
 
+/** One table row; cells are plaintext until the columns get their final formatting. */
+export type OrderRow = {
+  key: string;
+  side: TradeSide;
+  status: string;
+  price: string;
+  fulfilment: string;
+  timestamp: string;
+};
 
 export type UseOrdersWidgetResult = {
   title: string;
-  rows: string[];
+  rows: OrderRow[];
   deleting: boolean;
   openDelete: () => void;
   closeDialog: () => void;
   confirmDelete: () => void;
 };
 
-const SEPARATOR = ' | ';
-
-/** Every stored field of an order, in slice order, as one plaintext line. */
-const orderText = (order: Order) =>
-  [
-    order.productId,
-    order.side,
-    order.type,
-    order.timeInForce,
-    formatPrice(order.price),
-    formatSize(order.size),
-    formatSize(order.filledSize),
-    formatFill(order.filledSize, order.size),
-    order.status,
-    order.provider,
-    formatTime(order.placedAt),
-  ].join(SEPARATOR);
+const orderRow = (order: Order, index: number): OrderRow => ({
+  key: `${order.placedAt}-${index}`,
+  side: order.side,
+  status: `${order.productId} ${formatFill(order.filledSize, order.size)} ${order.status}`,
+  price: `${order.type} ${formatPrice(order.price)}`,
+  fulfilment: `${formatSize(order.filledSize)} / ${formatSize(order.size)} ${order.provider}`,
+  timestamp: formatDateTime(order.placedAt),
+});
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
   const { orders } = useOrders();
@@ -46,7 +47,7 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     removeWidget(widget.id);
   }, [removeWidget, widget.id]);
 
-  const rows = useMemo(() => [...orders].reverse().map(orderText), [orders]);
+  const rows = useMemo(() => [...orders].reverse().map(orderRow), [orders]);
 
   return { title: 'Orders', rows, deleting, openDelete, closeDialog, confirmDelete };
 };

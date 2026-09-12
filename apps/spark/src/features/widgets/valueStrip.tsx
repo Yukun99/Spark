@@ -6,6 +6,14 @@ import Typography, { type TypographyProps } from '@mui/material/Typography';
 
 export const STRIP_TEXT_PX = 12;
 
+/** Column heading above widget table rows: bold, slightly larger than cell text. */
+export const stripHeadingSx = {
+  fontSize: STRIP_TEXT_PX + 2,
+  fontWeight: 'bold',
+  color: gray[50],
+  whiteSpace: 'nowrap',
+} as const;
+
 /** Tinted, rounded surface that widget value rows (and other panels) sit on. */
 export const valueStripSx = (theme: Theme): SystemStyleObject<Theme> => ({
   p: 1,

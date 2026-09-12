@@ -1,5 +1,6 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
 import { useOrdersWidget } from '@/features/widgets/orders/hooks/useOrdersWidget';
+import { ORDERS_COLUMNS, OrdersHeader, OrdersRow } from '@/features/widgets/orders/ordersRow';
 import { STRIP_TEXT_PX } from '@/features/widgets/valueStrip';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
@@ -15,7 +16,7 @@ export type OrdersWidgetProps = {
 
 const SCROLLBAR_OPTIONS = { scrollbars: { autoHide: 'leave', autoHideDelay: 400 } } as const;
 
-/** Placed orders, newest first, one plaintext line each. */
+/** Placed orders as a table, newest first. */
 export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
   const { title, rows, deleting, openDelete, closeDialog, confirmDelete } = useOrdersWidget(widget);
 
@@ -30,15 +31,12 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
                 No orders yet
               </Typography>
             ) : (
-              rows.map((row, index) => (
-                <Typography
-                  key={index}
-                  data-testid='order-row'
-                  sx={{ fontSize: STRIP_TEXT_PX, whiteSpace: 'nowrap' }}
-                >
-                  {row}
-                </Typography>
-              ))
+              <Box sx={{ display: 'grid', gridTemplateColumns: ORDERS_COLUMNS, rowGap: 1 }}>
+                <OrdersHeader />
+                {rows.map((row) => (
+                  <OrdersRow key={row.key} row={row} />
+                ))}
+              </Box>
             )}
           </OverlayScrollbarsComponent>
         </Box>

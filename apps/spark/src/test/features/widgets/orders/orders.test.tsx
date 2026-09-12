@@ -21,18 +21,35 @@ const renderOrders = () => {
   return store;
 };
 
+const rowCells = () =>
+  screen
+    .getAllByTestId('order-row')
+    .map((row) => Array.from(row.children).map((cell) => cell.textContent));
+
 describe('OrdersWidget', () => {
-  it('is seeded with a line per stored order, newest first', () => {
+  it('has a header and a row per stored order, newest first', () => {
     const store = renderOrders();
     const seeded = store.getState().orders.items;
     expect(screen.getByText('Orders')).toBeInTheDocument();
-    const rows = screen.getAllByTestId('order-row').map((row) => row.textContent);
+    for (const heading of ['Txn Type', 'Status', 'Price', 'Fulfilment', 'Timestamp', 'Actions']) {
+      expect(screen.getByText(heading)).toBeInTheDocument();
+    }
+    const rows = rowCells();
     expect(rows).toHaveLength(seeded.length);
-    expect(rows[0]).toContain(seeded.at(-1)!.productId);
-    expect(rows.join(' ')).toContain(' | 2 | 0.75 | 37.50% | fulfilling | ');
+    expect(rows[0][1]).toContain(seeded.at(-1)!.productId);
+    expect(rows).toContainEqual([
+      'Sell',
+      'ETH-USD 37.50% fulfilling',
+      'limit 2,540.00',
+      '0.75 / 2 Coinbase',
+      expect.stringMatching(/^\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2}$/),
+      '',
+    ]);
   });
 
   it('adds placed orders on top as pending with nothing filled', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 12, 10, 30, 0));
     const store = renderOrders();
     const draft = {
       productId: 'BTC-USD',
@@ -48,11 +65,33 @@ describe('OrdersWidget', () => {
       store.dispatch(addOrder({ ...draft, productId: 'ETH-USD', side: 'sell', size: 0.25 }));
     });
 
-    const rows = screen.getAllByTestId('order-row').map((row) => row.textContent);
+    const rows = rowCells();
     expect(rows).toHaveLength(store.getState().orders.items.length);
-    expect(rows[0]).toContain('ETH-USD | sell | market | GTC | 100.50 | 0.25 | 0 | 0.00% | pending | Coinbase | ');
-    expect(rows[1]).toContain('BTC-USD | buy | market | GTC | 100.50 | 2 | 0 | 0.00% | pending | Coinbase | ');
-    expect(rows[1]?.split(' | ')).toHaveLength(11);
+    expect(rows[0]).toEqual([
+      'Sell',
+      'ETH-USD 0.00% pending',
+      'market 100.50',
+      '0 / 0.25 Coinbase',
+      '12/09/2026, 10:30:00',
+      '',
+    ]);
+    expect(rows[1]).toEqual([
+      'Buy',
+      'BTC-USD 0.00% pending',
+      'market 100.50',
+      '0 / 2 Coinbase',
+      '12/09/2026, 10:30:00',
+      '',
+    ]);
+    vi.useRealTimers();
+  });
+
+  it('has copy, modify and cancel actions on every row', () => {
+    const store = renderOrders();
+    const count = store.getState().orders.items.length;
+    for (const name of ['Copy order', 'Modify order', 'Cancel order']) {
+      expect(screen.getAllByRole('button', { name })).toHaveLength(count);
+    }
   });
 
   it('offers delete but no modify in edit mode', async () => {

@@ -7,8 +7,11 @@ export type OrderType = (typeof ORDER_TYPES)[number];
 export const TIME_IN_FORCE_OPTIONS = ['GTC', 'IOC', 'FOK'] as const;
 export type TimeInForce = (typeof TIME_IN_FORCE_OPTIONS)[number];
 
-/** pending: not yet being worked; fulfilling: being worked, 0% to <100% filled; fulfilled: fully filled. */
-export const ORDER_STATUSES = ['pending', 'fulfilling', 'fulfilled'] as const;
+/**
+ * pending: not yet being worked; fulfilling: being worked, 0% to <100% filled; fulfilled: fully
+ * filled; cancelled: stopped by the user, keeping whatever was filled by then.
+ */
+export const ORDER_STATUSES = ['pending', 'fulfilling', 'fulfilled', 'cancelled'] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export type Order = {
@@ -48,6 +51,7 @@ const SEED_ORDERS: SeedOrder[] = [
   { productId: 'DOT-USD', side: 'buy', type: 'limit', timeInForce: 'GTC', price: 4.2, size: 300, filledSize: 0, status: 'fulfilling' },
   { productId: 'AVAX-USD', side: 'buy', type: 'market', timeInForce: 'IOC', price: 7.43, size: 120, filledSize: 119.99, status: 'fulfilling' },
   { productId: 'LINK-USD', side: 'sell', type: 'limit', timeInForce: 'FOK', price: 11.58, size: 40, filledSize: 40, status: 'fulfilled' },
+  { productId: 'LTC-USD', side: 'buy', type: 'limit', timeInForce: 'GTC', price: 68.2, size: 10, filledSize: 3, status: 'cancelled' },
 ];
 
 const initialState: OrdersState = {

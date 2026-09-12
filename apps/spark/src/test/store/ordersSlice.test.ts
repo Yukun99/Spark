@@ -21,8 +21,9 @@ describe('ordersSlice', () => {
         expect(order.filledSize).toBeLessThan(order.size);
       }
       if (order.status === 'fulfilled') expect(order.filledSize).toBe(order.size);
+      if (order.status === 'cancelled') expect(order.filledSize).toBeLessThan(order.size);
     }
-    expect(new Set(items.map((order) => order.status)).size).toBe(3);
+    expect(new Set(items.map((order) => order.status)).size).toBe(4);
     expect(items.some((order) => order.status === 'fulfilling' && order.filledSize === 0)).toBe(true);
   });
 
