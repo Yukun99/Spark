@@ -1,25 +1,19 @@
-import { AddWidgetButton } from '@/features/edit/addWidgetButton';
-import { EditModeButton } from '@/features/edit/editModeButton';
+import { EditTray } from '@/features/edit/editTray';
 import { StreamingButton } from '@/features/edit/streamingButton';
-import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
 import { OrdersWidget } from '@/features/widgets/orders/orders';
 import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
-import { useEditMode } from '@/hooks/useEditMode';
 import type { Widget } from '@/store/widgetsSlice';
 import { gray } from '@/styles/palette';
 import { SCROLLBAR_OPTIONS, scrollbarSx } from '@/styles/scrollbar';
 import Box from '@mui/material/Box';
-import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import { useMemo } from 'react';
-
-const REVEAL_MS = 200;
 
 const renderWidget = (widget: Widget) => {
   switch (widget.type) {
@@ -34,7 +28,6 @@ const renderWidget = (widget: Widget) => {
 
 export const PageContent = () => {
   const { widgets } = useWidgets();
-  const { editMode } = useEditMode();
   const layouts = useMemo(() => widgets.map((widget) => widget.layout), [widgets]);
 
   return (
@@ -59,24 +52,7 @@ export const PageContent = () => {
         }}
       >
         <StreamingButton />
-        <EditModeButton />
-        <Collapse in={editMode} timeout={REVEAL_MS}>
-          <Stack
-            spacing={3}
-            sx={{
-              pt: 3,
-              alignItems: 'center',
-              opacity: editMode ? 1 : 0,
-              transform: editMode ? 'none' : 'translateY(-24px) scale(0.5)',
-              transition: `opacity ${REVEAL_MS}ms ease-out, transform ${REVEAL_MS}ms ease-out`,
-            }}
-          >
-            <AddWidgetButton type='instrument' />
-            <AddWidgetButton type='watchlist' />
-            <AddWidgetButton type='orders' />
-            <UpdateIntervalButton />
-          </Stack>
-        </Collapse>
+        <EditTray />
       </Stack>
     </Box>
   );
