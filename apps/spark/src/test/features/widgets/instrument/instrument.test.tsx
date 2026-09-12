@@ -3,7 +3,7 @@ import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -65,6 +65,19 @@ describe('InstrumentWidget', () => {
     expect(screen.getByText('0.01')).toHaveAttribute('data-side', 'buy');
   });
 
+  it('shows BUY and SELL buttons that do not open the details dialog', async () => {
+    const user = userEvent.setup();
+    renderWidget();
+    const buy = screen.getByRole('button', { name: 'BUY' });
+    const sell = screen.getByRole('button', { name: 'SELL' });
+    expect(buy).toHaveAttribute('data-side', 'buy');
+    expect(sell).toHaveAttribute('data-side', 'sell');
+
+    await user.click(buy);
+    await user.click(sell);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('shows the exchange timestamp of the latest tick', () => {
     renderWidget();
     const local = new Date('2026-09-12T13:45:12.345Z');
@@ -83,6 +96,8 @@ describe('InstrumentWidget', () => {
     expect(dialog).toHaveTextContent('0.50');
     expect(dialog).toHaveTextContent('24H Change %');
     expect(dialog).toHaveTextContent('+11.89%');
+    expect(within(dialog).getByRole('button', { name: 'BUY' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'SELL' })).toBeInTheDocument();
     expect(setFocus).toHaveBeenLastCalledWith('BTC-USD');
 
     await user.click(screen.getByRole('button', { name: 'Close details' }));

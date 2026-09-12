@@ -1,4 +1,4 @@
-import { STRIP_TEXT_PX, ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
+import { STRIP_TEXT_PX, ValueChip } from '@/features/widgets/valueStrip';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -41,11 +41,11 @@ const Side = ({ label, value, align }: SideProps) => (
   </Box>
 );
 
-/** Two stacked label/value pairs side by side on a tinted strip, split by a thin divider. */
+/** Two stacked label/value pairs side by side, split by a thin divider; sits on a `ValueStrip`. */
 export const ValuePairRow = ({ left, right }: ValuePairRowProps) => (
-  <ValueStrip sx={{ display: 'flex', alignItems: 'stretch' }}>
+  <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
     <Side {...left} align='start' />
     <Box sx={{ width: '1px', mx: 1, bgcolor: gray[50] }} />
     <Side {...right} align='end' />
-  </ValueStrip>
+  </Box>
 );

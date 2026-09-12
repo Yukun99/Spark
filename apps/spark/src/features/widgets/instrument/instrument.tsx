@@ -1,13 +1,16 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
 import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
+import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
 import { InstrumentSearchDialog } from '@/features/widgets/instrument/dialog/instrumentSearchDialog';
 import { useInstrument } from '@/features/widgets/instrument/hooks/useInstrument';
 import { ValuePairRow } from '@/features/widgets/instrument/valuePairRow';
+import { ValueStrip } from '@/features/widgets/valueStrip';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
+import { gray } from '@/styles/palette';
 import type { InstrumentWidget as InstrumentWidgetModel } from '@/store/widgetsSlice';
-import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 
 export type InstrumentWidgetProps = {
   widget: InstrumentWidgetModel;
@@ -42,11 +45,15 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         tickAt={tickAt}
       >
         <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{widget.productId}</WidgetLabel>
-        <Stack spacing={1}>
+        <ValueStrip sx={{ mb: 1 }}>
+          <TradeButtons />
+        </ValueStrip>
+        <ValueStrip sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <ValuePairRow
             left={{ label: 'Bid Price', value: bid }}
             right={{ label: 'Ask Price', value: ask }}
           />
+          <Divider sx={{ borderColor: gray[50] }} />
           <ValuePairRow
             left={{ label: 'Last Price', value: lastPrice }}
             right={{
@@ -54,7 +61,7 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
               value: <TransactionTypeDisplay side={lastSide} label={lastSize} />,
             }}
           />
-        </Stack>
+        </ValueStrip>
       </WidgetFrame>
       <ConfirmDialog
         open={dialog === 'delete'}

@@ -1,6 +1,7 @@
 import { ClearButton } from '@/components/buttons/clearButton';
 import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { useInstrumentDialog } from '@/features/widgets/instrument/dialog/hooks/useInstrumentDialog';
+import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
 import { gray } from '@/styles/palette';
 import CloseIcon from '@mui/icons-material/Close';
@@ -16,7 +17,7 @@ export type InstrumentDialogProps = {
 };
 
 const FIELD_FONT_PX = 14;
-const FIELD_WIDTH_PX = 250;
+const FIELD_WIDTH = `${100 / 3}%`;
 const FIELD_HEIGHT_PX = 60;
 const LABEL_OPACITY = 0.6;
 
@@ -39,7 +40,10 @@ export const InstrumentDialog = ({ productId, onClose }: InstrumentDialogProps) 
       }}
     >
       <Box sx={{ position: 'relative' }}>
-        <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{productId}</WidgetLabel>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
+          <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{productId}</WidgetLabel>
+          <TradeButtons sx={{ mb: 1 }} />
+        </Box>
         <ClearButton
           rounded
           aria-label='Close details'
@@ -59,7 +63,7 @@ export const InstrumentDialog = ({ productId, onClose }: InstrumentDialogProps) 
                 <Box
                   key={field.label}
                   sx={{
-                    width: FIELD_WIDTH_PX,
+                    width: FIELD_WIDTH,
                     height: FIELD_HEIGHT_PX,
                     p: 1,
                     display: 'flex',
