@@ -4,7 +4,6 @@ import { ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
 import { useWatchlistRow } from '@/features/widgets/watchlist/hooks/useWatchlistRow';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import { useCallback } from 'react';
 
 export type WatchlistRowProps = {
@@ -12,14 +11,17 @@ export type WatchlistRowProps = {
   onOpen: (productId: string) => void;
 };
 
-const CAPTION_FONT_PX = 10;
+/** Widest cell contents measured in the browser (px, Inter 12px chips, widest digit 4). */
+const INSTRUMENT_MAX_PX = 129;
+const PRICE_MAX_PX = 91;
+const SIZE_MAX_PX = 110;
 
 /**
  * Parent grid columns shared by the header and every row:
  * instrument | bid | divider | ask | price | divider | size.
- * Paired value columns are equal so each divider sits at the centre of its pair.
+ * Value columns share the width in proportion to their widest possible content.
  */
-export const WATCHLIST_COLUMNS = 'auto 1fr auto 1fr 1fr auto 1fr';
+export const WATCHLIST_COLUMNS = `${INSTRUMENT_MAX_PX}fr ${PRICE_MAX_PX}fr auto ${PRICE_MAX_PX}fr ${PRICE_MAX_PX}fr auto ${SIZE_MAX_PX}fr`;
 
 /** Subgrid row spanning every parent column. */
 export const watchlistRowSx = {
@@ -44,7 +46,7 @@ export const WatchlistDivider = () => (
  * Clicking the row opens that instrument's details.
  */
 export const WatchlistRow = ({ productId, onOpen }: WatchlistRowProps) => {
-  const { bid, ask, price, size, side, updatedAt, tickAt } = useWatchlistRow(productId);
+  const { bid, ask, price, size, side, tickAt } = useWatchlistRow(productId);
   const onClick = useCallback(() => onOpen(productId), [onOpen, productId]);
 
   return (
@@ -55,14 +57,7 @@ export const WatchlistRow = ({ productId, onOpen }: WatchlistRowProps) => {
       sx={{ ...watchlistRowSx, position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
     >
       {tickAt !== undefined && <FreshnessGlow tickAt={tickAt} />}
-      <Box
-        sx={{ ...startSx, display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 0.25 }}
-      >
-        <ValueChip>{productId}</ValueChip>
-        <Typography sx={{ fontSize: CAPTION_FONT_PX, lineHeight: 1, color: gray[50] }}>
-          Last Refresh: {updatedAt}
-        </Typography>
-      </Box>
+      <ValueChip sx={startSx}>{productId}</ValueChip>
       <ValueChip sx={endSx}>{bid}</ValueChip>
       <WatchlistDivider />
       <ValueChip sx={startSx}>{ask}</ValueChip>

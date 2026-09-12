@@ -1,6 +1,5 @@
 import type { CoinbaseProduct, Ticker } from '@/connections/coinbase';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
-import { formatTime } from '@/features/widgets/instrument/tickerFormat';
 import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
@@ -62,9 +61,7 @@ describe('WatchlistWidget', () => {
 
   it('lists each instrument under column headers with bid/ask and price/size', () => {
     renderWatchlist(['BTC-USD', 'ETH-USD']);
-    const refreshed = `Last Refresh: ${formatTime(1_000)}`;
     expect(screen.getByText('Watchlist (2)')).toBeInTheDocument();
-    expect(screen.getAllByText(refreshed)).toHaveLength(2);
     for (const header of ['Instrument', 'Bid Price', 'Ask Price', 'Last Price', 'Last Size']) {
       expect(screen.getByText(header)).toBeInTheDocument();
     }
@@ -74,8 +71,8 @@ describe('WatchlistWidget', () => {
         .getAllByText(/./)
         .map((cell) => cell.textContent);
     expect(rows.map(texts)).toEqual([
-      ['BTC-USD', refreshed, '100.50', '101.00', '100.75', '0.5'],
-      ['ETH-USD', 'Last Refresh: --', '10.25', '10.50', '--', '--'],
+      ['BTC-USD', '100.50', '101.00', '100.75', '0.5'],
+      ['ETH-USD', '10.25', '10.50', '--', '--'],
     ]);
   });
 

@@ -2,8 +2,7 @@ import type { TradeSide } from '@/connections/coinbase';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import {
   formatPrice,
-  formatSize,
-  formatUpdatedAt,
+  formatCompactSize,
   tickerTime,
 } from '@/features/widgets/instrument/tickerFormat';
 
@@ -13,7 +12,6 @@ export type UseWatchlistRowResult = {
   price: string;
   size: string;
   side: TradeSide | undefined;
-  updatedAt: string;
   tickAt: number | undefined;
 };
 
@@ -24,9 +22,8 @@ export const useWatchlistRow = (productId: string): UseWatchlistRowResult => {
     bid: formatPrice(ticker?.bid),
     ask: formatPrice(ticker?.ask),
     price: formatPrice(ticker?.price),
-    size: formatSize(ticker?.lastSize),
+    size: formatCompactSize(ticker?.lastSize),
     side: ticker?.side,
-    updatedAt: formatUpdatedAt(ticker),
     tickAt: tickerTime(ticker),
   };
 };

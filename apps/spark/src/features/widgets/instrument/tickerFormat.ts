@@ -36,6 +36,27 @@ export const formatSize = (value: number | undefined) =>
 export const formatPercent = (value: number | undefined) =>
   isValue(value) ? percentFormat.format(value) : EMPTY;
 
+const MAX_COMPACT_DIGITS = 11;
+const MAX_SIZE_FRACTION = 8;
+
+/** One truncating formatter per fraction length, reused across ticks. */
+const compactFormats = Array.from(
+  { length: MAX_SIZE_FRACTION + 1 },
+  (_, fraction) =>
+    new Intl.NumberFormat('en-US', { maximumFractionDigits: fraction, roundingMode: 'trunc' }),
+);
+
+/**
+ * Size for tight cells: up to 8 decimals while the integer part has at most 3 digits, after
+ * which decimals are truncated so the total stays at 11 digits (999.00000001, 9999.0000000).
+ */
+export const formatCompactSize = (value: number | undefined) => {
+  if (!isValue(value)) return EMPTY;
+  const integerDigits = Math.max(1, Math.floor(Math.log10(Math.abs(value))) + 1);
+  const fraction = Math.max(0, Math.min(MAX_SIZE_FRACTION, MAX_COMPACT_DIGITS - integerDigits));
+  return compactFormats[fraction].format(value);
+};
+
 export const formatInteger = (value: number | undefined) => (isValue(value) ? String(value) : EMPTY);
 
 export const formatTime = (value: number | undefined) =>

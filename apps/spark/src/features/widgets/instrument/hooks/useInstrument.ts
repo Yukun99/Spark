@@ -3,7 +3,7 @@ import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import {
   formatPrice,
-  formatSize,
+  formatCompactSize,
   formatUpdatedAt,
   tickerTime,
 } from '@/features/widgets/instrument/tickerFormat';
@@ -62,7 +62,7 @@ export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => 
     bid: formatPrice(ticker?.bid),
     ask: formatPrice(ticker?.ask),
     lastPrice: formatPrice(ticker?.price),
-    lastSize: formatSize(ticker?.lastSize),
+    lastSize: formatCompactSize(ticker?.lastSize),
     lastSide: ticker?.side,
     updatedAt: formatUpdatedAt(ticker),
     tickAt: tickerTime(ticker),
