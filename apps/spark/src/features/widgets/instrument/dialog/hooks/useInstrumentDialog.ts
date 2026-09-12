@@ -1,4 +1,5 @@
-import { coinbaseFeed, type Ticker, type TradeSide } from '@/connections/coinbase';
+import type { Ticker, TradeSide } from '@/connections/coinbase';
+import { useCoinbaseFocus } from '@/connections/hooks/useCoinbaseFocus';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import {
   formatInteger,
@@ -9,7 +10,7 @@ import {
   formatUpdatedAt,
   tickerTime,
 } from '@/features/widgets/instrument/tickerFormat';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 export type DetailField =
   { label: string; value: string } | { label: string; side: TradeSide | undefined };
@@ -68,10 +69,7 @@ const buildSections = (ticker: Ticker | undefined): DetailSection[] => {
 export const useInstrumentDialog = (productId: string): UseInstrumentDialogResult => {
   const ticker = useCoinbaseTicker(productId);
 
-  useEffect(() => {
-    coinbaseFeed.setFocus(productId);
-    return () => coinbaseFeed.setFocus(null);
-  }, [productId]);
+  useCoinbaseFocus(productId);
 
   const sections = useMemo(() => buildSections(ticker), [ticker]);
 

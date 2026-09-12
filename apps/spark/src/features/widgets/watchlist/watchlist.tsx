@@ -1,5 +1,6 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
 import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
+import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
 import { useWatchlist } from '@/features/widgets/watchlist/hooks/useWatchlist';
 import { WatchlistDialog } from '@/features/widgets/watchlist/dialog/watchlistDialog';
 import { WatchlistHeader } from '@/features/widgets/watchlist/watchlistHeader';
@@ -25,9 +26,11 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
     productIds,
     dialog,
     detailsProductId,
+    orderSide,
     openDelete,
     openModify,
     openDetails,
+    openOrder,
     closeDialog,
     confirmDelete,
     confirmWatchlist,
@@ -66,8 +69,11 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
       {dialog === 'modify' && (
         <WatchlistDialog widget={widget} onConfirm={confirmWatchlist} onCancel={closeDialog} />
       )}
-      {detailsProductId !== null && (
-        <InstrumentDialog productId={detailsProductId} onClose={closeDialog} />
+      {detailsProductId !== null && orderSide === null && (
+        <InstrumentDialog productId={detailsProductId} onTrade={openOrder} onClose={closeDialog} />
+      )}
+      {detailsProductId !== null && orderSide !== null && (
+        <PlaceOrderDialog productId={detailsProductId} side={orderSide} onClose={closeDialog} />
       )}
     </>
   );

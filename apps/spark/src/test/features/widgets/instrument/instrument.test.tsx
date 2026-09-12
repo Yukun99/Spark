@@ -29,6 +29,7 @@ const ticker: Ticker = {
 const setFocus = vi.fn();
 
 vi.mock('@/connections/coinbase', () => ({
+  COINBASE_PROVIDER: 'Coinbase',
   coinbaseFeed: {
     subscribe: () => () => undefined,
     getTicker: () => ticker,
@@ -65,17 +66,39 @@ describe('InstrumentWidget', () => {
     expect(screen.getByText('0.01')).toHaveAttribute('data-side', 'buy');
   });
 
-  it('shows BUY and SELL buttons that do not open the details dialog', async () => {
+  it('opens the Place Order dialog from BUY and stores the confirmed order', async () => {
     const user = userEvent.setup();
-    renderWidget();
+    const store = renderWidget();
     const buy = screen.getByRole('button', { name: 'BUY' });
-    const sell = screen.getByRole('button', { name: 'SELL' });
     expect(buy).toHaveAttribute('data-side', 'buy');
-    expect(sell).toHaveAttribute('data-side', 'sell');
+    expect(screen.getByRole('button', { name: 'SELL' })).toHaveAttribute('data-side', 'sell');
 
     await user.click(buy);
-    await user.click(sell);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Place Order');
+    expect(screen.queryByRole('dialog', { name: 'BTC-USD details' })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Price' })).toHaveValue('101');
+
+    await user.type(within(dialog).getByRole('textbox', { name: 'Size' }), '2');
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().orders.items).toEqual([
+      expect.objectContaining({ productId: 'BTC-USD', side: 'buy', price: 101, size: 2 }),
+    ]);
+  });
+
+  it('swaps the details dialog for the order dialog when SELL is clicked inside it', async () => {
+    const user = userEvent.setup();
+    renderWidget();
+    await user.click(screen.getByRole('button', { name: 'Expand widget' }));
+    const details = await screen.findByRole('dialog', { name: 'BTC-USD details' });
+    await user.click(within(details).getByRole('button', { name: 'SELL' }));
+
+    expect(screen.queryByRole('dialog', { name: 'BTC-USD details' })).not.toBeInTheDocument();
+    const order = screen.getByRole('dialog');
+    expect(order).toHaveTextContent('Place Order');
+    expect(within(order).getByRole('textbox', { name: 'Price' })).toHaveValue('100.5');
+    expect(setFocus).toHaveBeenLastCalledWith('BTC-USD');
   });
 
   it('shows the exchange timestamp of the latest tick', () => {

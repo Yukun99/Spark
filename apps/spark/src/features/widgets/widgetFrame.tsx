@@ -139,7 +139,14 @@ export const WidgetFrame = ({
                 rounded
                 aria-label='Expand widget'
                 onClick={onExpandClick}
-                sx={{ position: 'absolute', top: 0, right: 0, p: 0, height: LABEL_LINE_PX }}
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  p: 0,
+                  width: LABEL_LINE_PX,
+                  height: LABEL_LINE_PX,
+                }}
               >
                 <FullscreenIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </ClearButton>

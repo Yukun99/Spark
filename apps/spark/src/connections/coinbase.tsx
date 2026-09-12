@@ -2,6 +2,7 @@ import { DEFAULT_UPDATE_INTERVAL_MS } from '@/store/settingsSlice';
 
 export const COINBASE_REST_URL = 'https://api.exchange.coinbase.com';
 export const COINBASE_WS_URL = 'wss://ws-feed.exchange.coinbase.com';
+export const COINBASE_PROVIDER = 'Coinbase';
 
 const USD_QUOTES = new Set(['USD', 'USDT', 'USDC']);
 const RECONNECT_MIN_MS = 1000;

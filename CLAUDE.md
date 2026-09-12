@@ -53,7 +53,8 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 
 - Redux Toolkit store in `src/store/` (`store.ts`, one `<name>Slice.ts` per slice, typed
   `useAppDispatch`/`useAppSelector` in `hooks.ts`). Slices: `layout` (edit mode), `settings`
-  (update interval), `widgets` (placed widgets). Components never import the store directly; wrap
+  (update interval), `widgets` (placed widgets), `orders` (dummy orders placed from the
+  instrument BUY/SELL dialog; `useOrders` in `src/hooks/`). Components never import the store directly; wrap
   access in a `use<Feature>` hook.
 - Hooks live next to what they serve, in a `hooks/` subfolder of that feature, component or
   connection folder (e.g. `features/widgets/hooks/useWidgets.ts`). Only cross-cutting store hooks

@@ -31,7 +31,12 @@ export const trade = {
   sell: { light: '#EF9A9A', dark: '#C62828' },
 } as const;
 
-export const palette = { theme, gray, glow, trade } as const;
+/** Text colours for form feedback: the deep red reads on light, the pale red on dark. */
+export const status = {
+  error: { light: trade.sell.dark, dark: trade.sell.light },
+} as const;
+
+export const palette = { theme, gray, glow, trade, status } as const;
 
 export type ThemeColour = keyof typeof theme;
 export type GrayStep = keyof typeof gray;

@@ -1,4 +1,5 @@
 import { ClearButton } from '@/components/buttons/clearButton';
+import type { TradeSide } from '@/connections/coinbase';
 import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { useInstrumentDialog } from '@/features/widgets/instrument/dialog/hooks/useInstrumentDialog';
 import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
@@ -13,6 +14,7 @@ import { Fragment } from 'react';
 
 export type InstrumentDialogProps = {
   productId: string;
+  onTrade: (side: TradeSide) => void;
   onClose: () => void;
 };
 
@@ -24,7 +26,7 @@ const LABEL_OPACITY = 0.6;
 const divider = <Divider sx={{ borderColor: gray[50] }} />;
 
 /** Mounted only while open; the feed streams just this product for as long as it is mounted. */
-export const InstrumentDialog = ({ productId, onClose }: InstrumentDialogProps) => {
+export const InstrumentDialog = ({ productId, onTrade, onClose }: InstrumentDialogProps) => {
   const { updatedAt, sections } = useInstrumentDialog(productId);
 
   return (
@@ -42,7 +44,7 @@ export const InstrumentDialog = ({ productId, onClose }: InstrumentDialogProps) 
       <Box sx={{ position: 'relative' }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
           <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{productId}</WidgetLabel>
-          <TradeButtons sx={{ mb: 1 }} />
+          <TradeButtons onTrade={onTrade} sx={{ mb: 1 }} />
         </Box>
         <ClearButton
           rounded
