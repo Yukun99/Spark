@@ -8,12 +8,16 @@ import {
 import { validateAmount } from '@/features/widgets/instrument/dialog/orderValidation';
 import { formatPrice } from '@/features/widgets/instrument/tickerFormat';
 import { useOrders } from '@/hooks/useOrders';
-import type { OrderType, TimeInForce } from '@/store/ordersSlice';
+import type { Order, OrderType, TimeInForce } from '@/store/ordersSlice';
 import { useCallback, useMemo, useState } from 'react';
+
+/** Fields an existing order lends to a new form, e.g. when copying it. */
+export type OrderTemplate = Pick<Order, 'type' | 'timeInForce' | 'price' | 'size'>;
 
 export type UsePlaceOrderDialogParams = {
   productId: string;
   side: TradeSide;
+  template?: OrderTemplate;
   onClose: () => void;
 };
 
@@ -47,16 +51,19 @@ const sidePrice = (ticker: Ticker | undefined, side: TradeSide) =>
 export const usePlaceOrderDialog = ({
   productId,
   side: initialSide,
+  template,
   onClose,
 }: UsePlaceOrderDialogParams): UsePlaceOrderDialogResult => {
   const ticker = useCoinbaseTicker(productId);
   useCoinbaseFocus(productId);
   const { placeOrder } = useOrders();
   const [side, setSideState] = useState(initialSide);
-  const [type, setTypeState] = useState<OrderType>('market');
-  const [timeInForce, setTimeInForce] = useState<TimeInForce>('GTC');
-  const [limitPrice, setLimitPrice] = useState(() => sidePrice(ticker, initialSide));
-  const [size, setSizeState] = useState('');
+  const [type, setTypeState] = useState<OrderType>(template?.type ?? 'market');
+  const [timeInForce, setTimeInForce] = useState<TimeInForce>(template?.timeInForce ?? 'GTC');
+  const [limitPrice, setLimitPrice] = useState(() =>
+    template?.type === 'limit' ? String(template.price) : sidePrice(ticker, initialSide),
+  );
+  const [size, setSizeState] = useState(() => (template === undefined ? '' : String(template.size)));
   const [priceTouched, setPriceTouched] = useState(false);
   const [sizeTouched, setSizeTouched] = useState(false);
 

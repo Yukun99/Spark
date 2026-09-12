@@ -24,13 +24,19 @@ export type OrderRow = {
   timestamp: string;
   /** Set for orders placed moments ago so the row flashes; the glow is keyed on it. */
   glowAt?: number;
+  order: Order;
 };
+
+type OrdersDialogKind = 'delete' | 'copy' | null;
 
 export type UseOrdersWidgetResult = {
   title: string;
   rows: OrderRow[];
-  deleting: boolean;
+  dialog: OrdersDialogKind;
+  /** Order the copy dialog was opened from; only meaningful while `dialog` is 'copy'. */
+  copying: Order | null;
   openDelete: () => void;
+  openCopy: (row: OrderRow) => void;
   closeDialog: () => void;
   confirmDelete: () => void;
 };
@@ -48,21 +54,27 @@ const orderRow = (order: Order, index: number): OrderRow => ({
   fulfilment: `${formatSize(order.filledSize)} / ${formatSize(order.size)}`,
   timestamp: formatDateTime(order.placedAt),
   glowAt: Date.now() - order.placedAt < GLOW_FADE_MS ? order.placedAt : undefined,
+  order,
 });
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
   const { orders } = useOrders();
   const { removeWidget } = useWidgets();
-  const [deleting, setDeleting] = useState(false);
+  const [dialog, setDialog] = useState<OrdersDialogKind>(null);
+  const [copying, setCopying] = useState<Order | null>(null);
 
-  const openDelete = useCallback(() => setDeleting(true), []);
-  const closeDialog = useCallback(() => setDeleting(false), []);
+  const openDelete = useCallback(() => setDialog('delete'), []);
+  const openCopy = useCallback((row: OrderRow) => {
+    setCopying(row.order);
+    setDialog('copy');
+  }, []);
+  const closeDialog = useCallback(() => setDialog(null), []);
   const confirmDelete = useCallback(() => {
-    setDeleting(false);
+    setDialog(null);
     removeWidget(widget.id);
   }, [removeWidget, widget.id]);
 
   const rows = useMemo(() => [...orders].reverse().map(orderRow), [orders]);
 
-  return { title: 'Orders', rows, deleting, openDelete, closeDialog, confirmDelete };
+  return { title: 'Orders', rows, dialog, copying, openDelete, openCopy, closeDialog, confirmDelete };
 };

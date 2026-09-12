@@ -1,10 +1,41 @@
+import type { Ticker } from '@/connections/coinbase';
 import { OrdersWidget } from '@/features/widgets/orders/orders';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { addOrder } from '@/store/ordersSlice';
 import { createAppStore } from '@/store/store';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
+
+const ticker: Ticker = {
+  productId: 'ETH-USD',
+  bid: 2500,
+  ask: 2510,
+  bidSize: 0.5,
+  askSize: 1.25,
+  price: 2505,
+  lastSize: 0.01,
+  side: 'buy',
+  tradeId: 1,
+  time: '2026-09-12T13:45:12.345Z',
+  receivedAt: 0,
+  open24h: 2400,
+  high24h: 2600,
+  low24h: 2300,
+  volume24h: 1000,
+  volume30d: 30000,
+};
+
+vi.mock('@/connections/coinbase', () => ({
+  COINBASE_PROVIDER: 'Coinbase',
+  coinbaseFeed: {
+    subscribe: () => () => undefined,
+    getTicker: () => ticker,
+    setUpdateInterval: () => undefined,
+    setStreaming: () => undefined,
+    setFocus: () => undefined,
+  },
+}));
 
 const renderOrders = () => {
   const store = createAppStore();
@@ -127,6 +158,42 @@ describe('OrdersWidget', () => {
     for (const name of ['Copy order', 'Modify order', 'Cancel order']) {
       expect(screen.getAllByRole('button', { name })).toHaveLength(count);
     }
+  });
+
+  it('copies an order into a new order form with the same values', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders();
+    const source = store.getState().orders.items.find((order) => order.productId === 'ETH-USD')!;
+    const row = screen.getAllByTestId('order-row').find((item) => item.textContent?.startsWith('ETH-USD'))!;
+    await user.click(within(row).getByRole('button', { name: 'Copy order' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Place Order');
+    expect(within(dialog).getByLabelText('ETH-USD details')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'SELL' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(dialog).getByRole('radio', { name: 'Limit' })).toBeChecked();
+    expect(within(dialog).getByRole('radio', { name: 'GTC' })).toBeChecked();
+    expect(within(dialog).getByRole('textbox', { name: 'Price' })).toHaveValue('2540');
+    expect(within(dialog).getByRole('textbox', { name: 'Size' })).toHaveValue('2');
+    expect(within(dialog).getByRole('textbox', { name: 'Provider' })).toHaveValue('Coinbase');
+
+    const count = store.getState().orders.items.length;
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().orders.items).toHaveLength(count + 1);
+    expect(store.getState().orders.items.at(-1)).toEqual(
+      expect.objectContaining({
+        productId: source.productId,
+        side: source.side,
+        type: source.type,
+        timeInForce: source.timeInForce,
+        price: source.price,
+        size: source.size,
+        provider: source.provider,
+        filledSize: 0,
+        status: 'pending',
+      }),
+    );
   });
 
   it('offers delete but no modify in edit mode', async () => {

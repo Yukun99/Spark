@@ -15,6 +15,7 @@ import type { ReactNode } from 'react';
 
 export type OrdersRowProps = {
   row: OrderRow;
+  onCopy: (row: OrderRow) => void;
 };
 
 /**
@@ -82,10 +83,10 @@ const ACTION_BUTTON_PX = STRIP_TEXT_PX * 1.5;
 const actionButtonSx = { p: 0, width: ACTION_BUTTON_PX, height: ACTION_BUTTON_PX } as const;
 const actionIconSx = { fontSize: STRIP_TEXT_PX + 2 } as const;
 
-type ActionButtonProps = { label: string; children: ReactNode };
+type ActionButtonProps = { label: string; onClick?: () => void; children: ReactNode };
 
-const ActionButton = ({ label, children }: ActionButtonProps) => (
-  <ClearButton rounded aria-label={label} sx={actionButtonSx}>
+const ActionButton = ({ label, onClick, children }: ActionButtonProps) => (
+  <ClearButton aria-label={label} onClick={onClick} sx={actionButtonSx}>
     {children}
   </ClearButton>
 );
@@ -104,7 +105,7 @@ export const OrdersHeader = () => (
 );
 
 /** One order on a tinted strip; its cells sit on the parent grid so columns line up. */
-export const OrdersRow = ({ row }: OrdersRowProps) => (
+export const OrdersRow = ({ row, onCopy }: OrdersRowProps) => (
   <ValueStrip data-testid='order-row' sx={{ ...rowSx, position: 'relative', overflow: 'hidden' }}>
     {row.glowAt !== undefined && <FreshnessGlow tickAt={row.glowAt} />}
     <ValueChip sx={chipSx}>{row.instrument}</ValueChip>
@@ -133,7 +134,7 @@ export const OrdersRow = ({ row }: OrdersRowProps) => (
       data-testid='order-actions'
       sx={{ position: 'relative' }}
     >
-      <ActionButton label='Copy order'>
+      <ActionButton label='Copy order' onClick={() => onCopy(row)}>
         <ContentCopyIcon sx={actionIconSx} />
       </ActionButton>
       <ActionButton label='Modify order'>

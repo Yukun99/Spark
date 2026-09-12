@@ -1,7 +1,10 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
 import type { TradeSide } from '@/connections/coinbase';
 import { DetailFields, FIELD_FONT_PX } from '@/features/widgets/instrument/dialog/detailFields';
-import { usePlaceOrderDialog } from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
+import {
+  usePlaceOrderDialog,
+  type OrderTemplate,
+} from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
 import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
 import { ORDER_TYPES, TIME_IN_FORCE_OPTIONS, type OrderType } from '@/store/ordersSlice';
 import { gray, status } from '@/styles/palette';
@@ -22,6 +25,8 @@ import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 export type PlaceOrderDialogProps = {
   productId: string;
   side: TradeSide;
+  /** Prefills the form from an existing order. */
+  template?: OrderTemplate;
   onClose: () => void;
 };
 
@@ -82,8 +87,8 @@ const RadioRow = <T extends string>({ label, value, options, labels, onChange }:
 );
 
 /** Mounted only while open; the clicked side seeds the form. Details fill the form's height and scroll. */
-export const PlaceOrderDialog = ({ productId, side, onClose }: PlaceOrderDialogProps) => {
-  const order = usePlaceOrderDialog({ productId, side, onClose });
+export const PlaceOrderDialog = ({ productId, side, template, onClose }: PlaceOrderDialogProps) => {
+  const order = usePlaceOrderDialog({ productId, side, template, onClose });
 
   return (
     <ConfirmDialog

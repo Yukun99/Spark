@@ -1,4 +1,5 @@
 import type { Ticker } from '@/connections/coinbase';
+import type { OrderTemplate } from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
 import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
 import { createAppStore } from '@/store/store';
 import { act, render, screen } from '@testing-library/react';
@@ -48,12 +49,12 @@ const tick = (next: Partial<Ticker>) => {
   act(() => notify?.());
 };
 
-const renderDialog = (side: 'buy' | 'sell' = 'buy') => {
+const renderDialog = (side: 'buy' | 'sell' = 'buy', template?: OrderTemplate) => {
   const store = createAppStore();
   const onClose = vi.fn();
   const { unmount } = render(
     <Provider store={store}>
-      <PlaceOrderDialog productId='BTC-USD' side={side} onClose={onClose} />
+      <PlaceOrderDialog productId='BTC-USD' side={side} template={template} onClose={onClose} />
     </Provider>,
   );
   return { store, onClose, unmount };
@@ -130,6 +131,26 @@ describe('PlaceOrderDialog', () => {
     expect(confirmButton()).toBeDisabled();
     await user.type(field('Price'), '0.123456789');
     expect(screen.getByText('At most 8 decimal places')).toBeInTheDocument();
+  });
+
+  it('prefills from a template, keeping market prices live and limit prices as given', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderDialog('sell', { type: 'market', timeInForce: 'IOC', price: 99, size: 3 });
+    expect(screen.getByRole('radio', { name: 'Market' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'IOC' })).toBeChecked();
+    expect(field('Price')).toHaveValue('100.5');
+    expect(field('Size')).toHaveValue('3');
+    expect(screen.getByText('Estimated Order Value: 301.50')).toBeInTheDocument();
+    expect(confirmButton()).toBeEnabled();
+    unmount();
+
+    renderDialog('buy', { type: 'limit', timeInForce: 'FOK', price: 99, size: 0.5 });
+    expect(screen.getByRole('radio', { name: 'Limit' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'FOK' })).toBeChecked();
+    expect(field('Price')).toHaveValue('99');
+    expect(field('Size')).toHaveValue('0.5');
+    await user.click(screen.getByRole('radio', { name: 'Market' }));
+    expect(field('Price')).toHaveValue('101');
   });
 
   it('stores the order on confirm and closes; cancel stores nothing', async () => {
