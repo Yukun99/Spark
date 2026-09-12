@@ -8,7 +8,6 @@ export type ValuePairSide = {
   label: string;
   /** Strings go on a chip; anything else (e.g. a trade side chip) renders as given. */
   value: ReactNode;
-  labelFirst?: boolean;
 };
 
 export type ValuePairRowProps = {
@@ -23,36 +22,30 @@ const Label = ({ children }: { children: string }) => (
 const Value = ({ value }: Pick<ValuePairSide, 'value'>) =>
   typeof value === 'string' ? <ValueChip>{value}</ValueChip> : value;
 
-const Side = ({ label, value, labelFirst = true }: ValuePairSide) => (
+type SideProps = ValuePairSide & { align: 'start' | 'end' };
+
+/** Label stacked over its value, hugging the strip's outer edge. */
+const Side = ({ label, value, align }: SideProps) => (
   <Box
     sx={{
       flex: 1,
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: 1,
+      flexDirection: 'column',
+      alignItems: `flex-${align}`,
+      gap: 0.5,
       minWidth: 0,
     }}
   >
-    {labelFirst ? (
-      <>
-        <Label>{label}</Label>
-        <Value value={value} />
-      </>
-    ) : (
-      <>
-        <Value value={value} />
-        <Label>{label}</Label>
-      </>
-    )}
+    <Label>{label}</Label>
+    <Value value={value} />
   </Box>
 );
 
-/** Two label/value pairs side by side on a tinted strip, split by a thin divider. */
+/** Two stacked label/value pairs side by side on a tinted strip, split by a thin divider. */
 export const ValuePairRow = ({ left, right }: ValuePairRowProps) => (
   <ValueStrip sx={{ display: 'flex', alignItems: 'stretch' }}>
-    <Side {...left} />
+    <Side {...left} align='start' />
     <Box sx={{ width: '1px', mx: 1, bgcolor: gray[50] }} />
-    <Side {...right} />
+    <Side {...right} align='end' />
   </ValueStrip>
 );

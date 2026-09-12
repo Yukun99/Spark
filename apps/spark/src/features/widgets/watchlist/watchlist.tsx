@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
+import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
 import { useWatchlist } from '@/features/widgets/watchlist/hooks/useWatchlist';
 import { WatchlistDialog } from '@/features/widgets/watchlist/dialog/watchlistDialog';
 import { WatchlistHeader } from '@/features/widgets/watchlist/watchlistHeader';
@@ -20,10 +21,13 @@ const SCROLLBAR_OPTIONS = { scrollbars: { autoHide: 'leave', autoHideDelay: 400 
 export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
   const {
     title,
+    updatedAt,
     productIds,
     dialog,
+    detailsProductId,
     openDelete,
     openModify,
+    openDetails,
     closeDialog,
     confirmDelete,
     confirmWatchlist,
@@ -32,7 +36,7 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
   return (
     <>
       <WidgetFrame widget={widget} name={title} onDelete={openDelete} onModify={openModify}>
-        <WidgetLabel>{title}</WidgetLabel>
+        <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{title}</WidgetLabel>
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <OverlayScrollbarsComponent defer options={SCROLLBAR_OPTIONS} style={{ height: '100%' }}>
             {productIds.length === 0 ? (
@@ -43,7 +47,7 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
               <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: 1 }}>
                 <WatchlistHeader />
                 {productIds.map((productId) => (
-                  <WatchlistRow key={productId} productId={productId} />
+                  <WatchlistRow key={productId} productId={productId} onOpen={openDetails} />
                 ))}
               </Box>
             )}
@@ -61,6 +65,9 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
       </ConfirmDialog>
       {dialog === 'modify' && (
         <WatchlistDialog widget={widget} onConfirm={confirmWatchlist} onCancel={closeDialog} />
+      )}
+      {detailsProductId !== null && (
+        <InstrumentDialog productId={detailsProductId} onClose={closeDialog} />
       )}
     </>
   );

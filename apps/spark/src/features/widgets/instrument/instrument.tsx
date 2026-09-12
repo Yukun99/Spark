@@ -6,8 +6,8 @@ import { useInstrument } from '@/features/widgets/instrument/hooks/useInstrument
 import { ValuePairRow } from '@/features/widgets/instrument/valuePairRow';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
-import Stack from '@mui/material/Stack';
 import type { InstrumentWidget as InstrumentWidgetModel } from '@/store/widgetsSlice';
+import Stack from '@mui/material/Stack';
 
 export type InstrumentWidgetProps = {
   widget: InstrumentWidgetModel;
@@ -18,6 +18,7 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
     bid,
     ask,
     lastPrice,
+    lastSize,
     lastSide,
     updatedAt,
     tickAt,
@@ -44,14 +45,13 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         <Stack spacing={1}>
           <ValuePairRow
             left={{ label: 'Bid', value: bid }}
-            right={{ label: 'Ask', value: ask, labelFirst: false }}
+            right={{ label: 'Ask', value: ask }}
           />
           <ValuePairRow
             left={{ label: 'Price', value: lastPrice }}
             right={{
-              label: 'Type',
-              value: <TransactionTypeDisplay side={lastSide} />,
-              labelFirst: false,
+              label: 'Size',
+              value: <TransactionTypeDisplay side={lastSide} label={lastSize} />,
             }}
           />
         </Stack>

@@ -60,8 +60,8 @@ describe('InstrumentWidget', () => {
     expect(screen.getByText('101.00')).toBeInTheDocument();
     expect(screen.getByText('Price')).toBeInTheDocument();
     expect(screen.getByText('100.70')).toBeInTheDocument();
-    expect(screen.getByText('Type')).toBeInTheDocument();
-    expect(screen.getByText('Buy')).toBeInTheDocument();
+    expect(screen.getByText('Size')).toBeInTheDocument();
+    expect(screen.getByText('0.01')).toHaveAttribute('data-side', 'buy');
   });
 
   it('shows the exchange timestamp of the latest tick', () => {

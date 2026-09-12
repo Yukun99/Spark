@@ -4,6 +4,8 @@ import Typography, { type TypographyProps } from '@mui/material/Typography';
 
 export type TransactionTypeDisplayProps = {
   side: TradeSide | undefined;
+  /** Text on the chip; defaults to Buy/Sell. Pass e.g. the trade size to keep only the colour. */
+  label?: string;
   fontSize?: number;
   sx?: TypographyProps['sx'];
 };
@@ -11,7 +13,12 @@ export type TransactionTypeDisplayProps = {
 const LABELS: Record<TradeSide, string> = { buy: 'Buy', sell: 'Sell' };
 
 /** Buy on green, Sell on red; a bare `--` while no trade has been seen. */
-export const TransactionTypeDisplay = ({ side, fontSize = 12, sx }: TransactionTypeDisplayProps) => (
+export const TransactionTypeDisplay = ({
+  side,
+  label,
+  fontSize = 12,
+  sx,
+}: TransactionTypeDisplayProps) => (
   <Typography
     component='span'
     data-side={side}
@@ -30,6 +37,6 @@ export const TransactionTypeDisplay = ({ side, fontSize = 12, sx }: TransactionT
       ...(Array.isArray(sx) ? sx : [sx]),
     ]}
   >
-    {side === undefined ? '--' : LABELS[side]}
+    {label ?? (side === undefined ? '--' : LABELS[side])}
   </Typography>
 );

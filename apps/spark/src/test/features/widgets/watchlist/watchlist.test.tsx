@@ -1,10 +1,11 @@
 import type { CoinbaseProduct, Ticker } from '@/connections/coinbase';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
+import { formatTime } from '@/features/widgets/instrument/tickerFormat';
 import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
 import { addWidget, setWatchlist } from '@/store/widgetsSlice';
-import { act, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -17,7 +18,7 @@ const product = (id: string): CoinbaseProduct => ({
 });
 
 const tickers: Record<string, Partial<Ticker>> = {
-  'BTC-USD': { bid: 100.5, ask: 101, price: 100.75, side: 'buy', receivedAt: 1_000 },
+  'BTC-USD': { bid: 100.5, ask: 101, price: 100.75, lastSize: 0.5, side: 'buy', receivedAt: 1_000 },
   'ETH-USD': { bid: 10.25, ask: 10.5 },
 };
 
@@ -58,26 +59,40 @@ describe('WatchlistWidget', () => {
     expect(screen.getByText('No instruments yet')).toBeInTheDocument();
   });
 
-  it('lists each instrument under column headers with bid/ask and price/type', () => {
+  it('lists each instrument under column headers with bid/ask and price/size', () => {
     renderWatchlist(['BTC-USD', 'ETH-USD']);
+    const refreshed = `Last Refresh: ${formatTime(1_000)}`;
     expect(screen.getByText('Watchlist (2)')).toBeInTheDocument();
-    for (const header of ['Instrument', 'Bid / Ask', 'Price / Type']) {
+    expect(screen.getAllByText(refreshed)).toHaveLength(2);
+    for (const header of ['Instrument', 'Bid', 'Ask', 'Price', 'Size']) {
       expect(screen.getByText(header)).toBeInTheDocument();
     }
     const rows = screen.getAllByTestId('watchlist-row');
-    expect(rows.map((row) => row.textContent)).toEqual([
-      'BTC-USD100.50 / 101.00100.75 / Buy',
-      'ETH-USD10.25 / 10.50-- / --',
+    const texts = (row: HTMLElement) =>
+      within(row)
+        .getAllByText(/./)
+        .map((cell) => cell.textContent);
+    expect(rows.map(texts)).toEqual([
+      ['BTC-USD', refreshed, '100.50', '101.00', '100.75', '0.5'],
+      ['ETH-USD', 'Last Refresh: --', '10.25', '10.50', '--', '--'],
     ]);
   });
 
-  it('glows only the row that has received a tick, and not in edit mode', () => {
-    const { store } = renderWatchlist(['BTC-USD', 'ETH-USD']);
+  it('opens the instrument details when a row is clicked', async () => {
+    const user = userEvent.setup();
+    renderWatchlist(['BTC-USD', 'ETH-USD']);
+    await user.click(screen.getByText('ETH-USD'));
+    const dialog = await screen.findByRole('dialog', { name: 'ETH-USD details' });
+    await user.click(within(dialog).getByRole('button', { name: 'Close details' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('glows only the row that has received a tick', () => {
+    renderWatchlist(['BTC-USD', 'ETH-USD']);
     const [btc, eth] = screen.getAllByTestId('watchlist-row');
+    expect(within(btc).getByText('0.5')).toHaveAttribute('data-side', 'buy');
     expect(within(btc).getByTestId('freshness-glow')).toBeInTheDocument();
     expect(within(eth).queryByTestId('freshness-glow')).not.toBeInTheDocument();
-    act(() => store.dispatch(toggleEditMode()));
-    expect(screen.queryByTestId('freshness-glow')).not.toBeInTheDocument();
   });
 
   const openDialog = async (user: ReturnType<typeof userEvent.setup>, productIds: string[]) => {

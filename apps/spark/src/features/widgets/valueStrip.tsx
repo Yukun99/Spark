@@ -1,4 +1,4 @@
-import { gray, theme as colours } from '@/styles/palette';
+import { theme as colours, gray } from '@/styles/palette';
 import Box, { type BoxProps } from '@mui/material/Box';
 import Typography, { type TypographyProps } from '@mui/material/Typography';
 

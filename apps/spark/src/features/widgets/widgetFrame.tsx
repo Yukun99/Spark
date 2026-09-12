@@ -1,13 +1,13 @@
 import { ClearButton } from '@/components/buttons/clearButton';
 import { TILE_GAP_PX, TILE_RADIUS_PX } from '@/features/grid/gridConfig';
 import { GridWidget } from '@/features/grid/gridWidget';
-import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
+import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { useWidgetDrag } from '@/features/widgets/hooks/useWidgetDrag';
+import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { ResizeHandles } from '@/features/widgets/resizeHandles';
 import { LABEL_FONT_PX, LABEL_LINE_PX, WidgetLabel } from '@/features/widgets/widgetLabel';
 import { useEditMode } from '@/hooks/useEditMode';
-import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { Widget } from '@/store/widgetsSlice';
 import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
@@ -51,7 +51,10 @@ export const WidgetFrame = ({
     (cell: { row: number; col: number }) => moveWidget(widget.id, cell),
     [moveWidget, widget.id],
   );
-  const onDragStart = useCallback(() => setDragSource(widget.layout), [setDragSource, widget.layout]);
+  const onDragStart = useCallback(
+    () => setDragSource(widget.layout),
+    [setDragSource, widget.layout],
+  );
   const onDragEnd = useCallback(() => setDragSource(null), [setDragSource]);
   const { dragging, offset, handlers } = useWidgetDrag({
     layout: widget.layout,
@@ -88,7 +91,11 @@ export const WidgetFrame = ({
             overflow: 'hidden',
             bgcolor: colours.cream,
             transform: `translate(${offset.dx}px, ${offset.dy}px)`,
-            ...(editMode && { cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none', touchAction: 'none' }),
+            ...(editMode && {
+              cursor: dragging ? 'grabbing' : 'grab',
+              userSelect: 'none',
+              touchAction: 'none',
+            }),
             ...(expandable && { cursor: 'pointer' }),
             ...theme.applyStyles('dark', { bgcolor: colours.navy }),
           }),
@@ -102,7 +109,12 @@ export const WidgetFrame = ({
             <Stack
               direction='row'
               spacing={3}
-              sx={{ position: 'absolute', inset: 0, justifyContent: 'center', alignItems: 'center' }}
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
             >
               <ClearButton rounded aria-label='Modify widget' onClick={onModify} sx={{ p: 1 }}>
                 <EditIcon />

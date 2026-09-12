@@ -12,8 +12,7 @@ import {
 import { useEffect, useMemo } from 'react';
 
 export type DetailField =
-  | { label: string; value: string }
-  | { label: string; side: TradeSide | undefined };
+  { label: string; value: string } | { label: string; side: TradeSide | undefined };
 
 export type DetailSection = { id: string; fields: DetailField[] };
 
@@ -44,7 +43,7 @@ const buildSections = (ticker: Ticker | undefined): DetailSection[] => {
       id: 'trade',
       fields: [
         { label: 'Last Trade Price', value: formatPrice(ticker?.price) },
-        { label: 'Last Trade Amount', value: formatSize(ticker?.lastSize) },
+        { label: 'Last Trade Size', value: formatSize(ticker?.lastSize) },
         { label: 'Transaction Type', side: ticker?.side },
         { label: 'Last Trade ID', value: formatInteger(ticker?.tradeId) },
         { label: 'Last Trade Time', value: formatTime(tickerTime(ticker)) },

@@ -17,6 +17,11 @@ describe('TransactionTypeDisplay', () => {
     });
   });
 
+  it('takes a custom label but keeps the side colour', () => {
+    render(<TransactionTypeDisplay side='sell' label='0.25' />);
+    expect(screen.getByText('0.25')).toHaveStyle({ backgroundColor: trade.sell.light });
+  });
+
   it('shows a bare placeholder before any trade', () => {
     render(<TransactionTypeDisplay side={undefined} />);
     expect(screen.getByText('--')).not.toHaveAttribute('data-side');
