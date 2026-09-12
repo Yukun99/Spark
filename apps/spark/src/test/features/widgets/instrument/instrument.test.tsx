@@ -75,7 +75,7 @@ describe('InstrumentWidget', () => {
     const dialog = await screen.findByRole('dialog', { name: 'BTC-USD details' });
     expect(dialog).toHaveTextContent('Spread');
     expect(dialog).toHaveTextContent('0.50');
-    expect(dialog).toHaveTextContent('Change % 24h');
+    expect(dialog).toHaveTextContent('24H Change %');
     expect(dialog).toHaveTextContent('+11.89%');
     expect(setFocus).toHaveBeenLastCalledWith('BTC-USD');
 
