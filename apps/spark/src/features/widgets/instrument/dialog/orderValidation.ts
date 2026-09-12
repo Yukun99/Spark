@@ -2,6 +2,9 @@ export const MAX_DECIMALS = 8;
 
 const NUMBER_PATTERN = /^\d*\.?\d*$/;
 
+/** Trims float noise from size arithmetic to the precision the form accepts. */
+export const roundSize = (size: number) => Number(size.toFixed(MAX_DECIMALS));
+
 /** Error text for a typed price or size, or null when it is a positive number with sane precision. */
 export const validateAmount = (value: string): string | null => {
   const trimmed = value.trim();

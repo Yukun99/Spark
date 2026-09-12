@@ -5,7 +5,7 @@ import {
   buildSections,
   type DetailSection,
 } from '@/features/widgets/instrument/dialog/detailSections';
-import { validateAmount } from '@/features/widgets/instrument/dialog/orderValidation';
+import { roundSize, validateAmount } from '@/features/widgets/instrument/dialog/orderValidation';
 import { formatPrice } from '@/features/widgets/instrument/tickerFormat';
 import { useOrders } from '@/hooks/useOrders';
 import type { Order, OrderType, TimeInForce } from '@/store/ordersSlice';
@@ -14,14 +14,22 @@ import { useCallback, useMemo, useState } from 'react';
 /** Fields an existing order lends to a new form, e.g. when copying it. */
 export type OrderTemplate = Pick<Order, 'type' | 'timeInForce' | 'price' | 'size'>;
 
+/** Order being modified; the size field then holds what is still open, on top of `filledSize`. */
+export type EditTarget = Pick<Order, 'id' | 'filledSize'>;
+
 export type UsePlaceOrderDialogParams = {
   productId: string;
   side: TradeSide;
   template?: OrderTemplate;
+  editing?: EditTarget;
   onClose: () => void;
 };
 
 export type UsePlaceOrderDialogResult = {
+  title: string;
+  confirmLabel: string;
+  /** True while modifying an order: its side cannot change. */
+  sideLocked: boolean;
   side: TradeSide;
   setSide: (side: TradeSide) => void;
   type: OrderType;
@@ -52,11 +60,12 @@ export const usePlaceOrderDialog = ({
   productId,
   side: initialSide,
   template,
+  editing,
   onClose,
 }: UsePlaceOrderDialogParams): UsePlaceOrderDialogResult => {
   const ticker = useCoinbaseTicker(productId);
   useCoinbaseFocus(productId);
-  const { placeOrder } = useOrders();
+  const { placeOrder, modifyOrder } = useOrders();
   const [side, setSideState] = useState(initialSide);
   const [type, setTypeState] = useState<OrderType>(template?.type ?? 'market');
   const [timeInForce, setTimeInForce] = useState<TimeInForce>(template?.timeInForce ?? 'GTC');
@@ -101,19 +110,19 @@ export const usePlaceOrderDialog = ({
 
   const confirm = useCallback(() => {
     if (!canConfirm) return;
-    placeOrder({
-      productId,
-      side,
-      type,
-      timeInForce,
-      price: Number(price),
-      size: Number(size),
-      provider: COINBASE_PROVIDER,
-    });
+    const changes = { type, timeInForce, price: Number(price), size: Number(size) };
+    if (editing === undefined) {
+      placeOrder({ ...changes, productId, side, provider: COINBASE_PROVIDER });
+    } else {
+      modifyOrder(editing.id, { ...changes, size: roundSize(changes.size + editing.filledSize) });
+    }
     onClose();
-  }, [canConfirm, onClose, placeOrder, price, productId, side, size, timeInForce, type]);
+  }, [canConfirm, editing, modifyOrder, onClose, placeOrder, price, productId, side, size, timeInForce, type]);
 
   return {
+    title: editing === undefined ? 'Place Order' : 'Modify Order',
+    confirmLabel: editing === undefined ? 'Confirm' : 'Save',
+    sideLocked: editing !== undefined,
     side,
     setSide,
     type,

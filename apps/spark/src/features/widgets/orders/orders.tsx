@@ -17,7 +17,7 @@ export type OrdersWidgetProps = {
 
 /** Placed orders as a table, newest first. */
 export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
-  const { title, rows, dialog, copying, openDelete, openCopy, closeDialog, confirmDelete } =
+  const { title, rows, deleting, orderForm, openDelete, openCopy, openEdit, closeDialog, confirmDelete } =
     useOrdersWidget(widget);
 
   return (
@@ -33,14 +33,14 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
             <Box sx={{ display: 'grid', gridTemplateColumns: ORDERS_COLUMNS, rowGap: 1 }}>
               <OrdersHeader />
               {rows.map((row) => (
-                <OrdersRow key={row.key} row={row} onCopy={openCopy} />
+                <OrdersRow key={row.key} row={row} onCopy={openCopy} onEdit={openEdit} />
               ))}
             </Box>
           )}
         </WidgetScrollArea>
       </WidgetFrame>
       <ConfirmDialog
-        open={dialog === 'delete'}
+        open={deleting}
         title='Delete widget?'
         confirmLabel='Delete'
         onConfirm={confirmDelete}
@@ -48,14 +48,7 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
       >
         The widget will be removed from the grid.
       </ConfirmDialog>
-      {dialog === 'copy' && copying !== null && (
-        <PlaceOrderDialog
-          productId={copying.productId}
-          side={copying.side}
-          template={copying}
-          onClose={closeDialog}
-        />
-      )}
+      {orderForm !== null && <PlaceOrderDialog {...orderForm} onClose={closeDialog} />}
     </>
   );
 };

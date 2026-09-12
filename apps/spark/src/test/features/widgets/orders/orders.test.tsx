@@ -152,12 +152,57 @@ describe('OrdersWidget', () => {
     expect(bars).toContain('0');
   });
 
-  it('has copy, modify and cancel actions on every row', () => {
+  it('has copy, modify and cancel actions on every row, modify only while the order is open', () => {
     const store = renderOrders();
-    const count = store.getState().orders.items.length;
+    const orders = store.getState().orders.items;
     for (const name of ['Copy order', 'Modify order', 'Cancel order']) {
-      expect(screen.getAllByRole('button', { name })).toHaveLength(count);
+      expect(screen.getAllByRole('button', { name })).toHaveLength(orders.length);
     }
+    const open = orders.filter((order) => ['pending', 'fulfilling'].includes(order.status));
+    const enabled = screen
+      .getAllByRole('button', { name: 'Modify order' })
+      .filter((button) => !(button as HTMLButtonElement).disabled);
+    expect(enabled).toHaveLength(open.length);
+    expect(open.length).toBeGreaterThan(0);
+    expect(open.length).toBeLessThan(orders.length);
+  });
+
+  it('modifies an order in place, offering the unfilled size and keeping the fill', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders();
+    const source = store.getState().orders.items.find((order) => order.productId === 'ETH-USD')!;
+    expect(source).toMatchObject({ status: 'fulfilling', size: 2, filledSize: 0.75 });
+    const row = screen.getAllByTestId('order-row').find((item) => item.textContent?.startsWith('ETH-USD'))!;
+    await user.click(within(row).getByRole('button', { name: 'Modify order' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('Modify Order');
+    expect(within(dialog).getByRole('button', { name: 'SELL' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(dialog).getByRole('button', { name: 'SELL' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'BUY' })).toBeDisabled();
+    expect(within(dialog).getByRole('textbox', { name: 'Size' })).toHaveValue('1.25');
+    expect(within(dialog).getByRole('textbox', { name: 'Price' })).toHaveValue('2540');
+    await user.clear(within(dialog).getByRole('textbox', { name: 'Size' }));
+    await user.type(within(dialog).getByRole('textbox', { name: 'Size' }), '3');
+    await user.clear(within(dialog).getByRole('textbox', { name: 'Price' }));
+    await user.type(within(dialog).getByRole('textbox', { name: 'Price' }), '2600');
+    await user.click(within(dialog).getByRole('radio', { name: 'IOC' }));
+
+    const count = store.getState().orders.items.length;
+    expect(rowGlows()).not.toContain(true);
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(store.getState().orders.items).toHaveLength(count);
+    expect(store.getState().orders.items.find((order) => order.id === source.id)).toEqual({
+      ...source,
+      timeInForce: 'IOC',
+      price: 2600,
+      size: 3.75,
+      updatedAt: expect.any(Number),
+    });
+    const glows = rowGlows();
+    expect(glows.filter(Boolean)).toHaveLength(1);
+    expect(glows[screen.getAllByTestId('order-row').indexOf(row)]).toBe(true);
   });
 
   it('copies an order into a new order form with the same values', async () => {

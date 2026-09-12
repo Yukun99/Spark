@@ -1,5 +1,5 @@
 import type { TradeSide } from '@/connections/coinbase';
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit';
 
 export const ORDER_TYPES = ['market', 'limit'] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
@@ -15,6 +15,7 @@ export const ORDER_STATUSES = ['pending', 'fulfilling', 'fulfilled', 'cancelled'
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export type Order = {
+  id: string;
   productId: string;
   side: TradeSide;
   type: OrderType;
@@ -27,9 +28,24 @@ export type Order = {
   status: OrderStatus;
   provider: string;
   placedAt: number;
+  /** Last time the user modified the order; absent until then. */
+  updatedAt?: number;
 };
 
-export type OrderDraft = Omit<Order, 'filledSize' | 'status' | 'placedAt'>;
+export type OrderDraft = Omit<Order, 'id' | 'filledSize' | 'status' | 'placedAt' | 'updatedAt'>;
+
+/** Fields the user can change on an order that is still being worked; the side is fixed. */
+export type OrderChanges = Pick<Order, 'type' | 'timeInForce' | 'price' | 'size'>;
+
+export type UpdateOrderPayload = { id: string; changes: OrderChanges };
+
+/** Moment an order last changed: its edit if any, else its placement. */
+export const orderTouchedAt = (order: Pick<Order, 'placedAt' | 'updatedAt'>) =>
+  order.updatedAt ?? order.placedAt;
+
+/** Orders still open for editing or cancelling; fulfilled and cancelled ones are final. */
+export const isOrderOpen = (order: Pick<Order, 'status'>) =>
+  order.status === 'pending' || order.status === 'fulfilling';
 
 export type OrdersState = {
   items: Order[];
@@ -38,7 +54,7 @@ export type OrdersState = {
 const SEED_PLACED_AT = Date.UTC(2026, 8, 12, 9, 0, 0);
 const MINUTE_MS = 60_000;
 
-type SeedOrder = Omit<Order, 'provider' | 'placedAt'>;
+type SeedOrder = Omit<Order, 'id' | 'provider' | 'placedAt'>;
 
 /** Dummy orders across instruments and fill states, one minute apart, until real fills exist. */
 const SEED_ORDERS: SeedOrder[] = [
@@ -57,6 +73,7 @@ const SEED_ORDERS: SeedOrder[] = [
 const initialState: OrdersState = {
   items: SEED_ORDERS.map((order, index) => ({
     ...order,
+    id: nanoid(),
     provider: 'Coinbase',
     placedAt: SEED_PLACED_AT + index * MINUTE_MS,
   })),
@@ -71,11 +88,25 @@ export const ordersSlice = createSlice({
         state.items.push(action.payload);
       },
       prepare: (draft: OrderDraft) => ({
-        payload: { ...draft, filledSize: 0, status: 'pending' as const, placedAt: Date.now() },
+        payload: {
+          ...draft,
+          id: nanoid(),
+          filledSize: 0,
+          status: 'pending' as const,
+          placedAt: Date.now(),
+        },
       }),
+    },
+    updateOrder: {
+      reducer: (state, action: PayloadAction<UpdateOrderPayload & { updatedAt: number }>) => {
+        const { id, changes, updatedAt } = action.payload;
+        const order = state.items.find((item) => item.id === id);
+        if (order !== undefined && isOrderOpen(order)) Object.assign(order, changes, { updatedAt });
+      },
+      prepare: (payload: UpdateOrderPayload) => ({ payload: { ...payload, updatedAt: Date.now() } }),
     },
   },
 });
 
-export const { addOrder } = ordersSlice.actions;
+export const { addOrder, updateOrder } = ordersSlice.actions;
 export const ordersReducer = ordersSlice.reducer;

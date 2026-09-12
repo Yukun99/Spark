@@ -1,6 +1,10 @@
 import type { Ticker } from '@/connections/coinbase';
-import type { OrderTemplate } from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
+import type {
+  EditTarget,
+  OrderTemplate,
+} from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
 import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
+import type { Order } from '@/store/ordersSlice';
 import { createAppStore } from '@/store/store';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -49,12 +53,22 @@ const tick = (next: Partial<Ticker>) => {
   act(() => notify?.());
 };
 
-const renderDialog = (side: 'buy' | 'sell' = 'buy', template?: OrderTemplate) => {
+const renderDialog = (
+  side: 'buy' | 'sell' = 'buy',
+  template?: OrderTemplate,
+  editing?: (orders: Order[]) => EditTarget,
+) => {
   const store = createAppStore();
   const onClose = vi.fn();
   const { unmount } = render(
     <Provider store={store}>
-      <PlaceOrderDialog productId='BTC-USD' side={side} template={template} onClose={onClose} />
+      <PlaceOrderDialog
+        productId='BTC-USD'
+        side={side}
+        template={template}
+        editing={editing?.(store.getState().orders.items)}
+        onClose={onClose}
+      />
     </Provider>,
   );
   return { store, onClose, unmount };
@@ -151,6 +165,31 @@ describe('PlaceOrderDialog', () => {
     expect(field('Size')).toHaveValue('0.5');
     await user.click(screen.getByRole('radio', { name: 'Market' }));
     expect(field('Price')).toHaveValue('101');
+  });
+
+  it('saves edits onto the target order, adding the filled size back on top', async () => {
+    const user = userEvent.setup();
+    const target = (orders: Order[]) => orders.find((order) => order.status === 'fulfilling')!;
+    const { store, onClose } = renderDialog('buy', { type: 'limit', timeInForce: 'GTC', price: 99, size: 1.25 }, target);
+    const before = target(store.getState().orders.items);
+    const count = store.getState().orders.items.length;
+    expect(screen.getByRole('dialog')).toHaveTextContent('Modify Order');
+    expect(screen.getByRole('button', { name: 'BUY' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'SELL' })).toBeDisabled();
+    await user.clear(field('Size'));
+    await user.type(field('Size'), '2');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(store.getState().orders.items).toHaveLength(count);
+    expect(store.getState().orders.items.find((order) => order.id === before.id)).toEqual({
+      ...before,
+      type: 'limit',
+      timeInForce: 'GTC',
+      price: 99,
+      size: 2 + before.filledSize,
+      updatedAt: expect.any(Number),
+    });
   });
 
   it('stores the order on confirm and closes; cancel stores nothing', async () => {

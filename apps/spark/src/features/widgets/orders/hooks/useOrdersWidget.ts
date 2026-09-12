@@ -1,10 +1,12 @@
 import type { TradeSide } from '@/connections/coinbase';
 import { GLOW_FADE_MS } from '@/features/widgets/freshnessGlow';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
+import { roundSize } from '@/features/widgets/instrument/dialog/orderValidation';
+import type { PlaceOrderDialogProps } from '@/features/widgets/instrument/dialog/placeOrderDialog';
 import { formatPrice, formatSize } from '@/features/widgets/instrument/tickerFormat';
 import { formatDateTime, formatFill } from '@/features/widgets/orders/orderFormat';
 import { useOrders } from '@/hooks/useOrders';
-import type { Order, OrderType } from '@/store/ordersSlice';
+import { isOrderOpen, orderTouchedAt, type Order, type OrderType } from '@/store/ordersSlice';
 import type { OrdersWidget } from '@/store/widgetsSlice';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -22,27 +24,38 @@ export type OrderRow = {
   provider: string;
   fulfilment: string;
   timestamp: string;
-  /** Set for orders placed moments ago so the row flashes; the glow is keyed on it. */
+  /** Set for orders placed or edited moments ago so the row flashes; the glow is keyed on it. */
   glowAt?: number;
+  /** Whether the order can still be modified or cancelled. */
+  open: boolean;
   order: Order;
 };
 
-type OrdersDialogKind = 'delete' | 'copy' | null;
+type OrdersDialogKind = 'delete' | 'copy' | 'edit' | null;
+
+/** Props for the order form the widget currently shows, minus its close handler. */
+export type OrderFormProps = Omit<PlaceOrderDialogProps, 'onClose'>;
 
 export type UseOrdersWidgetResult = {
   title: string;
   rows: OrderRow[];
-  dialog: OrdersDialogKind;
-  /** Order the copy dialog was opened from; only meaningful while `dialog` is 'copy'. */
-  copying: Order | null;
+  deleting: boolean;
+  /** Set while copying or editing an order. */
+  orderForm: OrderFormProps | null;
   openDelete: () => void;
   openCopy: (row: OrderRow) => void;
+  openEdit: (row: OrderRow) => void;
   closeDialog: () => void;
   confirmDelete: () => void;
 };
 
-const orderRow = (order: Order, index: number): OrderRow => ({
-  key: `${order.placedAt}-${index}`,
+const glowAt = (order: Order) => {
+  const touchedAt = orderTouchedAt(order);
+  return Date.now() - touchedAt < GLOW_FADE_MS ? touchedAt : undefined;
+};
+
+const orderRow = (order: Order): OrderRow => ({
+  key: order.id,
   instrument: order.productId,
   side: order.side,
   status: order.status,
@@ -53,20 +66,36 @@ const orderRow = (order: Order, index: number): OrderRow => ({
   provider: order.provider,
   fulfilment: `${formatSize(order.filledSize)} / ${formatSize(order.size)}`,
   timestamp: formatDateTime(order.placedAt),
-  glowAt: Date.now() - order.placedAt < GLOW_FADE_MS ? order.placedAt : undefined,
+  glowAt: glowAt(order),
+  open: isOrderOpen(order),
   order,
 });
+
+/** Copying reuses the order as typed; editing offers only the part not yet filled as the size. */
+const orderForm = (kind: OrdersDialogKind, order: Order): OrderFormProps | null => {
+  const { productId, side, type, timeInForce, price, filledSize } = order;
+  if (kind === 'copy') return { productId, side, template: { type, timeInForce, price, size: order.size } };
+  if (kind === 'edit') {
+    const size = roundSize(order.size - filledSize);
+    return { productId, side, template: { type, timeInForce, price, size }, editing: order };
+  }
+  return null;
+};
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
   const { orders } = useOrders();
   const { removeWidget } = useWidgets();
   const [dialog, setDialog] = useState<OrdersDialogKind>(null);
-  const [copying, setCopying] = useState<Order | null>(null);
+  const [selected, setSelected] = useState<Order | null>(null);
 
   const openDelete = useCallback(() => setDialog('delete'), []);
   const openCopy = useCallback((row: OrderRow) => {
-    setCopying(row.order);
+    setSelected(row.order);
     setDialog('copy');
+  }, []);
+  const openEdit = useCallback((row: OrderRow) => {
+    setSelected(row.order);
+    setDialog('edit');
   }, []);
   const closeDialog = useCallback(() => setDialog(null), []);
   const confirmDelete = useCallback(() => {
@@ -75,6 +104,20 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
   }, [removeWidget, widget.id]);
 
   const rows = useMemo(() => [...orders].reverse().map(orderRow), [orders]);
+  const form = useMemo(
+    () => (selected === null ? null : orderForm(dialog, selected)),
+    [dialog, selected],
+  );
 
-  return { title: 'Orders', rows, dialog, copying, openDelete, openCopy, closeDialog, confirmDelete };
+  return {
+    title: 'Orders',
+    rows,
+    deleting: dialog === 'delete',
+    orderForm: form,
+    openDelete,
+    openCopy,
+    openEdit,
+    closeDialog,
+    confirmDelete,
+  };
 };

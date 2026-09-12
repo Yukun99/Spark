@@ -8,6 +8,8 @@ export type TradeButtonsProps = {
   onTrade?: (side: TradeSide) => void;
   /** When set, the other side renders dimmed so the pair works as a toggle. */
   selected?: TradeSide;
+  /** Locks the toggle; the selected side keeps its full colour. */
+  disabled?: boolean;
   sx?: BoxProps['sx'];
 };
 
@@ -17,7 +19,7 @@ const BUTTON_FONT_PX = 12;
 const UNSELECTED_OPACITY = 0.4;
 
 /** BUY on green and SELL on red, side by side; clicks stay off the card. */
-export const TradeButtons = ({ onTrade, selected, sx }: TradeButtonsProps) => (
+export const TradeButtons = ({ onTrade, selected, disabled, sx }: TradeButtonsProps) => (
   <Box sx={[{ display: 'flex', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}>
     {SIDES.map((side) => (
       <FilledButton
@@ -25,6 +27,7 @@ export const TradeButtons = ({ onTrade, selected, sx }: TradeButtonsProps) => (
         size='small'
         data-side={side}
         aria-pressed={selected === undefined ? undefined : selected === side}
+        disabled={disabled}
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           event.stopPropagation();
           onTrade?.(side);
@@ -38,10 +41,12 @@ export const TradeButtons = ({ onTrade, selected, sx }: TradeButtonsProps) => (
           bgcolor: trade[side].light,
           color: colours.navy,
           '&:hover': { bgcolor: trade[side].light },
+          '&.Mui-disabled': { bgcolor: trade[side].light, color: colours.navy },
           ...theme.applyStyles('dark', {
             bgcolor: trade[side].dark,
             color: colours.cream,
             '&:hover': { bgcolor: trade[side].dark },
+            '&.Mui-disabled': { bgcolor: trade[side].dark, color: colours.cream },
           }),
         })}
       >

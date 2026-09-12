@@ -1,4 +1,4 @@
-import { addOrder, ordersReducer, type OrderDraft } from '@/store/ordersSlice';
+import { addOrder, ordersReducer, updateOrder, type OrderDraft } from '@/store/ordersSlice';
 
 const draft: OrderDraft = {
   productId: 'BTC-USD',
@@ -38,11 +38,37 @@ describe('ordersSlice', () => {
     expect(two.items).toHaveLength(seeded + 2);
     expect(two.items[seeded]).toEqual({
       ...draft,
+      id: expect.any(String),
       filledSize: 0,
       status: 'pending',
       placedAt: Date.parse('2026-09-12T10:00:00Z'),
     });
     expect(two.items[seeded + 1].side).toBe('sell');
+    expect(new Set(two.items.map((order) => order.id)).size).toBe(two.items.length);
+    vi.useRealTimers();
+  });
+
+  it('updates only open orders in place, keeping their fill and stamping the edit time', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-12T11:00:00Z'));
+    const initial = ordersReducer(undefined, { type: 'init' });
+    const changes = { type: 'limit', timeInForce: 'FOK', price: 5, size: 9 } as const;
+    const working = initial.items.find((order) => order.status === 'fulfilling')!;
+    const updated = ordersReducer(initial, updateOrder({ id: working.id, changes }));
+    const index = initial.items.indexOf(working);
+    expect(updated.items).toHaveLength(initial.items.length);
+    expect(updated.items[index]).toEqual({
+      ...working,
+      ...changes,
+      updatedAt: Date.parse('2026-09-12T11:00:00Z'),
+    });
+    expect(updated.items[index].placedAt).toBe(working.placedAt);
+
+    for (const status of ['fulfilled', 'cancelled'] as const) {
+      const final = initial.items.find((order) => order.status === status)!;
+      expect(ordersReducer(initial, updateOrder({ id: final.id, changes }))).toBe(initial);
+    }
+    expect(ordersReducer(initial, updateOrder({ id: 'missing', changes }))).toBe(initial);
     vi.useRealTimers();
   });
 });

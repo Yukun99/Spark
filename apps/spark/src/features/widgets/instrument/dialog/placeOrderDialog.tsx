@@ -3,6 +3,7 @@ import type { TradeSide } from '@/connections/coinbase';
 import { DetailFields, FIELD_FONT_PX } from '@/features/widgets/instrument/dialog/detailFields';
 import {
   usePlaceOrderDialog,
+  type EditTarget,
   type OrderTemplate,
 } from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
 import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
@@ -27,6 +28,8 @@ export type PlaceOrderDialogProps = {
   side: TradeSide;
   /** Prefills the form from an existing order. */
   template?: OrderTemplate;
+  /** When set, confirming updates this order instead of placing a new one. */
+  editing?: EditTarget;
   onClose: () => void;
 };
 
@@ -87,13 +90,20 @@ const RadioRow = <T extends string>({ label, value, options, labels, onChange }:
 );
 
 /** Mounted only while open; the clicked side seeds the form. Details fill the form's height and scroll. */
-export const PlaceOrderDialog = ({ productId, side, template, onClose }: PlaceOrderDialogProps) => {
-  const order = usePlaceOrderDialog({ productId, side, template, onClose });
+export const PlaceOrderDialog = ({
+  productId,
+  side,
+  template,
+  editing,
+  onClose,
+}: PlaceOrderDialogProps) => {
+  const order = usePlaceOrderDialog({ productId, side, template, editing, onClose });
 
   return (
     <ConfirmDialog
       open
-      title='Place Order'
+      title={order.title}
+      confirmLabel={order.confirmLabel}
       maxWidth={false}
       paperSx={PAPER_SX}
       confirmDisabled={!order.canConfirm}
@@ -102,7 +112,12 @@ export const PlaceOrderDialog = ({ productId, side, template, onClose }: PlaceOr
       contentSx={CONTENT_SX}
     >
       <Stack spacing={1} sx={{ flex: FORM_FLEX, minWidth: 0, pt: 1 }}>
-        <TradeButtons selected={order.side} onTrade={order.setSide} sx={{ pb: `${CAPTION_BLOCK_PX}px` }} />
+        <TradeButtons
+          selected={order.side}
+          disabled={order.sideLocked}
+          onTrade={order.setSide}
+          sx={{ pb: `${CAPTION_BLOCK_PX}px` }}
+        />
         <TextField
           fullWidth
           disabled
