@@ -2,14 +2,14 @@ import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 
 const GRID_WIDTH = 600;
 const GRID_HEIGHT = 300;
 const CELL = 100;
 
-const renderFrame = ({ editMode = true } = {}) => {
+const renderFrame = ({ editMode = true, tickAt }: { editMode?: boolean; tickAt?: number } = {}) => {
   const store = createAppStore();
   if (editMode) store.dispatch(toggleEditMode());
   const widget = store.getState().widgets.items[0];
@@ -23,6 +23,7 @@ const renderFrame = ({ editMode = true } = {}) => {
           onDelete={vi.fn()}
           onModify={vi.fn()}
           onExpand={onExpand}
+          tickAt={tickAt}
         >
           <span>content</span>
         </WidgetFrame>
@@ -36,6 +37,8 @@ const renderFrame = ({ editMode = true } = {}) => {
   } as DOMRect);
   return { store, frame: screen.getByTestId('widget-frame'), onExpand };
 };
+
+const GLOW = '[data-testid="freshness-glow"]';
 
 const pointer = (x: number, y: number) => ({ clientX: x, clientY: y, button: 0, pointerId: 1 });
 
@@ -89,5 +92,30 @@ describe('WidgetFrame drag', () => {
 
     fireEvent.click(frame);
     expect(onExpand).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the freshness glow only outside edit mode with a tick time, remounting it per tick', () => {
+    expect(renderFrame({ editMode: false }).frame.querySelector(GLOW)).toBeNull();
+    cleanup();
+    expect(renderFrame({ editMode: true, tickAt: 1000 }).frame.querySelector(GLOW)).toBeNull();
+    cleanup();
+
+    const store = createAppStore();
+    const widget = store.getState().widgets.items[0];
+    const frameAt = (tickAt: number) => (
+      <Provider store={store}>
+        <WidgetGrid layouts={[widget.layout]}>
+          <WidgetFrame widget={widget} name='BTC-USD' onDelete={vi.fn()} onModify={vi.fn()} tickAt={tickAt}>
+            <span>content</span>
+          </WidgetFrame>
+        </WidgetGrid>
+      </Provider>
+    );
+    const { rerender } = render(frameAt(1000));
+    const first = screen.getByTestId('freshness-glow');
+    rerender(frameAt(1000));
+    expect(screen.getByTestId('freshness-glow')).toBe(first);
+    rerender(frameAt(2000));
+    expect(screen.getByTestId('freshness-glow')).not.toBe(first);
   });
 });

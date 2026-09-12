@@ -61,7 +61,8 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   prices never pass through Redux.
 - Features live in `src/features/<feature>/`. `grid/` is the page grid (`WidgetGrid`, sizes in
   `gridConfig.ts`, occupancy helpers). `widgets/` holds the widgets: `widgetFrame.tsx` is the shared
-  card chrome (drag-to-move, delete/modify in edit mode) and each widget has its own subfolder
+  card chrome (drag-to-move, delete/modify in edit mode, `freshnessGlow.tsx` purple wash that
+  restarts on each tick and fades over 10s) and each widget has its own subfolder
   (`instrument/`) with its hook under `hooks/` and its dialogs under `dialog/`. Widgets render inside
   `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans default to 1). `edit/` holds
   the action-column buttons (edit mode, add widget, update interval).

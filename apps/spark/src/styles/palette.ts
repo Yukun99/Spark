@@ -19,7 +19,13 @@ export const gray = {
   100: '#000000',
 } as const;
 
-export const palette = { theme, gray } as const;
+/** Translucent purple laid over a widget right after a tick; fades to nothing when idle. */
+export const glow = {
+  light: 'rgba(106, 27, 154, 0.3)',
+  dark: 'rgba(106, 27, 154, 0.45)',
+} as const;
+
+export const palette = { theme, gray, glow } as const;
 
 export type ThemeColour = keyof typeof theme;
 export type GrayStep = keyof typeof gray;

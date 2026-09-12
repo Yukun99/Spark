@@ -16,6 +16,7 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
     bid,
     ask,
     updatedAt,
+    tickAt,
     dialog,
     openDelete,
     openModify,
@@ -33,6 +34,7 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         onDelete={openDelete}
         onModify={openModify}
         onExpand={openDetails}
+        tickAt={tickAt}
       >
         <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{widget.productId}</WidgetLabel>
         <BidAskRow bid={bid} ask={ask} />

@@ -1,8 +1,9 @@
 import { ClearButton } from '@/components/buttons/clearButton';
 import { GridWidget } from '@/features/grid/gridWidget';
+import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
 import { useWidgetDrag } from '@/features/widgets/hooks/useWidgetDrag';
-import { WidgetLabel } from '@/features/widgets/widgetLabel';
+import { LABEL_FONT_PX, LABEL_LINE_PX, WidgetLabel } from '@/features/widgets/widgetLabel';
 import { useEditMode } from '@/hooks/useEditMode';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { Widget } from '@/store/widgetsSlice';
@@ -15,18 +16,22 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { useCallback, type MouseEvent, type ReactNode } from 'react';
 
+const CARD_PADDING = 2;
+
 export type WidgetFrameProps = {
   widget: Widget;
   name: string;
   onDelete: () => void;
   onModify: () => void;
   onExpand?: () => void;
+  tickAt?: number;
   children: ReactNode;
 };
 
 /**
  * Card chrome shared by all widgets: drag-to-move, delete and modify actions in edit mode;
- * outside edit mode, clicking the card or its corner icon calls `onExpand`.
+ * outside edit mode, clicking the card or its corner icon calls `onExpand`, and `tickAt`
+ * restarts a purple glow that fades while no new tick arrives.
  */
 export const WidgetFrame = ({
   widget,
@@ -34,6 +39,7 @@ export const WidgetFrame = ({
   onDelete,
   onModify,
   onExpand,
+  tickAt,
   children,
 }: WidgetFrameProps) => {
   const { editMode } = useEditMode();
@@ -69,7 +75,7 @@ export const WidgetFrame = ({
           (theme) => ({
             position: 'absolute',
             inset: 24,
-            p: 2,
+            p: CARD_PADDING,
             borderRadius: '24px',
             display: 'flex',
             flexDirection: 'column',
@@ -83,6 +89,7 @@ export const WidgetFrame = ({
           }),
         ]}
       >
+        {!editMode && tickAt !== undefined && <FreshnessGlow tickAt={tickAt} />}
         {editMode ? (
           <>
             <WidgetLabel>{name}</WidgetLabel>
@@ -100,19 +107,27 @@ export const WidgetFrame = ({
             </Stack>
           </>
         ) : (
-          <>
+          <Box
+            sx={{
+              position: 'relative',
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             {expandable && (
               <ClearButton
                 rounded
                 aria-label='Expand widget'
                 onClick={onExpandClick}
-                sx={{ position: 'absolute', top: 8, right: 8, p: 0.5 }}
+                sx={{ position: 'absolute', top: 0, right: 0, p: 0, height: LABEL_LINE_PX }}
               >
-                <FullscreenIcon sx={{ fontSize: 16 }} />
+                <FullscreenIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </ClearButton>
             )}
             {children}
-          </>
+          </Box>
         )}
       </Box>
     </GridWidget>
