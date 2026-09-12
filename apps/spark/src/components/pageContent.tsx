@@ -1,5 +1,6 @@
-import { AddWidgetButton } from '@/features/widgets/addWidgetButton';
-import { EditModeButton } from '@/features/grid/editModeButton';
+import { AddWidgetButton } from '@/features/edit/addWidgetButton';
+import { EditModeButton } from '@/features/edit/editModeButton';
+import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
 import { BANNER_HEIGHT } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { InstrumentWidget } from '@/features/widgets/instrument';
@@ -51,19 +52,22 @@ export const PageContent = () => {
         </OverlayScrollbarsComponent>
       </Box>
       <Divider orientation='vertical' flexItem sx={{ borderColor: gray[50] }} />
-      <Stack component='aside' sx={{ p: 3 }}>
+      <Stack component='aside' sx={{ p: 3, alignItems: 'center' }}>
         <EditModeButton />
         <Collapse in={editMode} timeout={REVEAL_MS}>
-          <Box
+          <Stack
+            spacing={3}
             sx={{
               pt: 3,
+              alignItems: 'center',
               opacity: editMode ? 1 : 0,
               transform: editMode ? 'none' : 'translateY(-24px) scale(0.5)',
               transition: `opacity ${REVEAL_MS}ms ease-out, transform ${REVEAL_MS}ms ease-out`,
             }}
           >
             <AddWidgetButton />
-          </Box>
+            <UpdateIntervalButton />
+          </Stack>
         </Collapse>
       </Stack>
     </Box>

@@ -7,7 +7,14 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
-const ticker: Ticker = { productId: 'BTC-USD', bid: 100.5, ask: 101, price: 100.7, time: '' };
+const ticker: Ticker = {
+  productId: 'BTC-USD',
+  bid: 100.5,
+  ask: 101,
+  price: 100.7,
+  time: '2026-09-12T13:45:12.345678Z',
+  receivedAt: 0,
+};
 
 vi.mock('@/connections/coinbase', () => ({
   coinbaseFeed: {
@@ -37,6 +44,14 @@ describe('InstrumentWidget', () => {
     expect(screen.getByText('BTC-USD')).toBeInTheDocument();
     expect(screen.getByText('100.50')).toBeInTheDocument();
     expect(screen.getByText('101.00')).toBeInTheDocument();
+  });
+
+  it('shows the exchange timestamp of the latest tick', () => {
+    renderWidget();
+    const local = new Date('2026-09-12T13:45:12.345Z');
+    const hh = String(local.getHours()).padStart(2, '0');
+    const mm = String(local.getMinutes()).padStart(2, '0');
+    expect(screen.getByText(`Last Refresh: ${hh}:${mm}:12.345`)).toBeInTheDocument();
   });
 
   it('replaces content with the name and actions in edit mode, and deletes after confirming', async () => {

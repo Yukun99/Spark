@@ -1,3 +1,5 @@
+import { DEFAULT_UPDATE_INTERVAL_MS } from '@/store/settingsSlice';
+
 export const COINBASE_REST_URL = 'https://api.exchange.coinbase.com';
 export const COINBASE_WS_URL = 'wss://ws-feed.exchange.coinbase.com';
 
@@ -19,6 +21,7 @@ export type Ticker = {
   ask: number;
   price: number;
   time: string;
+  receivedAt: number;
 };
 
 type TickerMessage = {
@@ -51,7 +54,7 @@ export const getCoinbaseProducts = (): Promise<CoinbaseProduct[]> => {
   return productsPromise;
 };
 
-export const parseTickerMessage = (raw: unknown): Ticker | undefined => {
+export const parseTickerMessage = (raw: unknown, receivedAt = Date.now()): Ticker | undefined => {
   if (typeof raw !== 'object' || raw === null) return undefined;
   const message = raw as Partial<TickerMessage>;
   if (message.type !== 'ticker' || !message.product_id) return undefined;
@@ -64,6 +67,7 @@ export const parseTickerMessage = (raw: unknown): Ticker | undefined => {
     ask,
     price: Number(message.price),
     time: message.time ?? '',
+    receivedAt,
   };
 };
 
@@ -78,7 +82,7 @@ class CoinbaseFeed {
   private readonly listeners = new Map<string, Set<Listener>>();
   private readonly dirty = new Set<string>();
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
-  private updateIntervalMs = 10000;
+  private updateIntervalMs = DEFAULT_UPDATE_INTERVAL_MS;
   private reconnectDelay = RECONNECT_MIN_MS;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -86,6 +90,10 @@ class CoinbaseFeed {
 
   setUpdateInterval = (ms: number) => {
     this.updateIntervalMs = Math.max(0, ms);
+    if (this.flushTimer === null) return;
+    clearTimeout(this.flushTimer);
+    this.flushTimer = null;
+    this.scheduleFlush();
   };
 
   subscribe = (productId: string, listener: Listener): (() => void) => {

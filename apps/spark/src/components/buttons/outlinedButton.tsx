@@ -1,8 +1,5 @@
-import { buttonSx } from '@/components/buttons/buttonSx';
-import Button, { type ButtonProps } from '@mui/material/Button';
+import { BaseButton, type BaseButtonProps } from '@/components/buttons/baseButton';
 
-export type OutlinedButtonProps = Omit<ButtonProps, 'variant'> & { rounded?: boolean };
+export type OutlinedButtonProps = Omit<BaseButtonProps, 'variant'>;
 
-export const OutlinedButton = ({ rounded, sx, ...props }: OutlinedButtonProps) => (
-  <Button variant='outlined' sx={buttonSx({ rounded, sx })} {...props} />
-);
+export const OutlinedButton = (props: OutlinedButtonProps) => <BaseButton variant='outlined' {...props} />;

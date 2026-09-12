@@ -1,3 +1,4 @@
+import type { Ticker } from '@/connections/coinbase';
 import { useCoinbaseTicker } from '@/connections/hooks/useCoinbaseTicker';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { InstrumentWidget } from '@/store/widgetsSlice';
@@ -8,6 +9,7 @@ type InstrumentDialogKind = 'delete' | 'modify' | null;
 export type UseInstrumentResult = {
   bid: string;
   ask: string;
+  updatedAt: string;
   dialog: InstrumentDialogKind;
   openDelete: () => void;
   openModify: () => void;
@@ -23,6 +25,21 @@ const priceFormat = new Intl.NumberFormat('en-US', {
 
 const formatPrice = (value: number | undefined) =>
   value === undefined ? '--' : priceFormat.format(value);
+
+const timeFormat = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  fractionalSecondDigits: 3,
+  hour12: false,
+});
+
+/** Exchange timestamp of the tick when present, otherwise the time it arrived. */
+const formatUpdatedAt = (ticker: Ticker | undefined) => {
+  if (!ticker) return '--';
+  const exchangeTime = Date.parse(ticker.time);
+  return timeFormat.format(Number.isNaN(exchangeTime) ? ticker.receivedAt : exchangeTime);
+};
 
 export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => {
   const ticker = useCoinbaseTicker(widget.productId);
@@ -47,6 +64,7 @@ export const useInstrument = (widget: InstrumentWidget): UseInstrumentResult => 
   return {
     bid: formatPrice(ticker?.bid),
     ask: formatPrice(ticker?.ask),
+    updatedAt: formatUpdatedAt(ticker),
     dialog,
     openDelete,
     openModify,

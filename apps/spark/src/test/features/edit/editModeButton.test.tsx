@@ -1,4 +1,4 @@
-import { EditModeButton } from '@/features/grid/editModeButton';
+import { EditModeButton } from '@/features/edit/editModeButton';
 import { createAppStore } from '@/store/store';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

@@ -11,13 +11,22 @@ export type InstrumentWidgetProps = {
 };
 
 export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
-  const { bid, ask, dialog, openDelete, openModify, closeDialog, confirmDelete, confirmInstrument } =
-    useInstrument(widget);
+  const {
+    bid,
+    ask,
+    updatedAt,
+    dialog,
+    openDelete,
+    openModify,
+    closeDialog,
+    confirmDelete,
+    confirmInstrument,
+  } = useInstrument(widget);
 
   return (
     <>
       <WidgetFrame widget={widget} name={widget.productId} onDelete={openDelete} onModify={openModify}>
-        <WidgetLabel>{widget.productId}</WidgetLabel>
+        <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{widget.productId}</WidgetLabel>
         <BidAskRow bid={bid} ask={ask} />
       </WidgetFrame>
       <ConfirmDialog

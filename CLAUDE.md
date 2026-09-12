@@ -63,7 +63,8 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   `gridConfig.ts`, occupancy helpers). `widgets/` holds the widgets: `widgetFrame.tsx` is the shared
   card chrome (drag-to-move, delete/modify in edit mode) and each widget is one file
   (`instrument.tsx`) with its dialog beside it and its hook under `hooks/`. Widgets render inside
-  `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans default to 1).
+  `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans default to 1). `edit/` holds
+  the action-column buttons (edit mode, add widget, update interval).
 - `src/components/` is for general-purpose UI only (banner, button variants, dialogs, page
   chrome). Anything tied to one feature (its buttons, dialogs, hooks) lives in that feature's
   folder. Styling in `src/styles/`.
