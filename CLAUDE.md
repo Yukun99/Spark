@@ -13,6 +13,9 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   this repo intentionally does not keep.
 - When adding text to any `.md` file, keep it brief. Prefer leaving a placeholder and asking the
   developer to fill it in, unless told otherwise.
+- After any code change, run `pnpm nx run-many -t lint typecheck test -p spark` before reporting
+  done. When a large task is complete, ask the developer to test it in the browser.
+- Before the developer commits, list any new untracked files so none are left out of the commit.
 
 ## Code Structure
 
