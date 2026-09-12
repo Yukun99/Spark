@@ -6,6 +6,7 @@ import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { ThemeProvider } from '@mui/material/styles';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import 'overlayscrollbars/overlayscrollbars.css';
 import { Provider } from 'react-redux';
 
 const container = document.getElementById('root');

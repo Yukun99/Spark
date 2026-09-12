@@ -36,19 +36,37 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   usage. Icons come from `@mui/icons-material`.
 - Mode-dependent colours: use `theme.applyStyles('dark', {...})` inside `sx`/style overrides,
   importing values from `palette.ts` rather than writing raw hex.
+- Fonts come from `src/styles/fonts.ts`: `fonts.ui` (Inter, set as the MUI default) and
+  `fonts.display` (Harmonias Demo, falling back to Source Serif 4) for the banner title. Inter and
+  Source Serif 4 load via the Google Fonts link in `index.html`; Harmonias Demo is bundled at
+  `public/fonts/harmonias-demo.ttf` (`@font-face` in `styles.css`; demo licence, personal use only).
+- Scrolling: `html`/`body` never scroll (`overflow: hidden` in `styles.css`). The only scroll
+  container is the grid area in `pageContent.tsx`, using OverlayScrollbars (floating bar, colours
+  via `--os-*` CSS vars from the palette). Banner and action column stay fixed.
 - Shadows: use `shadowSx('sm' | 'md' | 'lg')` from `src/styles/shadows.ts` in `sx` (navy-tinted in
   light, cream-tinted in dark). Don't write `boxShadow` values inline.
 
-## State And Layout
+## State, Data And Layout
 
 - Redux Toolkit store in `src/store/` (`store.ts`, one `<name>Slice.ts` per slice, typed
-  `useAppDispatch`/`useAppSelector` in `hooks.ts`). Components never import the store directly;
-  wrap access in a `use<Feature>` hook under `src/hooks/`.
-- Features live in `src/features/<feature>/`. The page body is the `WidgetGrid` from
-  `src/features/grid/` (size in `gridConfig.ts`); each gridded widget gets its own feature folder
-  and is placed with `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans
-  default to 1).
-- Shared UI (banner, buttons, page chrome) stays in `src/components/`; styling in `src/styles/`.
+  `useAppDispatch`/`useAppSelector` in `hooks.ts`). Slices: `layout` (edit mode), `settings`
+  (update interval), `widgets` (placed widgets). Components never import the store directly; wrap
+  access in a `use<Feature>` hook.
+- Hooks live next to what they serve, in a `hooks/` subfolder of that feature, component or
+  connection folder (e.g. `features/widgets/hooks/useWidgets.ts`). Only cross-cutting store hooks
+  (`useEditMode`, `useUpdateInterval`) sit in `src/hooks/`.
+- Exchange access lives in `src/connections/` (`coinbase.tsx`: REST product list + one shared
+  WebSocket ticker feed). The feed keeps latest ticks in a map and notifies subscribers on the
+  configured interval; widgets read it with `useCoinbaseTicker` (`useSyncExternalStore`), so
+  prices never pass through Redux.
+- Features live in `src/features/<feature>/`. `grid/` is the page grid (`WidgetGrid`, sizes in
+  `gridConfig.ts`, occupancy helpers). `widgets/` holds the widgets: `widgetFrame.tsx` is the shared
+  card chrome (drag-to-move, delete/modify in edit mode) and each widget is one file
+  (`instrument.tsx`) with its dialog beside it and its hook under `hooks/`. Widgets render inside
+  `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans default to 1).
+- `src/components/` is for general-purpose UI only (banner, button variants, dialogs, page
+  chrome). Anything tied to one feature (its buttons, dialogs, hooks) lives in that feature's
+  folder. Styling in `src/styles/`.
 
 ## Naming
 
@@ -77,9 +95,9 @@ All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`,
 
 Current state: `apps/spark/src/main.tsx` bootstraps React with the Redux `Provider`, MUI
 `ThemeProvider` + `CssBaseline`, and renders `App` (`src/app.tsx`): a `Banner` plus `PageContent`
-(the widget grid, a divider and an action column with the edit-mode button). Brand colours live in
+(the widget grid with instrument widgets, a divider and an action column with edit/add buttons). Brand colours live in
 `src/styles/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, black, white, plus a
-`gray` ramp 10-100). Ticker widgets and the data layer still need to be created.
+`gray` ramp 10-100). Trading, multi-instrument widgets and the update-interval control are still to come.
 
 ## Commands
 

@@ -1,3 +1,4 @@
+import { fonts } from '@/styles/fonts';
 import { gray, theme as colours } from '@/styles/palette';
 import { createTheme } from '@mui/material/styles';
 
@@ -6,6 +7,7 @@ const common = { black: colours.black, white: colours.white };
 
 export const theme = createTheme({
   cssVariables: { colorSchemeSelector: 'data-mui-color-scheme' },
+  typography: { fontFamily: fonts.ui },
   colorSchemes: {
     light: {
       palette: {
@@ -25,6 +27,18 @@ export const theme = createTheme({
     },
   },
   components: {
+    MuiModal: { defaultProps: { disableScrollLock: true } },
+    MuiDialog: { defaultProps: { disableScrollLock: true } },
+    MuiPaper: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          backgroundImage: 'none',
+          backgroundColor: colours.cream,
+          color: colours.navy,
+          ...theme.applyStyles('dark', { backgroundColor: colours.navy, color: colours.cream }),
+        }),
+      },
+    },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {

@@ -1,10 +1,14 @@
 import { layoutReducer } from '@/store/layoutSlice';
+import { settingsReducer } from '@/store/settingsSlice';
+import { widgetsReducer } from '@/store/widgetsSlice';
 import { configureStore } from '@reduxjs/toolkit';
 
 export const createAppStore = () =>
   configureStore({
     reducer: {
       layout: layoutReducer,
+      settings: settingsReducer,
+      widgets: widgetsReducer,
     },
   });
 

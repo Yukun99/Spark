@@ -1,4 +1,4 @@
-import { EditModeButton } from '@/components/buttons/editModeButton';
+import { EditModeButton } from '@/features/grid/editModeButton';
 import { createAppStore } from '@/store/store';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -16,6 +16,6 @@ describe('EditModeButton', () => {
 
     await user.click(screen.getByRole('button', { name: 'Enter edit mode' }));
     expect(store.getState().layout.editMode).toBe(true);
-    expect(screen.getByRole('button', { name: 'Exit edit mode' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save layout' })).toBeInTheDocument();
   });
 });

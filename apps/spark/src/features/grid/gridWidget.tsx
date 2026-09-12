@@ -1,12 +1,6 @@
+import type { WidgetLayout } from '@/features/grid/gridTypes';
 import Box from '@mui/material/Box';
 import type { ReactNode } from 'react';
-
-export type WidgetLayout = {
-  row: number;
-  col: number;
-  rowSpan?: number;
-  colSpan?: number;
-};
 
 export type GridWidgetProps = {
   layout: WidgetLayout;
@@ -19,6 +13,7 @@ export const GridWidget = ({ layout, children }: GridWidgetProps) => {
   return (
     <Box
       sx={{
+        position: 'relative',
         gridRowStart: row,
         gridRowEnd: `span ${rowSpan}`,
         gridColumnStart: col,

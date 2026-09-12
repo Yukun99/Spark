@@ -1,17 +1,23 @@
 import { GRID_COLS, GRID_ROWS } from '@/features/grid/gridConfig';
 import { GridWidget } from '@/features/grid/gridWidget';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
+import { createAppStore } from '@/store/store';
 import { render, screen } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import type { ReactElement } from 'react';
+
+const renderInStore = (ui: ReactElement) =>
+  render(<Provider store={createAppStore()}>{ui}</Provider>);
 
 describe('WidgetGrid', () => {
   it('renders a dot at every inner intersection', () => {
-    render(<WidgetGrid />);
+    renderInStore(<WidgetGrid layouts={[]} />);
     expect(screen.getAllByTestId('grid-dot')).toHaveLength((GRID_ROWS - 1) * (GRID_COLS - 1));
   });
 
   it('fills every unoccupied cell with a placeholder', () => {
-    render(
-      <WidgetGrid>
+    renderInStore(
+      <WidgetGrid layouts={[{ row: 1, col: 1, colSpan: 2 }]}>
         <GridWidget layout={{ row: 1, col: 1, colSpan: 2 }} />
       </WidgetGrid>,
     );
@@ -22,8 +28,8 @@ describe('WidgetGrid', () => {
   });
 
   it('places a widget on the requested cells', () => {
-    render(
-      <WidgetGrid>
+    renderInStore(
+      <WidgetGrid layouts={[{ row: 2, col: 3, rowSpan: 2, colSpan: 2 }]}>
         <GridWidget layout={{ row: 2, col: 3, rowSpan: 2, colSpan: 2 }}>
           <span>widget</span>
         </GridWidget>

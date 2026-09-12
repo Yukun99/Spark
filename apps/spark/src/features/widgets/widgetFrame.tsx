@@ -1,0 +1,87 @@
+import { ClearButton } from '@/components/buttons/clearButton';
+import { GridWidget } from '@/features/grid/gridWidget';
+import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
+import { useWidgetDrag } from '@/features/widgets/hooks/useWidgetDrag';
+import { WidgetLabel } from '@/features/widgets/widgetLabel';
+import { useEditMode } from '@/hooks/useEditMode';
+import { useWidgets } from '@/features/widgets/hooks/useWidgets';
+import type { Widget } from '@/store/widgetsSlice';
+import { theme as colours } from '@/styles/palette';
+import { shadowSx } from '@/styles/shadows';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import { useCallback, type ReactNode } from 'react';
+
+
+export type WidgetFrameProps = {
+  widget: Widget;
+  name: string;
+  onDelete: () => void;
+  onModify: () => void;
+  children: ReactNode;
+};
+
+/** Card chrome shared by all widgets: drag-to-move, delete and modify actions in edit mode. */
+export const WidgetFrame = ({ widget, name, onDelete, onModify, children }: WidgetFrameProps) => {
+  const { editMode } = useEditMode();
+  const { moveWidget } = useWidgets();
+  const { setDragTarget } = useDragTarget();
+  const onDrop = useCallback(
+    (cell: { row: number; col: number }) => moveWidget(widget.id, cell),
+    [moveWidget, widget.id],
+  );
+  const { dragging, offset, handlers } = useWidgetDrag({
+    layout: widget.layout,
+    enabled: editMode,
+    onHover: setDragTarget,
+    onDrop,
+  });
+
+  return (
+    <GridWidget layout={widget.layout}>
+      <Box
+        {...handlers}
+        data-testid='widget-frame'
+        sx={[
+          shadowSx('sm'),
+          (theme) => ({
+            position: 'absolute',
+            inset: 24,
+            p: 2,
+            borderRadius: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            bgcolor: colours.cream,
+            transform: `translate(${offset.dx}px, ${offset.dy}px)`,
+            zIndex: dragging ? 1 : 'auto',
+            ...(editMode && { cursor: dragging ? 'grabbing' : 'grab', userSelect: 'none', touchAction: 'none' }),
+            ...theme.applyStyles('dark', { bgcolor: colours.navy }),
+          }),
+        ]}
+      >
+        {editMode ? (
+          <>
+            <WidgetLabel>{name}</WidgetLabel>
+            <Stack
+              direction='row'
+              spacing={3}
+              sx={{ position: 'absolute', inset: 0, justifyContent: 'center', alignItems: 'center' }}
+            >
+              <ClearButton rounded aria-label='Modify widget' onClick={onModify} sx={{ p: 1 }}>
+                <EditIcon />
+              </ClearButton>
+              <ClearButton rounded aria-label='Delete widget' onClick={onDelete} sx={{ p: 1 }}>
+                <CloseIcon />
+              </ClearButton>
+            </Stack>
+          </>
+        ) : (
+          children
+        )}
+      </Box>
+    </GridWidget>
+  );
+};

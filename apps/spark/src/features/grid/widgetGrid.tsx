@@ -1,19 +1,22 @@
 import { GRID_COLS, GRID_ROWS } from '@/features/grid/gridConfig';
 import { GridDots } from '@/features/grid/gridDots';
+import { getEmptyCells } from '@/features/grid/gridOccupancy';
 import { GridPlaceholder } from '@/features/grid/gridPlaceholder';
-import { useWidgetGrid } from '@/features/grid/useWidgetGrid';
+import type { WidgetLayout } from '@/features/grid/gridTypes';
 import Box from '@mui/material/Box';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 export type WidgetGridProps = {
+  layouts: WidgetLayout[];
   children?: ReactNode;
 };
 
-export const WidgetGrid = ({ children }: WidgetGridProps) => {
-  const { emptyCells } = useWidgetGrid(children);
+export const WidgetGrid = ({ layouts, children }: WidgetGridProps) => {
+  const emptyCells = useMemo(() => getEmptyCells(layouts), [layouts]);
 
   return (
     <Box
+      data-widget-grid
       sx={{
         position: 'relative',
         display: 'grid',

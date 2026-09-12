@@ -1,0 +1,116 @@
+import { GRID_COLS, GRID_ROWS } from '@/features/grid/gridConfig';
+import type { GridCell, WidgetLayout } from '@/features/grid/gridTypes';
+import { useCallback, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
+
+type Offset = { dx: number; dy: number };
+type DragOrigin = Offset & { pointerX: number; pointerY: number; cellWidth: number; cellHeight: number };
+
+const NO_OFFSET: Offset = { dx: 0, dy: 0 };
+const DRAG_THRESHOLD_PX = 4;
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+export type UseWidgetDragParams = {
+  layout: WidgetLayout;
+  enabled: boolean;
+  onHover: (target: WidgetLayout | null) => void;
+  onDrop: (cell: GridCell) => void;
+};
+
+export type UseWidgetDragResult = {
+  dragging: boolean;
+  offset: Offset;
+  handlers: {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+    onPointerMove: (event: PointerEvent<HTMLElement>) => void;
+    onPointerUp: (event: PointerEvent<HTMLElement>) => void;
+    onPointerCancel: () => void;
+    onClickCapture: (event: MouseEvent<HTMLElement>) => void;
+  };
+};
+
+/** Pointer-drag a widget, report the hovered grid area, and snap to it on release. */
+export const useWidgetDrag = ({ layout, enabled, onHover, onDrop }: UseWidgetDragParams): UseWidgetDragResult => {
+  const origin = useRef<DragOrigin | null>(null);
+  const moved = useRef(false);
+  const [offset, setOffset] = useState(NO_OFFSET);
+  const [dragging, setDragging] = useState(false);
+
+  const targetFor = useCallback(
+    ({ dx, dy, cellWidth, cellHeight }: DragOrigin): GridCell => {
+      const { rowSpan = 1, colSpan = 1 } = layout;
+      return {
+        row: clamp(layout.row + Math.round(dy / cellHeight), 1, GRID_ROWS - rowSpan + 1),
+        col: clamp(layout.col + Math.round(dx / cellWidth), 1, GRID_COLS - colSpan + 1),
+      };
+    },
+    [layout],
+  );
+
+  const onPointerDown = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      moved.current = false;
+      if (!enabled || event.button !== 0) return;
+      if ((event.target as HTMLElement).closest('button')) return;
+      const grid = event.currentTarget.closest('[data-widget-grid]');
+      if (!grid) return;
+      const { width, height } = grid.getBoundingClientRect();
+      origin.current = {
+        dx: 0,
+        dy: 0,
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        cellWidth: width / GRID_COLS,
+        cellHeight: height / GRID_ROWS,
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setDragging(true);
+    },
+    [enabled],
+  );
+
+  const onPointerMove = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      const current = origin.current;
+      if (!current) return;
+      current.dx = event.clientX - current.pointerX;
+      current.dy = event.clientY - current.pointerY;
+      if (Math.hypot(current.dx, current.dy) > DRAG_THRESHOLD_PX) moved.current = true;
+      setOffset({ dx: current.dx, dy: current.dy });
+      onHover({ ...layout, ...targetFor(current) });
+    },
+    [layout, onHover, targetFor],
+  );
+
+  const finish = useCallback(() => {
+    origin.current = null;
+    setOffset(NO_OFFSET);
+    setDragging(false);
+    onHover(null);
+  }, [onHover]);
+
+  const onPointerUp = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      const current = origin.current;
+      if (!current) return;
+      event.currentTarget.releasePointerCapture(event.pointerId);
+      const target = targetFor(current);
+      finish();
+      if (moved.current && (target.row !== layout.row || target.col !== layout.col)) onDrop(target);
+    },
+    [layout, onDrop, finish, targetFor],
+  );
+
+  const onClickCapture = useCallback((event: MouseEvent<HTMLElement>) => {
+    if (!moved.current) return;
+    event.stopPropagation();
+    event.preventDefault();
+    moved.current = false;
+  }, []);
+
+  return {
+    dragging,
+    offset,
+    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: finish, onClickCapture },
+  };
+};
