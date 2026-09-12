@@ -1,6 +1,6 @@
 import type { Ticker } from '@/connections/coinbase';
 
-const EMPTY = '--';
+export const EMPTY = '--';
 
 const priceFormat = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,

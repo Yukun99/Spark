@@ -61,7 +61,8 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 - Exchange access lives in `src/connections/` (`coinbase.tsx`: REST product list + one shared
   WebSocket ticker feed). The feed keeps latest ticks in a map and notifies subscribers on the
   configured interval; widgets read it with `useCoinbaseTicker` (`useSyncExternalStore`), so
-  prices never pass through Redux.
+  prices never pass through Redux. Watchlist rows instead use `useLiveTicker` and write each
+  tick into the DOM through refs, so a tick never re-renders a row.
 - Features live in `src/features/<feature>/`. `grid/` is the page grid (`WidgetGrid`, sizes in
   `gridConfig.ts`, occupancy helpers). `widgets/` holds the widgets: `widgetFrame.tsx` is the shared
   card chrome (drag-to-move, delete/modify in edit mode, `freshnessGlow.tsx` purple wash that

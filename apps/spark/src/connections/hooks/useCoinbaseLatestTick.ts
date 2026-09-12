@@ -1,11 +1,9 @@
 import { coinbaseFeed } from '@/connections/coinbase';
-import { useCoinbaseSettingsSync } from '@/connections/hooks/useCoinbaseSettingsSync';
 import { tickerTime } from '@/features/widgets/instrument/tickerFormat';
 import { useCallback, useSyncExternalStore } from 'react';
 
 /** Time of the newest tick across `productIds`, or undefined while none has arrived. */
 export const useCoinbaseLatestTick = (productIds: string[]): number | undefined => {
-  useCoinbaseSettingsSync();
   const key = productIds.join(',');
 
   const subscribe = useCallback(

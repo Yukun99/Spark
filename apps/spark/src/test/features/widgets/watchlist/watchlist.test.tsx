@@ -4,7 +4,7 @@ import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
 import { addWidget, removeWidget, setWatchlist } from '@/store/widgetsSlice';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -16,14 +16,29 @@ const product = (id: string): CoinbaseProduct => ({
   status: 'online',
 });
 
-const tickers: Record<string, Partial<Ticker>> = {
+const baseTickers = (): Record<string, Partial<Ticker>> => ({
   'BTC-USD': { bid: 100.5, ask: 101, price: 100.75, lastSize: 0.5, side: 'buy', receivedAt: 1_000 },
   'ETH-USD': { bid: 10.25, ask: 10.5 },
+});
+let tickers = baseTickers();
+beforeEach(() => {
+  tickers = baseTickers();
+});
+
+const listeners: Record<string, Set<() => void>> = {};
+
+/** Pushes a tick for one product through the mocked feed, as the interval notifier would. */
+const tick = (productId: string, next: Partial<Ticker>) => {
+  tickers[productId] = { ...tickers[productId], ...next };
+  act(() => listeners[productId]?.forEach((listener) => listener()));
 };
 
 vi.mock('@/connections/coinbase', () => ({
   coinbaseFeed: {
-    subscribe: () => () => undefined,
+    subscribe: (productId: string, listener: () => void) => {
+      (listeners[productId] ??= new Set()).add(listener);
+      return () => listeners[productId].delete(listener);
+    },
     getTicker: (productId: string) => tickers[productId],
     setUpdateInterval: () => undefined,
     setStreaming: () => undefined,
@@ -90,8 +105,23 @@ describe('WatchlistWidget', () => {
     renderWatchlist(['BTC-USD', 'ETH-USD']);
     const [btc, eth] = screen.getAllByTestId('watchlist-row');
     expect(within(btc).getByText('0.5')).toHaveAttribute('data-side', 'buy');
-    expect(within(btc).getByTestId('freshness-glow')).toBeInTheDocument();
-    expect(within(eth).queryByTestId('freshness-glow')).not.toBeInTheDocument();
+    expect(within(btc).getByTestId('freshness-glow')).toBeVisible();
+    expect(within(eth).getByTestId('freshness-glow')).not.toBeVisible();
+  });
+
+  it('writes ticks into the row cells in place, without re-rendering', () => {
+    const { store } = renderWatchlist(['BTC-USD', 'ETH-USD']);
+    const [, eth] = screen.getAllByTestId('watchlist-row');
+    const before = store.getState().widgets.items.at(-1);
+    tick('ETH-USD', { bid: 11, ask: 12, price: 11.5, lastSize: 2, side: 'sell', receivedAt: 2_000 });
+
+    const cells = within(eth)
+      .getAllByText(/./)
+      .map((cell) => cell.textContent);
+    expect(cells).toEqual(['ETH-USD', '11.00', '12.00', '11.50', '2']);
+    expect(within(eth).getByText('2')).toHaveAttribute('data-side', 'sell');
+    expect(within(eth).getByTestId('freshness-glow')).toBeVisible();
+    expect(store.getState().widgets.items.at(-1)).toBe(before);
   });
 
   const openDialog = async (user: ReturnType<typeof userEvent.setup>, productIds: string[]) => {

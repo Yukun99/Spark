@@ -2,9 +2,10 @@ import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
 import { useWatchlistRow } from '@/features/widgets/watchlist/hooks/useWatchlistRow';
+import { EMPTY } from '@/features/widgets/instrument/tickerFormat';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 export type WatchlistRowProps = {
   productId: string;
@@ -43,10 +44,11 @@ export const WatchlistDivider = () => (
 
 /**
  * One instrument on a tinted strip; its cells sit on the parent grid so columns line up.
- * Clicking the row opens that instrument's details.
+ * Clicking the row opens that instrument's details. Renders once: ticks are written into the
+ * cells through refs by `useWatchlistRow`, never through a re-render.
  */
-export const WatchlistRow = ({ productId, onOpen }: WatchlistRowProps) => {
-  const { bid, ask, price, size, side, tickAt } = useWatchlistRow(productId);
+export const WatchlistRow = memo(({ productId, onOpen }: WatchlistRowProps) => {
+  const { bidRef, askRef, priceRef, sizeRef, glowRef } = useWatchlistRow(productId);
   const onClick = useCallback(() => onOpen(productId), [onOpen, productId]);
 
   return (
@@ -56,14 +58,20 @@ export const WatchlistRow = ({ productId, onOpen }: WatchlistRowProps) => {
       onClick={onClick}
       sx={{ ...watchlistRowSx, position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
     >
-      {tickAt !== undefined && <FreshnessGlow tickAt={tickAt} />}
+      <FreshnessGlow ref={glowRef} hidden />
       <ValueChip sx={startSx}>{productId}</ValueChip>
-      <ValueChip sx={endSx}>{bid}</ValueChip>
+      <ValueChip ref={bidRef} sx={endSx}>
+        {EMPTY}
+      </ValueChip>
       <WatchlistDivider />
-      <ValueChip sx={startSx}>{ask}</ValueChip>
-      <ValueChip sx={endSx}>{price}</ValueChip>
+      <ValueChip ref={askRef} sx={startSx}>
+        {EMPTY}
+      </ValueChip>
+      <ValueChip ref={priceRef} sx={endSx}>
+        {EMPTY}
+      </ValueChip>
       <WatchlistDivider />
-      <TransactionTypeDisplay side={side} label={size} sx={startSx} />
+      <TransactionTypeDisplay ref={sizeRef} side={undefined} label={EMPTY} sx={startSx} />
     </ValueStrip>
   );
-};
+});

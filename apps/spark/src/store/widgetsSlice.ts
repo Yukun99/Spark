@@ -125,7 +125,7 @@ export const widgetsSlice = createSlice({
       const widget = state.items.find((item) => item.id === id);
       if (widget?.type !== 'watchlist') return;
       widget.name = name.trim() || DEFAULT_WATCHLIST_NAME;
-      widget.productIds = [...new Set(productIds)];
+      widget.productIds = [...productIds];
     },
   },
 });

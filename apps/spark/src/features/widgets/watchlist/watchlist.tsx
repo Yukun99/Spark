@@ -6,7 +6,7 @@ import { WatchlistDialog } from '@/features/widgets/watchlist/dialog/watchlistDi
 import { WatchlistHeader } from '@/features/widgets/watchlist/watchlistHeader';
 import { WATCHLIST_COLUMNS, WatchlistRow } from '@/features/widgets/watchlist/watchlistRow';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
-import { WidgetLabel } from '@/features/widgets/widgetLabel';
+import { WatchlistLabel } from '@/features/widgets/watchlist/watchlistLabel';
 import { WidgetScrollArea } from '@/features/widgets/widgetScrollArea';
 import type { WatchlistWidget as WatchlistWidgetModel } from '@/store/widgetsSlice';
 import { gray } from '@/styles/palette';
@@ -20,7 +20,6 @@ export type WatchlistWidgetProps = {
 export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
   const {
     title,
-    updatedAt,
     productIds,
     dialog,
     detailsProductId,
@@ -37,7 +36,7 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
   return (
     <>
       <WidgetFrame widget={widget} name={title} onDelete={openDelete} onModify={openModify}>
-        <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{title}</WidgetLabel>
+        <WatchlistLabel title={title} productIds={productIds} />
         <WidgetScrollArea>
           {productIds.length === 0 ? (
             <Typography sx={{ fontSize: 12, color: gray[50], textAlign: 'center' }}>
@@ -46,8 +45,8 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
           ) : (
             <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: 1 }}>
               <WatchlistHeader />
-              {productIds.map((productId) => (
-                <WatchlistRow key={productId} productId={productId} onOpen={openDetails} />
+              {productIds.map((productId, index) => (
+                <WatchlistRow key={`${productId}-${index}`} productId={productId} onOpen={openDetails} />
               ))}
             </Box>
           )}
