@@ -52,11 +52,15 @@ const renderWidget = () => {
 };
 
 describe('InstrumentWidget', () => {
-  it('shows the product with bid and ask prices', () => {
+  it('shows the product with bid, ask and the last trade', () => {
     renderWidget();
     expect(screen.getByText('BTC-USD')).toBeInTheDocument();
     expect(screen.getByText('100.50')).toBeInTheDocument();
     expect(screen.getByText('101.00')).toBeInTheDocument();
+    expect(screen.getByText('Price')).toBeInTheDocument();
+    expect(screen.getByText('100.70')).toBeInTheDocument();
+    expect(screen.getByText('Type')).toBeInTheDocument();
+    expect(screen.getByText('Buy')).toBeInTheDocument();
   });
 
   it('shows the exchange timestamp of the latest tick', () => {

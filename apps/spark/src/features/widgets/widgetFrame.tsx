@@ -1,4 +1,5 @@
 import { ClearButton } from '@/components/buttons/clearButton';
+import { TILE_GAP_PX, TILE_RADIUS_PX } from '@/features/grid/gridConfig';
 import { GridWidget } from '@/features/grid/gridWidget';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
@@ -74,9 +75,9 @@ export const WidgetFrame = ({
           shadowSx('sm'),
           (theme) => ({
             position: 'absolute',
-            inset: 24,
+            inset: TILE_GAP_PX,
             p: CARD_PADDING,
-            borderRadius: '24px',
+            borderRadius: `${TILE_RADIUS_PX}px`,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',

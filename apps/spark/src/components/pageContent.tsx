@@ -1,7 +1,7 @@
 import { AddWidgetButton } from '@/features/edit/addWidgetButton';
 import { EditModeButton } from '@/features/edit/editModeButton';
 import { UpdateIntervalButton } from '@/features/edit/updateIntervalButton';
-import { BANNER_HEIGHT } from '@/features/grid/gridConfig';
+import { BANNER_HEIGHT, TILE_GAP_PX } from '@/features/grid/gridConfig';
 import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
 import { useEditMode } from '@/hooks/useEditMode';
@@ -46,13 +46,13 @@ export const PageContent = () => {
         }}
       >
         <OverlayScrollbarsComponent defer options={SCROLLBAR_OPTIONS} style={{ height: '100%' }}>
-          <Box sx={{ height: '100%', p: 3 }}>
+          <Box sx={{ height: '100%', p: `${TILE_GAP_PX}px` }}>
             <WidgetGrid layouts={layouts}>{widgets.map(renderWidget)}</WidgetGrid>
           </Box>
         </OverlayScrollbarsComponent>
       </Box>
       <Divider orientation='vertical' flexItem sx={{ borderColor: gray[50] }} />
-      <Stack component='aside' sx={{ p: 3, alignItems: 'center' }}>
+      <Stack component='aside' sx={{ p: `${TILE_GAP_PX}px`, alignItems: 'center' }}>
         <EditModeButton />
         <Collapse in={editMode} timeout={REVEAL_MS}>
           <Stack

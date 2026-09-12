@@ -2,6 +2,7 @@ import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
 import type { GridCell, WidgetLayout } from '@/features/grid/gridTypes';
 import { gray, theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
+import { TILE_GAP_PX, TILE_RADIUS_PX } from '@/features/grid/gridConfig';
 import Box from '@mui/material/Box';
 
 export type GridPlaceholderProps = {
@@ -29,9 +30,9 @@ export const GridPlaceholder = ({ cell }: GridPlaceholderProps) => {
         (theme) => ({
           gridRowStart: cell.row,
           gridColumnStart: cell.col,
-          m: 3,
+          m: `${TILE_GAP_PX}px`,
           p: 3,
-          borderRadius: '24px',
+          borderRadius: `${TILE_RADIUS_PX}px`,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-evenly',

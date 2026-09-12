@@ -1,10 +1,11 @@
 import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
-import { BidAskRow } from '@/features/widgets/instrument/bidAskRow';
 import { InstrumentDialog } from '@/features/widgets/instrument/dialog/instrumentDialog';
 import { InstrumentSearchDialog } from '@/features/widgets/instrument/dialog/instrumentSearchDialog';
 import { useInstrument } from '@/features/widgets/instrument/hooks/useInstrument';
+import { ValuePairRow } from '@/features/widgets/instrument/valuePairRow';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WidgetLabel } from '@/features/widgets/widgetLabel';
+import Stack from '@mui/material/Stack';
 import type { InstrumentWidget as InstrumentWidgetModel } from '@/store/widgetsSlice';
 
 export type InstrumentWidgetProps = {
@@ -15,6 +16,8 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
   const {
     bid,
     ask,
+    lastPrice,
+    lastSide,
     updatedAt,
     tickAt,
     dialog,
@@ -37,7 +40,16 @@ export const InstrumentWidget = ({ widget }: InstrumentWidgetProps) => {
         tickAt={tickAt}
       >
         <WidgetLabel caption={`Last Refresh: ${updatedAt}`}>{widget.productId}</WidgetLabel>
-        <BidAskRow bid={bid} ask={ask} />
+        <Stack spacing={1}>
+          <ValuePairRow
+            left={{ label: 'Bid', value: bid }}
+            right={{ label: 'Ask', value: ask, labelFirst: false }}
+          />
+          <ValuePairRow
+            left={{ label: 'Price', value: lastPrice }}
+            right={{ label: 'Type', value: lastSide, labelFirst: false }}
+          />
+        </Stack>
       </WidgetFrame>
       <ConfirmDialog
         open={dialog === 'delete'}
