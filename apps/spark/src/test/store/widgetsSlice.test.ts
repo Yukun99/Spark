@@ -54,19 +54,19 @@ describe('widgetsSlice', () => {
     expect(state.items).toHaveLength(GRID_ROWS * GRID_COLS);
   });
 
-  it('adds an empty 2x2 watchlist where it fits, or at a requested free cell', () => {
+  it('adds an empty 1x2 watchlist where it fits, or at a requested free cell', () => {
     let state = widgetsReducer(bare(), addWidget('watchlist'));
     expect(state.items[1]).toMatchObject({
       type: 'watchlist',
       name: 'Watchlist',
       productIds: [],
-      layout: { row: 1, col: 2, rowSpan: 2, colSpan: 2 },
+      layout: { row: 1, col: 2, rowSpan: 1, colSpan: 2 },
     });
 
-    state = widgetsReducer(state, addWidget('watchlist', { row: 2, col: 2 }));
+    state = widgetsReducer(state, addWidget('watchlist', { row: 1, col: 3 }));
     expect(state.items).toHaveLength(2);
     state = widgetsReducer(state, addWidget('watchlist', { row: 2, col: 5 }));
-    expect(state.items[2].layout).toEqual({ row: 2, col: 5, rowSpan: 2, colSpan: 2 });
+    expect(state.items[2].layout).toEqual({ row: 2, col: 5, rowSpan: 1, colSpan: 2 });
   });
 
   it('adds a 1x4 orders widget and never lets it shrink narrower', () => {
@@ -114,6 +114,8 @@ describe('widgetsSlice', () => {
     state = widgetsReducer(state, at('initial', { row: 0, rowSpan: 3, colSpan: 2 }));
     expect(state.items[0].layout).toMatchObject({ row: 1, rowSpan: 2, colSpan: 2 });
 
+    state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 2, colSpan: 2 }));
+    expect(state.items[1].layout).toMatchObject({ rowSpan: 2, colSpan: 2 });
     state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 1, colSpan: 1 }));
     expect(state.items[1].layout).toMatchObject({ rowSpan: 2, colSpan: 2 });
     state = widgetsReducer(state, at(watchlist, { col: 3, rowSpan: 1, colSpan: 2 }));

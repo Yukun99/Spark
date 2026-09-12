@@ -55,7 +55,7 @@ const initialState: WidgetsState = {
     {
       id: 'common',
       type: 'watchlist',
-      layout: { row: 2, col: 5, ...WIDGET_SIZES.watchlist },
+      layout: { row: 2, col: 5, rowSpan: 2, colSpan: 2 },
       name: COMMON_WATCHLIST_NAME,
       productIds: COMMON_PRODUCT_IDS,
     },

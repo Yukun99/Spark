@@ -7,7 +7,7 @@ export type WidgetSize = Required<Pick<WidgetLayout, 'rowSpan' | 'colSpan'>>;
 /** Grid footprint each widget type is created with. */
 export const WIDGET_SIZES: Record<WidgetType, WidgetSize> = {
   instrument: { rowSpan: 1, colSpan: 1 },
-  watchlist: { rowSpan: 2, colSpan: 2 },
+  watchlist: { rowSpan: 1, colSpan: 2 },
   orders: { rowSpan: 1, colSpan: 4 },
 };
 
