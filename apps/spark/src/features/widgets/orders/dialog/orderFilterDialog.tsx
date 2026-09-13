@@ -19,8 +19,10 @@ import {
 } from '@/store/ordersSlice';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import Autocomplete from '@mui/material/Autocomplete';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -45,6 +47,15 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 const TYPE_LABELS: Record<OrderType, string> = { market: 'Market', limit: 'Limit' };
 const DATE_FORMAT = 'DD/MM/YYYY';
 const DECIMAL = { htmlInput: { inputMode: 'decimal' } } as const;
+const RANGE_SX = { display: 'flex', alignItems: 'flex-start', gap: 1 } as const;
+/** Sits level with the field text so the range reads "from - to"; captions hang below. */
+const RANGE_DASH_SX = { lineHeight: '56px', userSelect: 'none' } as const;
+
+const rangeDash = (
+  <Typography aria-hidden sx={RANGE_DASH_SX}>
+    -
+  </Typography>
+);
 
 /** Mounted only while open; confirming sends the filter to the server, unset fields filter nothing. */
 export const OrderFilterDialog = ({ initial, onApply, onClose }: OrderFilterDialogProps) => {
@@ -111,49 +122,55 @@ export const OrderFilterDialog = ({ initial, onApply, onClose }: OrderFilterDial
             values={filter.form.types}
             onToggle={filter.toggleType}
           />
-          <TextField
-            fullWidth
-            label='Minimum Price'
-            value={filter.form.minPrice}
-            error={filter.minPriceError !== null}
-            helperText={filter.minPriceError ?? ' '}
-            onChange={(event) => filter.setMinPrice(event.target.value)}
-            slotProps={{ ...DECIMAL, ...captionProps(filter.minPriceError) }}
-          />
-          <TextField
-            fullWidth
-            label='Maximum Price'
-            value={filter.form.maxPrice}
-            error={filter.maxPriceError !== null}
-            helperText={filter.maxPriceError ?? ' '}
-            onChange={(event) => filter.setMaxPrice(event.target.value)}
-            slotProps={{ ...DECIMAL, ...captionProps(filter.maxPriceError) }}
-          />
-          <DatePicker
-            label='Submitted From'
-            format={DATE_FORMAT}
-            value={filter.form.from}
-            onChange={filter.setFrom}
-            slotProps={{
-              textField: { fullWidth: true, helperText: ' ', slotProps: captionProps(null) },
-              field: { clearable: true },
-            }}
-          />
-          <DatePicker
-            label='Submitted To'
-            format={DATE_FORMAT}
-            value={filter.form.to}
-            onChange={filter.setTo}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                error: filter.toError !== null,
-                helperText: filter.toError ?? ' ',
-                slotProps: captionProps(filter.toError),
-              },
-              field: { clearable: true },
-            }}
-          />
+          <Box sx={RANGE_SX}>
+            <TextField
+              fullWidth
+              label='Minimum Price'
+              value={filter.form.minPrice}
+              error={filter.minPriceError !== null}
+              helperText={filter.minPriceError ?? ' '}
+              onChange={(event) => filter.setMinPrice(event.target.value)}
+              slotProps={{ ...DECIMAL, ...captionProps(filter.minPriceError) }}
+            />
+            {rangeDash}
+            <TextField
+              fullWidth
+              label='Maximum Price'
+              value={filter.form.maxPrice}
+              error={filter.maxPriceError !== null}
+              helperText={filter.maxPriceError ?? ' '}
+              onChange={(event) => filter.setMaxPrice(event.target.value)}
+              slotProps={{ ...DECIMAL, ...captionProps(filter.maxPriceError) }}
+            />
+          </Box>
+          <Box sx={RANGE_SX}>
+            <DatePicker
+              label='Submitted From'
+              format={DATE_FORMAT}
+              value={filter.form.from}
+              onChange={filter.setFrom}
+              slotProps={{
+                textField: { fullWidth: true, helperText: ' ', slotProps: captionProps(null) },
+                field: { clearable: true },
+              }}
+            />
+            {rangeDash}
+            <DatePicker
+              label='Submitted To'
+              format={DATE_FORMAT}
+              value={filter.form.to}
+              onChange={filter.setTo}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: filter.toError !== null,
+                  helperText: filter.toError ?? ' ',
+                  slotProps: captionProps(filter.toError),
+                },
+                field: { clearable: true },
+              }}
+            />
+          </Box>
         </Stack>
       </LocalizationProvider>
     </ConfirmDialog>

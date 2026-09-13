@@ -13,7 +13,7 @@ import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Box from '@mui/material/Box';
@@ -210,7 +210,7 @@ export const WidgetFrame = ({
                 slot={onRefresh === undefined ? 0 : 1}
                 active={filterActive}
               >
-                <FilterListIcon sx={{ fontSize: LABEL_FONT_PX }} />
+                <FilterAltIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </CornerButton>
             )}
             {children}
