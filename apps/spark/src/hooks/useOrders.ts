@@ -1,8 +1,8 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  addOrder,
-  cancelOrder,
-  updateOrder,
+  cancelOrder as cancelOrderThunk,
+  modifyOrder,
+  placeOrder as placeOrderThunk,
   type Order,
   type OrderChanges,
   type OrderDraft,
@@ -16,16 +16,19 @@ export type UseOrdersResult = {
   cancelOrder: (id: string) => void;
 };
 
+/** Failures are reported through the notice snackbar by the thunks, so callers fire and forget. */
 export const useOrders = (): UseOrdersResult => {
   const orders = useAppSelector((state) => state.orders.items);
   const dispatch = useAppDispatch();
-  const placeOrder = useCallback((draft: OrderDraft) => dispatch(addOrder(draft)), [dispatch]);
-  const modifyOrder = useCallback(
-    (id: string, changes: OrderChanges) => dispatch(updateOrder({ id, changes })),
+  const placeOrder = useCallback(
+    (draft: OrderDraft) => void dispatch(placeOrderThunk(draft)),
     [dispatch],
   );
+  const modify = useCallback(
+    (id: string, changes: OrderChanges) => void dispatch(modifyOrder({ id, changes })),
+    [dispatch],
+  );
+  const cancel = useCallback((id: string) => void dispatch(cancelOrderThunk(id)), [dispatch]);
 
-  const cancel = useCallback((id: string) => dispatch(cancelOrder(id)), [dispatch]);
-
-  return { orders, placeOrder, modifyOrder, cancelOrder: cancel };
+  return { orders, placeOrder, modifyOrder: modify, cancelOrder: cancel };
 };

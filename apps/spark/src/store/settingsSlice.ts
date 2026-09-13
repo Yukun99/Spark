@@ -18,6 +18,10 @@ export const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
+    replaceSettings: (state, action: PayloadAction<SettingsState>) => {
+      state.updateIntervalMs = action.payload.updateIntervalMs;
+      state.streaming = action.payload.streaming;
+    },
     setUpdateInterval: (state, action: PayloadAction<number>) => {
       state.updateIntervalMs = Math.max(0, action.payload);
     },
@@ -34,5 +38,6 @@ export const settingsSlice = createSlice({
   },
 });
 
-export const { setUpdateInterval, cycleUpdateInterval, toggleStreaming } = settingsSlice.actions;
+export const { replaceSettings, setUpdateInterval, cycleUpdateInterval, toggleStreaming } =
+  settingsSlice.actions;
 export const settingsReducer = settingsSlice.reducer;

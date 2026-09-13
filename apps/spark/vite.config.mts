@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite';
 // noinspection ES6PreferShortImport
-import { appShellCss, appShellHtml, colorSchemeScript } from './src/styles/appShell';
+import { appShellCss, appShellHtml, colorSchemeScript, shellModeScript } from './src/styles/appShell';
 
 const DISPLAY_FONT_FILE = /source-serif-4-latin-wght-normal.*\.woff2$/;
 
@@ -16,6 +16,7 @@ const appShell = (): Plugin => ({
       const fontFile = Object.keys(ctx.bundle ?? {}).find((file) => DISPLAY_FONT_FILE.test(file));
       const tags: HtmlTagDescriptor[] = [
         { tag: 'script', children: colorSchemeScript, injectTo: 'head-prepend' },
+        { tag: 'script', children: shellModeScript, injectTo: 'head-prepend' },
         { tag: 'style', children: appShellCss, injectTo: 'head-prepend' },
       ];
       if (fontFile) {
@@ -45,10 +46,8 @@ export default defineConfig(() => ({
   server: {
     port: 4301,
     host: 'localhost',
-    // No local PHP: set SPARK_API_ORIGIN=https://spark.yukunxu.com to proxy /api to the deployed API.
-    proxy: process.env.SPARK_API_ORIGIN
-      ? { '/api': { target: process.env.SPARK_API_ORIGIN, changeOrigin: true } }
-      : undefined,
+    // No local PHP: /api goes to the deployed API and its database.
+    proxy: { '/api': { target: 'https://spark.yukunxu.com', changeOrigin: true } },
   },
   preview: {
     port: 4300,

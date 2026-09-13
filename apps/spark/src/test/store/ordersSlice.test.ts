@@ -1,4 +1,21 @@
-import { addOrder, cancelOrder, ordersReducer, updateOrder, type OrderDraft } from '@/store/ordersSlice';
+import { ApiError } from '@/connections/api';
+import {
+  cancelOrder,
+  modifyOrder,
+  orderUpserted,
+  ordersReducer,
+  placeOrder,
+  replaceOrders,
+  type OrderDraft,
+} from '@/store/ordersSlice';
+import { createAppStore } from '@/store/store';
+import { installFakeApi } from '@/test/fixtures/mockApi';
+import { sampleOrders } from '@/test/fixtures/orders';
+
+vi.mock('@/connections/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/connections/api')>()),
+  apiFetch: vi.fn(),
+}));
 
 const draft: OrderDraft = {
   productId: 'BTC-USD',
@@ -10,86 +27,87 @@ const draft: OrderDraft = {
   provider: 'Coinbase',
 };
 
-describe('ordersSlice', () => {
-  it('seeds orders whose fill matches their status', () => {
-    const { items } = ordersReducer(undefined, { type: 'init' });
-    expect(items.length).toBeGreaterThan(0);
-    for (const order of items) {
-      if (order.status === 'pending') expect(order.filledSize).toBe(0);
-      if (order.status === 'fulfilling') {
-        expect(order.filledSize).toBeGreaterThanOrEqual(0);
-        expect(order.filledSize).toBeLessThan(order.size);
-      }
-      if (order.status === 'fulfilled') expect(order.filledSize).toBe(order.size);
-      if (order.status === 'cancelled') expect(order.filledSize).toBeLessThan(order.size);
-    }
-    expect(new Set(items.map((order) => order.status)).size).toBe(4);
-    expect(items.some((order) => order.status === 'fulfilling' && order.filledSize === 0)).toBe(true);
+const seededStore = () => {
+  const fake = installFakeApi({ orders: sampleOrders() });
+  const store = createAppStore();
+  store.dispatch(replaceOrders(sampleOrders()));
+  return { fake, store };
+};
+
+describe('ordersSlice reducers', () => {
+  it('starts empty and replaces the list wholesale', () => {
+    expect(ordersReducer(undefined, { type: 'init' }).items).toEqual([]);
+    const orders = sampleOrders();
+    expect(ordersReducer(undefined, replaceOrders(orders)).items).toBe(orders);
   });
 
-  it('appends placed orders as pending with nothing filled and a timestamp', () => {
+  it('upserts by id, appending unknown orders', () => {
+    const [first, second] = sampleOrders();
+    const one = ordersReducer(undefined, orderUpserted(first));
+    const two = ordersReducer(one, orderUpserted(second));
+    expect(two.items.map((order) => order.id)).toEqual([first.id, second.id]);
+    const edited = ordersReducer(two, orderUpserted({ ...first, price: 1 }));
+    expect(edited.items).toHaveLength(2);
+    expect(edited.items[0].price).toBe(1);
+  });
+});
+
+describe('order thunks', () => {
+  it('appends the order the server returns when placing', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-12T10:00:00Z'));
-    const initial = ordersReducer(undefined, { type: 'init' });
-    const seeded = initial.items.length;
-
-    const one = ordersReducer(initial, addOrder(draft));
-    const two = ordersReducer(one, addOrder({ ...draft, side: 'sell' }));
-    expect(two.items).toHaveLength(seeded + 2);
-    expect(two.items[seeded]).toEqual({
+    const { fake, store } = seededStore();
+    const before = store.getState().orders.items.length;
+    await store.dispatch(placeOrder(draft));
+    expect(store.getState().orders.items).toHaveLength(before + 1);
+    expect(store.getState().orders.items.at(-1)).toEqual({
       ...draft,
       id: expect.any(String),
       filledSize: 0,
       status: 'pending',
       placedAt: Date.parse('2026-09-12T10:00:00Z'),
     });
-    expect(two.items[seeded + 1].side).toBe('sell');
-    expect(new Set(two.items.map((order) => order.id)).size).toBe(two.items.length);
+    expect(fake.calls.at(-1)).toEqual({ path: '/orders', request: { method: 'POST', body: draft } });
     vi.useRealTimers();
   });
 
-  it('updates only open orders in place, keeping their fill and stamping the edit time', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-09-12T11:00:00Z'));
-    const initial = ordersReducer(undefined, { type: 'init' });
+  it('applies edits at once, then keeps the server version', async () => {
+    const { fake, store } = seededStore();
+    const target = store.getState().orders.items.find((order) => order.status === 'fulfilling')!;
     const changes = { type: 'limit', timeInForce: 'FOK', price: 5, size: 9 } as const;
-    const working = initial.items.find((order) => order.status === 'fulfilling')!;
-    const updated = ordersReducer(initial, updateOrder({ id: working.id, changes }));
-    const index = initial.items.indexOf(working);
-    expect(updated.items).toHaveLength(initial.items.length);
-    expect(updated.items[index]).toEqual({
-      ...working,
+    const pending = store.dispatch(modifyOrder({ id: target.id, changes }));
+    expect(store.getState().orders.items.find((order) => order.id === target.id)).toEqual({
+      ...target,
       ...changes,
-      updatedAt: Date.parse('2026-09-12T11:00:00Z'),
+      updatedAt: expect.any(Number),
     });
-    expect(updated.items[index].placedAt).toBe(working.placedAt);
-
-    for (const status of ['fulfilled', 'cancelled'] as const) {
-      const final = initial.items.find((order) => order.status === status)!;
-      expect(ordersReducer(initial, updateOrder({ id: final.id, changes }))).toBe(initial);
-    }
-    expect(ordersReducer(initial, updateOrder({ id: 'missing', changes }))).toBe(initial);
-    vi.useRealTimers();
+    await pending;
+    expect(store.getState().orders.items.find((order) => order.id === target.id)).toEqual(
+      fake.state.orders.find((order) => order.id === target.id),
+    );
+    expect(fake.calls.at(-1)).toEqual({
+      path: `/orders/${target.id}`,
+      request: { method: 'PATCH', body: changes },
+    });
   });
 
-  it('cancels only open orders, keeping what was filled', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-09-12T12:00:00Z'));
-    const initial = ordersReducer(undefined, { type: 'init' });
-    for (const status of ['pending', 'fulfilling'] as const) {
-      const open = initial.items.find((order) => order.status === status)!;
-      const cancelled = ordersReducer(initial, cancelOrder(open.id)).items.find((o) => o.id === open.id);
-      expect(cancelled).toEqual({
-        ...open,
-        status: 'cancelled',
-        updatedAt: Date.parse('2026-09-12T12:00:00Z'),
-      });
-    }
-    for (const status of ['fulfilled', 'cancelled'] as const) {
-      const final = initial.items.find((order) => order.status === status)!;
-      expect(ordersReducer(initial, cancelOrder(final.id))).toBe(initial);
-    }
-    expect(ordersReducer(initial, cancelOrder('missing'))).toBe(initial);
-    vi.useRealTimers();
+  it('cancels at once and restores the order with a notice when the server refuses', async () => {
+    const { fake, store } = seededStore();
+    const target = store.getState().orders.items.find((order) => order.status === 'pending')!;
+    fake.failWith(new ApiError(409, 'Order is no longer open'));
+    const pending = store.dispatch(cancelOrder(target.id));
+    expect(store.getState().orders.items.find((order) => order.id === target.id)?.status).toBe('cancelled');
+    await pending;
+    expect(store.getState().orders.items.find((order) => order.id === target.id)).toEqual(target);
+    expect(store.getState().notice.message).toBe('Order is no longer open');
+  });
+
+  it('clears the whole session on a 401', async () => {
+    const { fake, store } = seededStore();
+    fake.failWith(new ApiError(401, 'Invalid or expired token'));
+    await store.dispatch(placeOrder(draft));
+    expect(store.getState().orders.items).toEqual([]);
+    expect(store.getState().auth.status).toBe('signedOut');
+    expect(store.getState().notice.message).toBeNull();
   });
 });

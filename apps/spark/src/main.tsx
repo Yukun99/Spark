@@ -7,6 +7,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import 'overlayscrollbars/overlayscrollbars.css';
 import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
 
 const container = document.getElementById('root');
 
@@ -19,7 +20,9 @@ createRoot(container).render(
     <Provider store={store}>
       <ThemeProvider theme={theme} defaultMode='system'>
         <CssBaseline />
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </ThemeProvider>
     </Provider>
   </StrictMode>,

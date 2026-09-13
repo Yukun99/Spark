@@ -29,7 +29,7 @@
     "src/**/*.test.js",
     "src/**/*.spec.jsx",
     "src/**/*.test.jsx",
-    "src/test/testSetup.ts",
+    "src/test/**",
     "vite.config.ts",
     "vite.config.mts",
     "vitest.config.ts",

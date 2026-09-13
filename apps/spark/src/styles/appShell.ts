@@ -68,3 +68,8 @@ export const colorSchemeScript =
   "(function(){try{var m=localStorage.getItem('mui-mode')||'system';" +
   "if(m==='system')m=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';" +
   "document.documentElement.setAttribute('data-mui-color-scheme',m)}catch(e){}})()";
+
+/** Hides the skeleton cards when the app will show the login page instead of the grid. */
+export const shellModeScript =
+  "(function(){try{if(location.pathname!=='/'||!localStorage.getItem('spark-token'))" +
+  "document.documentElement.classList.add('app-shell-bare')}catch(e){}})()";

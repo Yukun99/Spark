@@ -33,7 +33,8 @@
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
     "src/**/*.d.ts",
-    "src/test/testSetup.ts"
+    "src/test/testSetup.ts",
+    "src/test/fixtures/**/*.ts"
   ],
   "references": [
     {

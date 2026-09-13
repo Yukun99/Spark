@@ -4,9 +4,11 @@ import type {
   OrderTemplate,
 } from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
 import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
-import type { Order } from '@/store/ordersSlice';
+import { replaceOrders, type Order } from '@/store/ordersSlice';
 import { createAppStore } from '@/store/store';
-import { act, render, screen } from '@testing-library/react';
+import { installFakeApi } from '@/test/fixtures/mockApi';
+import { sampleOrders } from '@/test/fixtures/orders';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -33,6 +35,11 @@ let current = ticker;
 let notify: (() => void) | undefined;
 const setFocus = vi.fn();
 
+vi.mock('@/connections/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/connections/api')>()),
+  apiFetch: vi.fn(),
+}));
+
 vi.mock('@/connections/coinbase', () => ({
   COINBASE_PROVIDER: 'Coinbase',
   coinbaseFeed: {
@@ -58,7 +65,9 @@ const renderDialog = (
   template?: OrderTemplate,
   editing?: (orders: Order[]) => EditTarget,
 ) => {
+  installFakeApi({ orders: sampleOrders() });
   const store = createAppStore();
+  store.dispatch(replaceOrders(sampleOrders()));
   const onClose = vi.fn();
   const { unmount } = render(
     <Provider store={store}>
@@ -201,7 +210,7 @@ describe('PlaceOrderDialog', () => {
     await user.click(confirmButton());
 
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(store.getState().orders.items).toHaveLength(seeded + 1);
+    await waitFor(() => expect(store.getState().orders.items).toHaveLength(seeded + 1));
     expect(store.getState().orders.items.at(-1)).toEqual(
       expect.objectContaining({
         productId: 'BTC-USD',

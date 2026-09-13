@@ -1,8 +1,10 @@
 import type { Ticker } from '@/connections/coinbase';
 import { OrdersWidget } from '@/features/widgets/orders/orders';
 import { toggleEditMode } from '@/store/layoutSlice';
-import { addOrder } from '@/store/ordersSlice';
+import { orderUpserted, replaceOrders, type Order, type OrderDraft } from '@/store/ordersSlice';
 import { createAppStore } from '@/store/store';
+import { installFakeApi } from '@/test/fixtures/mockApi';
+import { sampleOrders } from '@/test/fixtures/orders';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
@@ -26,6 +28,11 @@ const ticker: Ticker = {
   volume30d: 30000,
 };
 
+vi.mock('@/connections/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/connections/api')>()),
+  apiFetch: vi.fn(),
+}));
+
 vi.mock('@/connections/coinbase', () => ({
   COINBASE_PROVIDER: 'Coinbase',
   coinbaseFeed: {
@@ -37,8 +44,20 @@ vi.mock('@/connections/coinbase', () => ({
   },
 }));
 
+/** Builds the order the server would return for a draft placed now. */
+let placedCount = 0;
+const placed = (draft: OrderDraft): Order => ({
+  ...draft,
+  id: `placed-${placedCount++}`,
+  filledSize: 0,
+  status: 'pending',
+  placedAt: Date.now(),
+});
+
 const renderOrders = () => {
+  installFakeApi({ orders: sampleOrders() });
   const store = createAppStore();
+  store.dispatch(replaceOrders(sampleOrders()));
   const Bound = () => {
     const widget = store.getState().widgets.items.find((item) => item.type === 'orders')!;
     if (widget.type !== 'orders') throw new Error('expected an orders widget');
@@ -99,8 +118,8 @@ describe('OrdersWidget', () => {
       provider: 'Coinbase',
     } as const;
     act(() => {
-      store.dispatch(addOrder(draft));
-      store.dispatch(addOrder({ ...draft, productId: 'ETH-USD', side: 'sell', size: 0.25 }));
+      store.dispatch(orderUpserted(placed(draft)));
+      store.dispatch(orderUpserted(placed({ ...draft, productId: 'ETH-USD', side: 'sell', size: 0.25 })));
     });
 
     const rows = rowCells();
@@ -129,15 +148,17 @@ describe('OrdersWidget', () => {
     expect(rowGlows()).not.toContain(true);
     act(() => {
       store.dispatch(
-        addOrder({
-          productId: 'BTC-USD',
-          side: 'buy',
-          type: 'market',
-          timeInForce: 'GTC',
-          price: 1,
-          size: 1,
-          provider: 'Coinbase',
-        }),
+        orderUpserted(
+          placed({
+            productId: 'BTC-USD',
+            side: 'buy',
+            type: 'market',
+            timeInForce: 'GTC',
+            price: 1,
+            size: 1,
+            provider: 'Coinbase',
+          }),
+        ),
       );
     });
     const glows = rowGlows();
@@ -258,7 +279,7 @@ describe('OrdersWidget', () => {
     const count = store.getState().orders.items.length;
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(store.getState().orders.items).toHaveLength(count + 1);
+    await waitFor(() => expect(store.getState().orders.items).toHaveLength(count + 1));
     expect(store.getState().orders.items.at(-1)).toEqual(
       expect.objectContaining({
         productId: source.productId,

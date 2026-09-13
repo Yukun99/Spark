@@ -12,7 +12,7 @@ export const ColorModeToggle = () => {
       rounded
       onClick={toggleMode}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      sx={{ position: 'absolute', top: 24, right: 24, p: 1 }}
+      sx={{ p: 1 }}
     >
       {isDark ? <DarkModeIcon /> : <LightModeIcon />}
     </ClearButton>

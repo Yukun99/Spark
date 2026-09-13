@@ -1,5 +1,8 @@
+import { apiFetch } from '@/connections/api';
 import type { TradeSide } from '@/connections/coinbase';
-import { createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit';
+import { reportApiFailure } from '@/store/apiFailure';
+import type { RootState } from '@/store/store';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export const ORDER_TYPES = ['market', 'limit'] as const;
 export type OrderType = (typeof ORDER_TYPES)[number];
@@ -51,70 +54,85 @@ export type OrdersState = {
   items: Order[];
 };
 
-const SEED_PLACED_AT = Date.UTC(2026, 8, 12, 9, 0, 0);
-const MINUTE_MS = 60_000;
+const initialState: OrdersState = { items: [] };
 
-type SeedOrder = Omit<Order, 'id' | 'provider' | 'placedAt'>;
+const selectOrder = (state: RootState, id: string) =>
+  state.orders.items.find((order) => order.id === id);
 
-/** Dummy orders across instruments and fill states, one minute apart, until real fills exist. */
-const SEED_ORDERS: SeedOrder[] = [
-  { productId: 'BTC-USD', side: 'buy', type: 'market', timeInForce: 'GTC', price: 77450.12, size: 0.5, filledSize: 0.5, status: 'fulfilled' },
-  { productId: 'ETH-USD', side: 'sell', type: 'limit', timeInForce: 'GTC', price: 2540, size: 2, filledSize: 0.75, status: 'fulfilling' },
-  { productId: 'SOL-USD', side: 'buy', type: 'limit', timeInForce: 'IOC', price: 102.5, size: 25, filledSize: 0, status: 'pending' },
-  { productId: 'XRP-USD', side: 'sell', type: 'market', timeInForce: 'FOK', price: 1.37, size: 1000, filledSize: 1000, status: 'fulfilled' },
-  { productId: 'DOGE-USD', side: 'buy', type: 'limit', timeInForce: 'GTC', price: 0.085, size: 5000, filledSize: 1234.5678, status: 'fulfilling' },
-  { productId: 'ADA-USD', side: 'sell', type: 'limit', timeInForce: 'GTC', price: 0.21, size: 800, filledSize: 0, status: 'pending' },
-  { productId: 'DOT-USD', side: 'buy', type: 'limit', timeInForce: 'GTC', price: 4.2, size: 300, filledSize: 0, status: 'fulfilling' },
-  { productId: 'AVAX-USD', side: 'buy', type: 'market', timeInForce: 'IOC', price: 7.43, size: 120, filledSize: 119.99, status: 'fulfilling' },
-  { productId: 'LINK-USD', side: 'sell', type: 'limit', timeInForce: 'FOK', price: 11.58, size: 40, filledSize: 40, status: 'fulfilled' },
-  { productId: 'LTC-USD', side: 'buy', type: 'limit', timeInForce: 'GTC', price: 68.2, size: 10, filledSize: 3, status: 'cancelled' },
-];
+export const fetchOrders = createAsyncThunk('orders/fetch', () => apiFetch<Order[]>('/orders'));
 
-const initialState: OrdersState = {
-  items: SEED_ORDERS.map((order, index) => ({
-    ...order,
-    id: nanoid(),
-    provider: 'Coinbase',
-    placedAt: SEED_PLACED_AT + index * MINUTE_MS,
-  })),
-};
+export const placeOrder = createAsyncThunk(
+  'orders/place',
+  async (draft: OrderDraft, { dispatch }) => {
+    try {
+      return await apiFetch<Order>('/orders', { method: 'POST', body: draft });
+    } catch (error) {
+      reportApiFailure(dispatch, error, 'Could not place the order');
+      throw error;
+    }
+  },
+);
+
+/** Applies the edit at once and restores the previous order if the server rejects it. */
+export const modifyOrder = createAsyncThunk<Order, UpdateOrderPayload, { state: RootState }>(
+  'orders/modify',
+  async ({ id, changes }, { dispatch, getState }) => {
+    const previous = selectOrder(getState(), id);
+    if (previous !== undefined) {
+      dispatch(orderUpserted({ ...previous, ...changes, updatedAt: Date.now() }));
+    }
+    try {
+      return await apiFetch<Order>(`/orders/${id}`, { method: 'PATCH', body: changes });
+    } catch (error) {
+      if (previous !== undefined) dispatch(orderUpserted(previous));
+      reportApiFailure(dispatch, error, 'Could not modify the order');
+      throw error;
+    }
+  },
+);
+
+export const cancelOrder = createAsyncThunk<Order, string, { state: RootState }>(
+  'orders/cancel',
+  async (id, { dispatch, getState }) => {
+    const previous = selectOrder(getState(), id);
+    if (previous !== undefined) {
+      dispatch(orderUpserted({ ...previous, status: 'cancelled', updatedAt: Date.now() }));
+    }
+    try {
+      return await apiFetch<Order>(`/orders/${id}/cancel`, { method: 'POST' });
+    } catch (error) {
+      if (previous !== undefined) dispatch(orderUpserted(previous));
+      reportApiFailure(dispatch, error, 'Could not cancel the order');
+      throw error;
+    }
+  },
+);
 
 export const ordersSlice = createSlice({
   name: 'orders',
   initialState,
   reducers: {
-    addOrder: {
-      reducer: (state, action: PayloadAction<Order>) => {
-        state.items.push(action.payload);
-      },
-      prepare: (draft: OrderDraft) => ({
-        payload: {
-          ...draft,
-          id: nanoid(),
-          filledSize: 0,
-          status: 'pending' as const,
-          placedAt: Date.now(),
-        },
-      }),
+    replaceOrders: (state, action: PayloadAction<Order[]>) => {
+      state.items = action.payload;
     },
-    updateOrder: {
-      reducer: (state, action: PayloadAction<UpdateOrderPayload & { updatedAt: number }>) => {
-        const { id, changes, updatedAt } = action.payload;
-        const order = state.items.find((item) => item.id === id);
-        if (order !== undefined && isOrderOpen(order)) Object.assign(order, changes, { updatedAt });
-      },
-      prepare: (payload: UpdateOrderPayload) => ({ payload: { ...payload, updatedAt: Date.now() } }),
+    /** Replaces the order with the same id in place, or appends it. */
+    orderUpserted: (state, action: PayloadAction<Order>) => {
+      const index = state.items.findIndex((order) => order.id === action.payload.id);
+      if (index === -1) state.items.push(action.payload);
+      else state.items[index] = action.payload;
     },
-    cancelOrder: {
-      reducer: (state, action: PayloadAction<{ id: string; updatedAt: number }>) => {
-        const { id, updatedAt } = action.payload;
-        const order = state.items.find((item) => item.id === id);
-        if (order !== undefined && isOrderOpen(order)) Object.assign(order, { status: 'cancelled', updatedAt });
-      },
-      prepare: (id: string) => ({ payload: { id, updatedAt: Date.now() } }),
-    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(fetchOrders.fulfilled, (state, action) => {
+      state.items = action.payload;
+    });
+    for (const thunk of [placeOrder, modifyOrder, cancelOrder]) {
+      builder.addCase(thunk.fulfilled, (state, action) => {
+        ordersSlice.caseReducers.orderUpserted(state, orderUpserted(action.payload));
+      });
+    }
   },
 });
 
-export const { addOrder, updateOrder, cancelOrder } = ordersSlice.actions;
+export const { replaceOrders, orderUpserted } = ordersSlice.actions;
 export const ordersReducer = ordersSlice.reducer;

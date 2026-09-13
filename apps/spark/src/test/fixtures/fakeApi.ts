@@ -1,0 +1,100 @@
+import { ApiError, apiFetch, type ApiRequest } from '@/connections/api';
+import type { User } from '@/store/authSlice';
+import { isOrderOpen, type Order, type OrderChanges, type OrderDraft } from '@/store/ordersSlice';
+import type { SettingsState } from '@/store/settingsSlice';
+import type { Widget } from '@/store/widgetsSlice';
+
+export type FakeApiState = {
+  orders: Order[];
+  settings: SettingsState;
+  widgets: Widget[];
+  user: User;
+  /** Bearer token the fake accepts; the login and register calls hand it out. */
+  token: string;
+};
+
+export type FakeApi = {
+  state: FakeApiState;
+  /** Every request seen, oldest first. */
+  calls: { path: string; request: ApiRequest }[];
+  /** Makes the next matching requests fail with this error. */
+  failWith: (error: ApiError | null) => void;
+  handle: typeof apiFetch;
+};
+
+const DEFAULTS: FakeApiState = {
+  orders: [],
+  settings: { updateIntervalMs: 1000, streaming: true },
+  widgets: [],
+  user: { id: 1, username: 'tester' },
+  token: 'fake-token',
+};
+
+let nextId = 0;
+
+/** In-memory stand-in for `apps/api`, mirroring its routes, ids and status codes. */
+export const createFakeApi = (overrides: Partial<FakeApiState> = {}): FakeApi => {
+  const state: FakeApiState = { ...DEFAULTS, ...overrides };
+  const calls: FakeApi['calls'] = [];
+  let failure: ApiError | null = null;
+
+  const route = (path: string, request: ApiRequest): unknown => {
+    const method = request.method ?? 'GET';
+    const body = request.body as never;
+    const [, resource, id, action] = path.split('/');
+    switch (resource) {
+      case 'auth': {
+        if (id === 'me') return state.user;
+        if (id === 'logout') return undefined;
+        const { username } = body as { username: string };
+        return { token: state.token, user: { ...state.user, username } };
+      }
+      case 'orders': {
+        if (method === 'GET') return [...state.orders];
+        if (method === 'POST' && id === undefined) {
+          const draft = body as OrderDraft;
+          const order: Order = {
+            ...draft,
+            id: `fake-${nextId++}`,
+            filledSize: 0,
+            status: 'pending',
+            placedAt: Date.now(),
+          };
+          state.orders.push(order);
+          return order;
+        }
+        const index = state.orders.findIndex((order) => order.id === id);
+        if (index === -1) throw new ApiError(404, 'Order not found');
+        if (!isOrderOpen(state.orders[index])) throw new ApiError(409, 'Order is no longer open');
+        const changes: Partial<Order> =
+          action === 'cancel' ? { status: 'cancelled' } : (body as OrderChanges);
+        state.orders[index] = { ...state.orders[index], ...changes, updatedAt: Date.now() };
+        return state.orders[index];
+      }
+      case 'settings':
+        if (method === 'PUT') state.settings = body as SettingsState;
+        return { ...state.settings };
+      case 'widgets':
+        if (method === 'PUT') state.widgets = body as Widget[];
+        return [...state.widgets];
+      default:
+        throw new ApiError(404, 'Not found');
+    }
+  };
+
+  const handle = (async (path: string, request: ApiRequest = {}) => {
+    calls.push({ path, request });
+    if (failure !== null) throw failure;
+    await Promise.resolve();
+    return route(path, request);
+  }) as typeof apiFetch;
+
+  return {
+    state,
+    calls,
+    failWith: (error) => {
+      failure = error;
+    },
+    handle,
+  };
+};

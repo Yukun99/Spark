@@ -3,7 +3,8 @@ import { WidgetGrid } from '@/features/grid/widgetGrid';
 import { InstrumentWidget } from '@/features/widgets/instrument/instrument';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
-import { render, screen, within } from '@testing-library/react';
+import { installFakeApi } from '@/test/fixtures/mockApi';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -28,6 +29,11 @@ const ticker: Ticker = {
 
 const setFocus = vi.fn();
 
+vi.mock('@/connections/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/connections/api')>()),
+  apiFetch: vi.fn(),
+}));
+
 vi.mock('@/connections/coinbase', () => ({
   COINBASE_PROVIDER: 'Coinbase',
   coinbaseFeed: {
@@ -41,6 +47,7 @@ vi.mock('@/connections/coinbase', () => ({
 }));
 
 const renderWidget = () => {
+  installFakeApi();
   const store = createAppStore();
   const widget = store.getState().widgets.items[0];
   if (widget.type !== 'instrument') throw new Error('expected an instrument widget');
@@ -82,8 +89,10 @@ describe('InstrumentWidget', () => {
     await user.type(within(dialog).getByRole('textbox', { name: 'Size' }), '2');
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(store.getState().orders.items.at(-1)).toEqual(
-      expect.objectContaining({ productId: 'BTC-USD', side: 'buy', price: 101, size: 2 }),
+    await waitFor(() =>
+      expect(store.getState().orders.items.at(-1)).toEqual(
+        expect.objectContaining({ productId: 'BTC-USD', side: 'buy', price: 101, size: 2 }),
+      ),
     );
   });
 

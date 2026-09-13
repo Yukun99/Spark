@@ -52,6 +52,9 @@ export const widgetsSlice = createSlice({
   name: 'widgets',
   initialState,
   reducers: {
+    replaceWidgets: (state, action: PayloadAction<Widget[]>) => {
+      state.items = action.payload;
+    },
     addWidget: {
       /** Places at `cell` when given and free, otherwise at the first cell where the widget fits. */
       reducer: (state, action: PayloadAction<AddWidgetPayload>) => {
@@ -101,6 +104,7 @@ export const widgetsSlice = createSlice({
 });
 
 export const {
+  replaceWidgets,
   addWidget,
   removeWidget,
   moveWidget,

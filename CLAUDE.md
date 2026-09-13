@@ -57,15 +57,22 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 ## State, Data And Layout
 
 - Redux Toolkit store in `src/store/` (`store.ts`, one `<name>Slice.ts` per slice, typed
-  `useAppDispatch`/`useAppSelector` in `hooks.ts`). Slices: `layout` (edit mode), `settings`
-  (update interval), `widgets` (placed widgets), `orders` (dummy orders placed from the
-  instrument BUY/SELL dialog; `useOrders` in `src/hooks/`). Components never import the store directly; wrap
-  access in a `use<Feature>` hook.
+  `useAppDispatch`/`useAppSelector` in `hooks.ts`). Slices: `auth` (session + hydration status),
+  `layout` (edit mode), `notice` (the one error snackbar), `settings` (update interval, streaming),
+  `widgets` (placed widgets), `orders` (`useOrders` in `src/hooks/` dispatches thunks that call the
+  API; edits and cancels apply optimistically and revert on failure). `syncListener.ts` (listener
+  middleware) PUTs settings on every change and the widget layout 500ms after a burst of edits,
+  only once `auth.hydration` is `done`; `hydrate.ts` loads orders/settings/widgets after sign-in
+  and seeds `SEED_WIDGETS` for a fresh account. `sessionCleared` (logout or any 401) resets every
+  slice via the root reducer in `store.ts`. Components never import the store directly; wrap
+  access in a `use<Feature>` hook. Every user-facing error goes through `showNotice`; only
+  `NoticeSnackbar` in `app.tsx` renders alerts.
 - Hooks live next to what they serve, in a `hooks/` subfolder of that feature, component or
   connection folder (e.g. `features/widgets/hooks/useWidgets.ts`). Only cross-cutting store hooks
   (`useEditMode`, `useUpdateInterval`) sit in `src/hooks/`.
 - Exchange access lives in `src/connections/` (`coinbase.tsx`: REST product list + one shared
-  WebSocket ticker feed). The feed keeps latest ticks in a map and notifies subscribers on the
+  WebSocket ticker feed; `api.ts`: `apiFetch` for the Spark API with the bearer token from
+  `localStorage['spark-token']`, errors as `ApiError`). The feed keeps latest ticks in a map and notifies subscribers on the
   configured interval; widgets read it with `useCoinbaseTicker` (`useSyncExternalStore`), so
   prices never pass through Redux. Watchlist rows instead use `useLiveTicker` and write each
   tick into the DOM through refs, so a tick never re-renders a row.
@@ -80,7 +87,9 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   `<GridWidget layout={{ row, col, rowSpan, colSpan }}>` (1-based, spans default to 1; span changes
   animate via `grid/hooks/useSpanTransition.ts`). `edit/` holds the action-column buttons (edit
   mode, one add button per widget type that clicks to place at the first free spot or drags a
-  ghost onto the grid via `useSpawnDrag`, update interval).
+  ghost onto the grid via `useSpawnDrag`, update interval). `auth/` holds `RequireAuth` (route
+  guard: restores the stored token, hydrates, else redirects to `/login`), `LoginPage` (`/login`
+  and `/register`, same form) and the banner's account controls.
 - `src/components/` is for general-purpose UI only (banner, button variants, dialogs, page
   chrome). Anything tied to one feature (its buttons, dialogs, hooks) lives in that feature's
   folder. Styling in `src/styles/`.
@@ -111,8 +120,10 @@ All Nx targets are inferred from plugins in `nx.json` (`@nx/vite`, `@nx/vitest`,
 `@nx/js/typescript`); there is no `project.json`. Root `package.json` has no scripts, so use `pnpm nx`.
 
 Current state: `apps/spark/src/main.tsx` bootstraps React with the Redux `Provider`, MUI
-`ThemeProvider` + `CssBaseline`, and renders `App` (`src/app.tsx`): a `Banner` plus `PageContent`
-(the widget grid, a divider and an action column with edit/add buttons). `widgetSeed.ts` (`SEED_WIDGETS`, seeded by `widgetsSlice.ts`) places
+`ThemeProvider` + `CssBaseline` and `BrowserRouter`, and renders `App` (`src/app.tsx`): a `Banner`
+plus routes (`/login`, `/register`, and `/` behind `RequireAuth` showing `PageContent`: the widget
+grid, a divider and an action column with edit/add buttons). `public/.htaccess` rewrites deep
+links to `index.html` on the host. `widgetSeed.ts` (`SEED_WIDGETS`, seeded by `widgetsSlice.ts`) places
 BTC-USD and ETH-USD instrument widgets top right with a 2x2 `Common` watchlist (`COMMON_PRODUCT_IDS`)
 under them. Brand colours live in
 `src/styles/palette.ts` (navy `#1C1A33`, cream `#EFECDF`, purple `#6A1B9A`, black, white, plus a
@@ -161,9 +172,9 @@ and writes `config.php` there from `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
 `apps/api` is a plain PHP 8.3 + PDO project (Nx project `api`, lint only) serving `/api/*` on the
 same host: username/password accounts with bearer tokens, then per-user orders, settings and
 widget layout. Endpoints and setup in `apps/api/README.md`; tables in `apps/api/schema.sql`. JSON
-shapes mirror the Redux slice types. The frontend does not call it yet. Local `config.php` is
-gitignored; there is no local PHP, so test against the deployed API (`SPARK_API_ORIGIN` proxies
-`/api` from the dev server).
+shapes mirror the Redux slice types. The frontend calls it through `src/connections/api.ts`. Local
+`config.php` is gitignored; the dev server always proxies `/api` to the live site, so local runs
+use the production database. Tests mock `apiFetch` with `src/test/fixtures/fakeApi.ts`.
 
 ## Conventions The Tooling Enforces
 
