@@ -3,13 +3,17 @@ import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import type { OrderRow } from '@/features/widgets/orders/hooks/useOrdersWidget';
 import { STRIP_TEXT_PX, stripHeadingSx, ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
+import type { OrderSort, OrderSortColumn, SortDirection } from '@/store/ordersSlice';
 import { theme as colours, gray } from '@/styles/palette';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
+import type { Theme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import type { ReactNode, Ref } from 'react';
 
@@ -99,18 +103,95 @@ const ActionButton = ({ label, disabled, onClick, children }: ActionButtonProps)
   </ClearButton>
 );
 
-const HEADINGS = ['Instrument', 'Status', 'Price', 'Fulfilment', 'Submission Time', 'Actions'] as const;
+type Heading = { label: string; column?: OrderSortColumn };
 
-export type OrdersHeaderProps = { ref?: Ref<HTMLDivElement> };
+/** Columns in grid order; those with a `column` sort through the server when clicked. */
+const HEADINGS: Heading[] = [
+  { label: 'Instrument', column: 'instrument' },
+  { label: 'Status', column: 'status' },
+  { label: 'Price', column: 'price' },
+  { label: 'Fulfilment', column: 'fulfilment' },
+  { label: 'Submission Time', column: 'placedAt' },
+  { label: 'Actions' },
+];
+
+/** Heading line height in px; the sort buttons match it so the header keeps its height. */
+const HEADING_LINE_PX = Math.round(stripHeadingSx.fontSize * 1.5);
+const SORT_ICON_PX = STRIP_TEXT_PX + 4;
+/** Overlap that puts the down arrow's glyph right under the up arrow's; glyphs fill only the middle of the icon box. */
+const SORT_STACK_OVERLAP_PX = (SORT_ICON_PX * 19) / 24;
+
+const sortButtonSx = {
+  ...stripHeadingSx,
+  p: 0,
+  minHeight: 0,
+  lineHeight: `${HEADING_LINE_PX}px`,
+  justifySelf: 'start',
+  gap: 0.25,
+} as const;
+
+/** Sorted column in the theme's text colour, like a focused field, plus an underline. */
+const activeSortSx = (theme: Theme) => ({
+  color: colours.navy,
+  textDecoration: 'underline',
+  ...theme.applyStyles('dark', { color: colours.cream }),
+});
+
+const ARIA_SORT = { asc: 'ascending', desc: 'descending' } as const;
+
+type SortGlyphProps = { direction: SortDirection | null };
+
+/** Both arrows stacked while the column is unsorted, else only the active one. */
+const SortGlyph = ({ direction }: SortGlyphProps) => (
+  <Box
+    aria-hidden
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: HEADING_LINE_PX,
+    }}
+  >
+    {direction !== 'desc' && <ArrowDropUpIcon sx={{ fontSize: SORT_ICON_PX }} />}
+    {direction !== 'asc' && (
+      <ArrowDropDownIcon
+        sx={{ fontSize: SORT_ICON_PX, ...(direction === null && { mt: `${-SORT_STACK_OVERLAP_PX}px` }) }}
+      />
+    )}
+  </Box>
+);
+
+export type OrdersHeaderProps = {
+  ref?: Ref<HTMLDivElement>;
+  sort: OrderSort | null;
+  onSort: (column: OrderSortColumn) => void;
+};
 
 /** Column titles above the order rows, padded like a row so they line up with its cells. */
-export const OrdersHeader = ({ ref }: OrdersHeaderProps) => (
+export const OrdersHeader = ({ ref, sort, onSort }: OrdersHeaderProps) => (
   <Box ref={ref} sx={{ ...rowSx, px: 1 }}>
-    {HEADINGS.map((heading) => (
-      <Typography key={heading} sx={stripHeadingSx}>
-        {heading}
-      </Typography>
-    ))}
+    {HEADINGS.map(({ label, column }) => {
+      if (column === undefined) {
+        return (
+          <Typography key={label} sx={stripHeadingSx}>
+            {label}
+          </Typography>
+        );
+      }
+      const direction = sort?.column === column ? sort.direction : null;
+      return (
+        <ClearButton
+          key={label}
+          aria-sort={direction === null ? 'none' : ARIA_SORT[direction]}
+          onClick={() => onSort(column)}
+          sx={[sortButtonSx, ...(direction === null ? [] : [activeSortSx])]}
+        >
+          {label}
+          <SortGlyph direction={direction} />
+        </ClearButton>
+      );
+    })}
   </Box>
 );
 

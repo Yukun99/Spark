@@ -18,11 +18,12 @@ export type OrdersWidgetProps = {
   widget: OrdersWidgetModel;
 };
 
-/** Placed orders as a table, newest first. */
+/** Placed orders as a table, newest first unless a column is sorted. */
 export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
   const {
     name,
     title,
+    caption,
     rows,
     page,
     pageCount,
@@ -34,7 +35,7 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
     cancelling,
     filtering,
     filter,
-    filterActive,
+    sort,
     selected,
     orderForm,
     openDelete,
@@ -46,6 +47,8 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
     confirmDelete,
     confirmCancel,
     applyFilter,
+    sortBy,
+    clearSort,
     refresh,
   } = useOrdersWidget(widget);
 
@@ -57,9 +60,9 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
         onDelete={openDelete}
         onRefresh={refresh}
         onFilter={openFilter}
-        filterActive={filterActive}
+        onClearSort={clearSort}
       >
-        <WidgetLabel caption={filterActive ? 'Filtered' : undefined}>{title}</WidgetLabel>
+        <WidgetLabel caption={caption}>{title}</WidgetLabel>
         <WidgetScrollArea ref={containerRef}>
           {rows.length === 0 ? (
             <Typography sx={{ fontSize: STRIP_TEXT_PX, color: gray[50], textAlign: 'center' }}>
@@ -67,7 +70,7 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
             </Typography>
           ) : (
             <Box sx={{ display: 'grid', gridTemplateColumns: ORDERS_COLUMNS, rowGap: `${LIST_ROW_GAP_PX}px` }}>
-              <OrdersHeader ref={headerRef} />
+              <OrdersHeader ref={headerRef} sort={sort} onSort={sortBy} />
               {rows.map((row, index) => (
                 <OrdersRow
                   key={row.key}

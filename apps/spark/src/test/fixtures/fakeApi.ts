@@ -2,9 +2,12 @@ import { ApiError, apiFetch, type ApiRequest } from '@/connections/api';
 import type { User } from '@/store/authSlice';
 import {
   isOrderOpen,
+  ORDER_SORT_COLUMNS,
+  ORDER_STATUSES,
   type Order,
   type OrderChanges,
   type OrderDraft,
+  type OrderSortColumn,
   type OrdersPage,
 } from '@/store/ordersSlice';
 import type { SettingsState } from '@/store/settingsSlice';
@@ -57,11 +60,47 @@ const filterOrders = (orders: Order[], query: URLSearchParams) => {
   );
 };
 
-/** Mirrors `Orders::list` + `Paging::fromQuery`: filter, newest first, then the page window. */
+type SortKey = (order: Order) => number | string;
+
+const fill = (order: Order) => (order.size > 0 ? order.filledSize / order.size : 0);
+const TYPE_RANK = ['limit', 'market'];
+
+/** Mirrors `OrderSort::KEYS`: ascending keys per column; the direction flips them all. */
+const SORT_KEYS: Record<OrderSortColumn, SortKey[]> = {
+  instrument: [(order) => order.productId],
+  status: [fill, (order) => ORDER_STATUSES.indexOf(order.status)],
+  price: [(order) => order.price, (order) => TYPE_RANK.indexOf(order.type)],
+  fulfilment: [fill, (order) => order.size, (order) => order.provider],
+  placedAt: [(order) => order.placedAt],
+};
+
+const compareValues = (a: number | string, b: number | string) =>
+  typeof a === 'string' && typeof b === 'string' ? a.localeCompare(b) : Number(a) - Number(b);
+
+/**
+ * Mirrors `OrderSort::fromQuery`: the column's keys, then the position in `orders` (the table's
+ * insertion order, `seq` on the server); newest first when unsorted.
+ */
+const sortOrders = (orders: Order[], matching: Order[], query: URLSearchParams): Order[] => {
+  const seq = new Map(orders.map((order, index) => [order.id, index]));
+  const column = query.get('sort') as OrderSortColumn | null;
+  if (column !== null && !ORDER_SORT_COLUMNS.includes(column)) {
+    throw new ApiError(400, 'sort must be one of: ' + ORDER_SORT_COLUMNS.join(', '));
+  }
+  const keys: SortKey[] = column === null ? [(order) => order.placedAt] : SORT_KEYS[column];
+  const sign = column === null || query.get('direction') === 'desc' ? -1 : 1;
+  return [...matching].sort((a, b) => {
+    for (const key of keys) {
+      const diff = compareValues(key(a), key(b));
+      if (diff !== 0) return sign * diff;
+    }
+    return sign * ((seq.get(a.id) ?? 0) - (seq.get(b.id) ?? 0));
+  });
+};
+
+/** Mirrors `Orders::list` + `Paging::fromQuery`: filter, sort, then the page window. */
 const pageOrders = (orders: Order[], query: URLSearchParams): OrdersPage => {
-  const matching = filterOrders(orders, query).sort(
-    (a, b) => b.placedAt - a.placedAt || b.id.localeCompare(a.id),
-  );
+  const matching = sortOrders(orders, filterOrders(orders, query), query);
   const pageSize = Number(query.get('pageSize') ?? 10);
   const pageCount = Math.max(1, Math.ceil(matching.length / pageSize));
   const page = Math.min(Number(query.get('page') ?? 1), pageCount);

@@ -17,19 +17,19 @@ final class Orders
     private const PROVIDER_MAX = 32;
     private const COLUMNS = 'id, product_id, side, type, time_in_force, price, size, filled_size, status, provider, placed_at, updated_at';
 
-    /** One page of the user's orders, newest first, filtered (see `OrderFilter`) before paging. */
+    /** One page of the user's orders, filtered (`OrderFilter`) then sorted (`OrderSort`) before paging. */
     public static function list(): void
     {
         $userId = Auth::requireUser();
         $filter = OrderFilter::fromQuery($_GET);
+        $orderBy = OrderSort::fromQuery($_GET);
         Execution::advance($userId);
         $where = ' FROM orders WHERE user_id = ?' . $filter['where'];
         $params = [$userId, ...$filter['params']];
         $total = (int) Db::one('SELECT COUNT(*) AS total' . $where, $params)['total'];
         $paging = Paging::fromQuery($_GET, $total);
         $rows = Db::all(
-            'SELECT ' . self::COLUMNS . $where . ' ORDER BY placed_at DESC, id DESC'
-            . " LIMIT {$paging['limit']} OFFSET {$paging['offset']}",
+            'SELECT ' . self::COLUMNS . $where . " $orderBy LIMIT {$paging['limit']} OFFSET {$paging['offset']}",
             $params,
         );
         Http::json(200, [

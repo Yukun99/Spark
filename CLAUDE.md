@@ -176,8 +176,10 @@ shapes mirror the Redux slice types. `Execution.php` advances open orders by wal
 steps whenever they are read (no daemon); the client refetches on load, on the orders widget's
 Refresh button and on leaving edit mode. The orders widget's filter is applied server-side:
 `OrderFilter.php` turns `GET /orders` query params into SQL; the client only stores the filter
-(`orders.filter`) and serialises it (`orderFilterQuery`). `pnpm nx test api` runs plain-PHP asserts
-in `apps/api/tests/`. The frontend calls it through `src/connections/api.ts`. Local
+(`orders.filter`) and serialises it (`orderFilterQuery`). Column sorting works the same way:
+`OrderSort.php` whitelists `sort`/`direction` into an `ORDER BY` (final tiebreak `seq`, the
+insertion order), the client stores `orders.sort` and clicking a header cycles asc → desc → off.
+`pnpm nx test api` runs plain-PHP asserts in `apps/api/tests/`. The frontend calls it through `src/connections/api.ts`. Local
 `config.php` is gitignored; the dev server always proxies `/api` to the live site, so local runs
 use the production database. Tests mock `apiFetch` with `src/test/fixtures/fakeApi.ts`.
 

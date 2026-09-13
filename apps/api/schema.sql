@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE TABLE IF NOT EXISTS orders (
   id CHAR(21) NOT NULL,
+  seq BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id INT UNSIGNED NOT NULL,
   product_id VARCHAR(20) NOT NULL,
   side ENUM('buy', 'sell') NOT NULL,
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS orders (
   ticked_at BIGINT UNSIGNED NOT NULL,
   updated_at BIGINT UNSIGNED NULL,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_orders_seq (seq),
   KEY ix_orders_user_placed (user_id, placed_at),
   CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

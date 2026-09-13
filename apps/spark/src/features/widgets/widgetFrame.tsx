@@ -14,6 +14,7 @@ import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Box from '@mui/material/Box';
@@ -30,9 +31,10 @@ export type WidgetFrameProps = {
   onExpand?: () => void;
   /** Refetches the widget's data; shows a corner button outside edit mode. */
   onRefresh?: () => void;
-  /** Opens a filter for the widget's data; the button turns purple while `filterActive`. */
+  /** Opens a filter for the widget's data. */
   onFilter?: () => void;
-  filterActive?: boolean;
+  /** Clears the widget's column sort; its button sits left of the filter button. */
+  onClearSort?: () => void;
   tickAt?: number;
   children: ReactNode;
 };
@@ -42,18 +44,16 @@ type CornerButtonProps = {
   onClick: (event: MouseEvent) => void;
   /** Slot from the right edge: 0 is the corner, 1 sits left of it. */
   slot?: number;
-  active?: boolean;
   children: ReactNode;
 };
 
 const CORNER_GAP_PX = 4;
 
 /** Round icon button along the card's top-right edge, sized to the title line. */
-const CornerButton = ({ label, onClick, slot = 0, active = false, children }: CornerButtonProps) => (
+const CornerButton = ({ label, onClick, slot = 0, children }: CornerButtonProps) => (
   <ClearButton
     rounded
     aria-label={label}
-    aria-pressed={active}
     onClick={onClick}
     sx={{
       position: 'absolute',
@@ -62,7 +62,6 @@ const CornerButton = ({ label, onClick, slot = 0, active = false, children }: Co
       p: 0,
       width: LABEL_LINE_PX,
       height: LABEL_LINE_PX,
-      ...(active && { color: colours.purple }),
     }}
   >
     {children}
@@ -83,7 +82,7 @@ export const WidgetFrame = ({
   onExpand,
   onRefresh,
   onFilter,
-  filterActive = false,
+  onClearSort,
   tickAt,
   children,
 }: WidgetFrameProps) => {
@@ -129,6 +128,15 @@ export const WidgetFrame = ({
     },
     [onFilter],
   );
+  const onClearSortClick = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onClearSort?.();
+    },
+    [onClearSort],
+  );
+  const filterSlot = onRefresh === undefined ? 0 : 1;
+  const clearSortSlot = onFilter === undefined ? filterSlot : filterSlot + 1;
 
   return (
     <GridWidget layout={widget.layout} raised={dragging}>
@@ -207,10 +215,14 @@ export const WidgetFrame = ({
               <CornerButton
                 label={`Filter ${name.toLowerCase()}`}
                 onClick={onFilterClick}
-                slot={onRefresh === undefined ? 0 : 1}
-                active={filterActive}
+                slot={filterSlot}
               >
                 <FilterAltIcon sx={{ fontSize: LABEL_FONT_PX }} />
+              </CornerButton>
+            )}
+            {onClearSort !== undefined && (
+              <CornerButton label='Cancel sort' onClick={onClearSortClick} slot={clearSortSlot}>
+                <FilterListOffIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </CornerButton>
             )}
             {children}

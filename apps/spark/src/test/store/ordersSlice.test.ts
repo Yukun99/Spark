@@ -1,12 +1,15 @@
 import { ApiError } from '@/connections/api';
 import {
   applyOrderFilter,
+  applyOrderSort,
   cancelOrder,
   fetchOrders,
   isOrderFilterActive,
   modifyOrder,
   goToOrdersPage,
+  nextOrderSort,
   orderFilterQuery,
+  orderSortQuery,
   ordersQuery,
   ordersReducer,
   orderUpserted,
@@ -43,7 +46,7 @@ const seededStore = () => {
 describe('ordersSlice reducers', () => {
   it('starts empty without a page size and takes the fetched page wholesale', () => {
     const initial = ordersReducer(undefined, { type: 'init' });
-    expect(initial).toEqual({ items: [], filter: {}, page: 1, pageSize: null, pageCount: 1, total: 0 });
+    expect(initial).toEqual({ items: [], filter: {}, sort: null, page: 1, pageSize: null, pageCount: 1, total: 0 });
     const page = { ...sampleOrdersPage(), page: 2, pageCount: 3, total: 25 };
     const loaded = ordersReducer(initial, fetchOrders.fulfilled(page, 'r'));
     expect(loaded).toMatchObject({ items: page.items, page: 2, pageCount: 3, total: 25 });
@@ -61,9 +64,12 @@ describe('ordersSlice reducers', () => {
 });
 
 describe('paging', () => {
-  it('puts the page window before the filter in the query', () => {
+  it('puts the page window before the sort and the filter in the query', () => {
     expect(ordersQuery({}, 1, 10)).toBe('?page=1&pageSize=10');
     expect(ordersQuery({ side: 'buy' }, 3, 7)).toBe('?page=3&pageSize=7&side=buy');
+    expect(ordersQuery({ side: 'buy' }, 3, 7, { column: 'price', direction: 'desc' })).toBe(
+      '?page=3&pageSize=7&sort=price&direction=desc&side=buy',
+    );
   });
 
   it('fetches nothing until a page size is known', async () => {
@@ -145,6 +151,56 @@ describe('order filter', () => {
     await store.dispatch(applyOrderFilter({}));
     expect(fake.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10');
     expect(store.getState().orders.items).toHaveLength(sampleOrders().length);
+  });
+});
+
+describe('order sort', () => {
+  it('cycles a column through ascending, descending and off; another column starts ascending', () => {
+    expect(nextOrderSort(null, 'price')).toEqual({ column: 'price', direction: 'asc' });
+    expect(nextOrderSort({ column: 'price', direction: 'asc' }, 'price')).toEqual({ column: 'price', direction: 'desc' });
+    expect(nextOrderSort({ column: 'price', direction: 'desc' }, 'price')).toBeNull();
+    expect(nextOrderSort({ column: 'price', direction: 'desc' }, 'status')).toEqual({ column: 'status', direction: 'asc' });
+    expect(orderSortQuery(null)).toBe('');
+    expect(orderSortQuery({ column: 'placedAt', direction: 'asc' })).toBe('&sort=placedAt&direction=asc');
+  });
+
+  it('stores the sort, restarts from page 1 and sends it with every fetch', async () => {
+    const fake = installFakeApi({ orders: manyOrders(25) });
+    const store = createAppStore();
+    await store.dispatch(resizeOrdersPage(10));
+    await store.dispatch(goToOrdersPage(2));
+    await store.dispatch(applyOrderSort({ column: 'placedAt', direction: 'asc' }));
+    expect(store.getState().orders).toMatchObject({ page: 1, sort: { column: 'placedAt', direction: 'asc' } });
+    expect(fake.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=placedAt&direction=asc');
+    expect(store.getState().orders.items.map((order) => order.id)[0]).toBe('many-0');
+    await store.dispatch(fetchOrders());
+    expect(fake.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=placedAt&direction=asc');
+    await store.dispatch(applyOrderSort(null));
+    expect(fake.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10');
+    expect(store.getState().orders.items.map((order) => order.id)[0]).toBe('many-24');
+  });
+
+  it('sorts by each column with the documented keys and ties broken by insertion order', async () => {
+    const orders = sampleOrders();
+    const fake = installFakeApi({ orders });
+    const store = createAppStore();
+    await store.dispatch(resizeOrdersPage(10));
+    const ids = () => store.getState().orders.items.map((order) => order.productId);
+    const sorted = async (column: Parameters<typeof nextOrderSort>[1], direction: 'asc' | 'desc') => {
+      await store.dispatch(applyOrderSort({ column, direction }));
+      return ids();
+    };
+    expect(await sorted('instrument', 'asc')).toEqual([...orders.map((order) => order.productId)].sort());
+    expect(await sorted('instrument', 'desc')).toEqual([...orders.map((order) => order.productId)].sort().reverse());
+    expect(await sorted('price', 'asc')).toEqual(['DOGE-USD', 'ADA-USD', 'XRP-USD', 'DOT-USD', 'AVAX-USD', 'LINK-USD', 'LTC-USD', 'SOL-USD', 'ETH-USD', 'BTC-USD']);
+    expect(await sorted('placedAt', 'asc')).toEqual(orders.map((order) => order.productId));
+    expect(fake.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=placedAt&direction=asc');
+    // 0% filled: SOL, ADA, DOT (pending, pending, fulfilling), ties by insertion order.
+    expect((await sorted('status', 'asc')).slice(0, 3)).toEqual(['SOL-USD', 'ADA-USD', 'DOT-USD']);
+    expect((await sorted('status', 'desc')).slice(0, 3)).toEqual(['LINK-USD', 'XRP-USD', 'BTC-USD']);
+    // 0% filled: DOT (size 300), ADA (800), SOL (25) → smaller total first.
+    expect((await sorted('fulfilment', 'asc')).slice(0, 3)).toEqual(['SOL-USD', 'DOT-USD', 'ADA-USD']);
+    expect((await sorted('fulfilment', 'desc')).slice(0, 3)).toEqual(['XRP-USD', 'LINK-USD', 'BTC-USD']);
   });
 });
 

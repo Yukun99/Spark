@@ -12,6 +12,8 @@ import {
   orderTouchedAt,
   type Order,
   type OrderFilter,
+  type OrderSort,
+  type OrderSortColumn,
   type OrderType,
 } from '@/store/ordersSlice';
 import type { OrdersWidget } from '@/store/widgetsSlice';
@@ -54,7 +56,9 @@ export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'he
   name: string;
   /** Card title: the name with the number of orders matching the filter. */
   title: string;
-  /** The current page, newest first. */
+  /** Small line under the title naming the active filter and sort, if any. */
+  caption?: string;
+  /** The current page in the server's order. */
   rows: OrderRow[];
   page: number;
   pageCount: number;
@@ -64,7 +68,8 @@ export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'he
   filtering: boolean;
   /** Filter currently applied on the server; prefills the filter dialog. */
   filter: OrderFilter;
-  filterActive: boolean;
+  /** Column sort applied on the server; null shows newest first. */
+  sort: OrderSort | null;
   /** Last order an action was opened on; stays set so a closing dialog keeps its text. */
   selected: Order | null;
   /** Set while copying or editing an order. */
@@ -78,7 +83,16 @@ export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'he
   confirmDelete: () => void;
   confirmCancel: () => void;
   applyFilter: (filter: OrderFilter) => void;
+  /** Steps the column through ascending, descending and off. */
+  sortBy: (column: OrderSortColumn) => void;
+  clearSort: () => void;
   refresh: () => void;
+};
+
+const captionFor = (filterActive: boolean, sorted: boolean) => {
+  if (filterActive && sorted) return 'Filtered, sorted';
+  if (filterActive) return 'Filtered';
+  return sorted ? 'Sorted' : undefined;
 };
 
 const glowAt = (order: Order) => {
@@ -127,6 +141,9 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     filter,
     filterActive,
     applyFilter,
+    sort,
+    sortBy,
+    clearSort,
   } = useOrders();
   const { removeWidget } = useWidgets();
   const { containerRef, headerRef, rowRef, pageSize } = usePageSize({ estimate: SIZE_ESTIMATE });
@@ -184,6 +201,7 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
   return {
     name: 'Orders',
     title: `Orders (${total})`,
+    caption: captionFor(filterActive, sort !== null),
     rows,
     page,
     pageCount,
@@ -195,7 +213,7 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     cancelling: dialog === 'cancel',
     filtering: dialog === 'filter',
     filter,
-    filterActive,
+    sort,
     selected,
     orderForm: form,
     openDelete,
@@ -207,6 +225,8 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     confirmDelete,
     confirmCancel,
     applyFilter: confirmFilter,
+    sortBy,
+    clearSort,
     refresh: refreshOrders,
   };
 };

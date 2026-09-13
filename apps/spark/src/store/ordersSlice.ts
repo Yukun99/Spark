@@ -80,9 +80,31 @@ export const orderFilterQuery = (filter: OrderFilter): string => {
   return query === '' ? '' : `?${query}`;
 };
 
-/** Query string for `GET /orders`: the page window first, then the filter. */
-export const ordersQuery = (filter: OrderFilter, page: number, pageSize: number): string =>
-  `?page=${page}&pageSize=${pageSize}${orderFilterQuery(filter).replace('?', '&')}`;
+export const ORDER_SORT_COLUMNS = ['instrument', 'status', 'price', 'fulfilment', 'placedAt'] as const;
+export type OrderSortColumn = (typeof ORDER_SORT_COLUMNS)[number];
+export type SortDirection = 'asc' | 'desc';
+
+/** Column the server sorts the list by; the keys per column live in `OrderSort.php`. */
+export type OrderSort = { column: OrderSortColumn; direction: SortDirection };
+
+/** Next step in a column's click cycle: ascending, descending, off; another column starts afresh. */
+export const nextOrderSort = (current: OrderSort | null, column: OrderSortColumn): OrderSort | null => {
+  if (current === null || current.column !== column) return { column, direction: 'asc' };
+  return current.direction === 'asc' ? { column, direction: 'desc' } : null;
+};
+
+/** Query fragment for `GET /orders` starting with `&`, empty when unsorted. */
+export const orderSortQuery = (sort: OrderSort | null): string =>
+  sort === null ? '' : `&sort=${sort.column}&direction=${sort.direction}`;
+
+/** Query string for `GET /orders`: the page window first, then the sort, then the filter. */
+export const ordersQuery = (
+  filter: OrderFilter,
+  page: number,
+  pageSize: number,
+  sort: OrderSort | null = null,
+): string =>
+  `?page=${page}&pageSize=${pageSize}${orderSortQuery(sort)}${orderFilterQuery(filter).replace('?', '&')}`;
 
 /** One page of orders as `GET /orders` returns it, newest first. */
 export type OrdersPage = {
@@ -96,6 +118,8 @@ export type OrdersState = {
   /** The current page only. */
   items: Order[];
   filter: OrderFilter;
+  /** Column sort applied on the server; null shows newest first. */
+  sort: OrderSort | null;
   page: number;
   /** Rows that fit the orders widget; null until it has measured itself, so nothing is fetched. */
   pageSize: number | null;
@@ -106,6 +130,7 @@ export type OrdersState = {
 const initialState: OrdersState = {
   items: [],
   filter: {},
+  sort: null,
   page: 1,
   pageSize: null,
   pageCount: 1,
@@ -115,14 +140,14 @@ const initialState: OrdersState = {
 const selectOrder = (state: RootState, id: string) =>
   state.orders.items.find((order) => order.id === id);
 
-/** Reloads the current page with the stored filter applied server-side; waits for a page size. */
+/** Reloads the current page with the stored filter and sort applied server-side; waits for a page size. */
 export const fetchOrders = createAsyncThunk<OrdersPage | null, void, { state: RootState }>(
   'orders/fetch',
   async (_, { dispatch, getState }) => {
-    const { filter, page, pageSize } = getState().orders;
+    const { filter, sort, page, pageSize } = getState().orders;
     if (pageSize === null) return null;
     try {
-      return await apiFetch<OrdersPage>(`/orders${ordersQuery(filter, page, pageSize)}`);
+      return await apiFetch<OrdersPage>(`/orders${ordersQuery(filter, page, pageSize, sort)}`);
     } catch (error) {
       reportApiFailure(dispatch, error, 'Could not refresh orders');
       throw error;
@@ -135,6 +160,16 @@ export const applyOrderFilter = createAsyncThunk<void, OrderFilter, { state: Roo
   'orders/applyFilter',
   async (filter, { dispatch }) => {
     dispatch(setOrderFilter(filter));
+    dispatch(setOrdersPage(1));
+    await dispatch(fetchOrders());
+  },
+);
+
+/** Stores the sort and starts over from the first page, like a filter change. */
+export const applyOrderSort = createAsyncThunk<void, OrderSort | null, { state: RootState }>(
+  'orders/applySort',
+  async (sort, { dispatch }) => {
+    dispatch(setOrdersSort(sort));
     dispatch(setOrdersPage(1));
     await dispatch(fetchOrders());
   },
@@ -215,6 +250,9 @@ export const ordersSlice = createSlice({
     setOrderFilter: (state, action: PayloadAction<OrderFilter>) => {
       state.filter = action.payload;
     },
+    setOrdersSort: (state, action: PayloadAction<OrderSort | null>) => {
+      state.sort = action.payload;
+    },
     setOrdersPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload;
     },
@@ -241,5 +279,6 @@ export const ordersSlice = createSlice({
   },
 });
 
-export const { setOrderFilter, setOrdersPage, setOrdersPageSize, orderUpserted } = ordersSlice.actions;
+export const { setOrderFilter, setOrdersSort, setOrdersPage, setOrdersPageSize, orderUpserted } =
+  ordersSlice.actions;
 export const ordersReducer = ordersSlice.reducer;

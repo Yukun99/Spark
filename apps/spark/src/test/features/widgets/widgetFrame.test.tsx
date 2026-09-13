@@ -171,6 +171,34 @@ describe('WidgetFrame drag', () => {
     expect(screen.queryByTestId('resize-handle-top')).toBeNull();
   });
 
+  it('lines the corner buttons up right to left: refresh, filter, cancel sort', () => {
+    const store = createAppStore();
+    const widget = store.getState().widgets.items[0];
+    const onClearSort = vi.fn();
+    render(
+      <Provider store={store}>
+        <WidgetGrid layouts={[widget.layout]}>
+          <WidgetFrame
+            widget={widget}
+            name='Orders'
+            onDelete={vi.fn()}
+            onRefresh={vi.fn()}
+            onFilter={vi.fn()}
+            onClearSort={onClearSort}
+          >
+            <span>content</span>
+          </WidgetFrame>
+        </WidgetGrid>
+      </Provider>,
+    );
+    const right = (name: string) => parseFloat(getComputedStyle(screen.getByRole('button', { name })).right);
+    expect(right('Refresh orders')).toBe(0);
+    expect(right('Filter orders')).toBeGreaterThan(right('Refresh orders'));
+    expect(right('Cancel sort')).toBeGreaterThan(right('Filter orders'));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel sort' }));
+    expect(onClearSort).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the freshness glow only outside edit mode with a tick time, remounting it per tick', () => {
     expect(renderFrame({ editMode: false }).frame.querySelector(GLOW)).toBeNull();
     cleanup();

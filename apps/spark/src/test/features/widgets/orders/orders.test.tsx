@@ -310,7 +310,6 @@ describe('OrdersWidget', () => {
     const user = userEvent.setup();
     const store = renderOrders();
     const filterButton = screen.getByRole('button', { name: 'Filter orders' });
-    expect(filterButton).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
 
     await user.click(filterButton);
@@ -324,7 +323,6 @@ describe('OrdersWidget', () => {
     expect(rowCells()[0][0]).toBe('LTC-USD');
     expect(store.getState().orders.filter).toEqual({ statuses: ['cancelled'] });
     expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&status=cancelled');
-    expect(screen.getByRole('button', { name: 'Filter orders' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Filtered')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Filter orders' }));
@@ -335,6 +333,69 @@ describe('OrdersWidget', () => {
     await user.click(within(reopened).getByRole('button', { name: 'Confirm' }));
     await waitFor(() => expect(rowCells()).toHaveLength(sampleOrders().length));
     expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
+  });
+
+  it('sorts through the server by clicking a heading: ascending, descending, off', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders();
+    const heading = (name: string) => screen.getByRole('button', { name });
+    const glyphs = (button: HTMLElement) =>
+      Array.from(button.querySelectorAll('svg')).map((icon) => icon.getAttribute('data-testid'));
+    for (const name of ['Instrument', 'Status', 'Price', 'Fulfilment', 'Submission Time']) {
+      expect(heading(name)).toHaveAttribute('aria-sort', 'none');
+      expect(glyphs(heading(name))).toEqual(['ArrowDropUpIcon', 'ArrowDropDownIcon']);
+    }
+    expect(screen.queryByRole('button', { name: 'Actions' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Sorted')).not.toBeInTheDocument();
+
+    await user.click(heading('Instrument'));
+    await waitFor(() => expect(rowCells()[0][0]).toBe('ADA-USD'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=instrument&direction=asc');
+    expect(heading('Instrument')).toHaveAttribute('aria-sort', 'ascending');
+    expect(glyphs(heading('Instrument'))).toEqual(['ArrowDropUpIcon']);
+    expect(screen.getByText('Sorted')).toBeInTheDocument();
+
+    await user.click(heading('Instrument'));
+    await waitFor(() => expect(rowCells()[0][0]).toBe('XRP-USD'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=instrument&direction=desc');
+    expect(heading('Instrument')).toHaveAttribute('aria-sort', 'descending');
+    expect(glyphs(heading('Instrument'))).toEqual(['ArrowDropDownIcon']);
+
+    await user.click(heading('Price'));
+    await waitFor(() => expect(rowCells()[0][0]).toBe('DOGE-USD'));
+    expect(store.getState().orders.sort).toEqual({ column: 'price', direction: 'asc' });
+    expect(heading('Instrument')).toHaveAttribute('aria-sort', 'none');
+    expect(heading('Price')).toHaveAttribute('aria-sort', 'ascending');
+
+    await user.click(heading('Price'));
+    await user.click(heading('Price'));
+    await waitFor(() => expect(store.getState().orders.sort).toBeNull());
+    await waitFor(() => expect(rowCells()[0][0]).toBe('LTC-USD'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10');
+    expect(heading('Price')).toHaveAttribute('aria-sort', 'none');
+    expect(screen.queryByText('Sorted')).not.toBeInTheDocument();
+  });
+
+  it('clears the sort from the corner button, going back to the first page', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders(manyOrders(25));
+    await user.click(pageButton('Refresh orders'));
+    await waitFor(() => expect(screen.getByText('Orders (25)')).toBeInTheDocument());
+    const calls = fakeApi.calls.length;
+    await user.click(pageButton('Cancel sort'));
+    expect(fakeApi.calls).toHaveLength(calls);
+
+    await user.click(screen.getByRole('button', { name: 'Submission Time' }));
+    await waitFor(() => expect(store.getState().orders.sort).toEqual({ column: 'placedAt', direction: 'asc' }));
+    await user.click(pageButton('Next page'));
+    await waitFor(() => expect(pageField()).toHaveValue('2'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=2&pageSize=10&sort=placedAt&direction=asc');
+
+    await user.click(pageButton('Cancel sort'));
+    await waitFor(() => expect(store.getState().orders.sort).toBeNull());
+    await waitFor(() => expect(pageField()).toHaveValue('1'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10');
+    expect(screen.getByRole('button', { name: 'Submission Time' })).toHaveAttribute('aria-sort', 'none');
   });
 
   it('pages through the server with the page bar, accepting only pages in range', async () => {
