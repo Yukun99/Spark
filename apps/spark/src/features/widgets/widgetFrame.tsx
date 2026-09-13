@@ -14,6 +14,7 @@ import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { useCallback, type MouseEvent, type ReactNode } from 'react';
@@ -26,9 +27,29 @@ export type WidgetFrameProps = {
   onDelete: () => void;
   onModify?: () => void;
   onExpand?: () => void;
+  /** Refetches the widget's data; shows a corner button outside edit mode. */
+  onRefresh?: () => void;
   tickAt?: number;
   children: ReactNode;
 };
+
+type CornerButtonProps = {
+  label: string;
+  onClick: (event: MouseEvent) => void;
+  children: ReactNode;
+};
+
+/** Round icon button in the card's top-right corner, sized to the title line. */
+const CornerButton = ({ label, onClick, children }: CornerButtonProps) => (
+  <ClearButton
+    rounded
+    aria-label={label}
+    onClick={onClick}
+    sx={{ position: 'absolute', top: 0, right: 0, p: 0, width: LABEL_LINE_PX, height: LABEL_LINE_PX }}
+  >
+    {children}
+  </ClearButton>
+);
 
 /**
  * Card chrome shared by all widgets: drag-to-move, delete and (when `onModify` is given) modify
@@ -42,6 +63,7 @@ export const WidgetFrame = ({
   onDelete,
   onModify,
   onExpand,
+  onRefresh,
   tickAt,
   children,
 }: WidgetFrameProps) => {
@@ -72,6 +94,13 @@ export const WidgetFrame = ({
       onExpand?.();
     },
     [onExpand],
+  );
+  const onRefreshClick = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onRefresh?.();
+    },
+    [onRefresh],
   );
 
   return (
@@ -138,21 +167,14 @@ export const WidgetFrame = ({
             }}
           >
             {expandable && (
-              <ClearButton
-                rounded
-                aria-label='Expand widget'
-                onClick={onExpandClick}
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  p: 0,
-                  width: LABEL_LINE_PX,
-                  height: LABEL_LINE_PX,
-                }}
-              >
+              <CornerButton label='Expand widget' onClick={onExpandClick}>
                 <FullscreenIcon sx={{ fontSize: LABEL_FONT_PX }} />
-              </ClearButton>
+              </CornerButton>
+            )}
+            {onRefresh !== undefined && (
+              <CornerButton label={`Refresh ${name.toLowerCase()}`} onClick={onRefreshClick}>
+                <RefreshIcon sx={{ fontSize: LABEL_FONT_PX }} />
+              </CornerButton>
             )}
             {children}
           </Box>

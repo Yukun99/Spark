@@ -19,6 +19,7 @@ final class Orders
     public static function list(): void
     {
         $userId = Auth::requireUser();
+        Execution::advance($userId);
         $rows = Db::all('SELECT ' . self::COLUMNS . ' FROM orders WHERE user_id = ? ORDER BY placed_at, id', [$userId]);
         Http::json(200, array_map(self::toJson(...), $rows));
     }
@@ -28,9 +29,10 @@ final class Orders
         $userId = Auth::requireUser();
         $body = Http::body();
         $id = Util::nanoid();
+        $now = Util::nowMs();
         Db::run(
-            'INSERT INTO orders (id, user_id, product_id, side, type, time_in_force, price, size, filled_size, status, provider, placed_at)'
-            . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)',
+            'INSERT INTO orders (id, user_id, product_id, side, type, time_in_force, price, size, filled_size, status, provider, placed_at, ticked_at)'
+            . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)',
             [
                 $id,
                 $userId,
@@ -39,7 +41,8 @@ final class Orders
                 ...self::changes($body),
                 'pending',
                 Validate::string($body, 'provider', self::PROVIDER_MAX),
-                Util::nowMs(),
+                $now,
+                $now,
             ],
         );
         Http::json(201, self::toJson(self::find($userId, $id)));
@@ -48,6 +51,7 @@ final class Orders
     public static function update(array $params): void
     {
         $userId = Auth::requireUser();
+        Execution::advance($userId);
         $order = self::findOpen($userId, $params['id']);
         $changes = self::changes(Http::body());
         if ((float) $changes[3] < (float) $order['filled_size']) {
@@ -63,6 +67,7 @@ final class Orders
     public static function cancel(array $params): void
     {
         $userId = Auth::requireUser();
+        Execution::advance($userId);
         $order = self::findOpen($userId, $params['id']);
         Db::run(
             'UPDATE orders SET status = ?, updated_at = ? WHERE id = ? AND user_id = ?',

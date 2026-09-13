@@ -52,6 +52,7 @@ export type UseOrdersWidgetResult = {
   closeDialog: () => void;
   confirmDelete: () => void;
   confirmCancel: () => void;
+  refresh: () => void;
 };
 
 const glowAt = (order: Order) => {
@@ -88,7 +89,7 @@ const orderForm = (kind: OrdersDialogKind, order: Order): OrderFormProps | null 
 };
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
-  const { orders, cancelOrder } = useOrders();
+  const { orders, cancelOrder, refreshOrders } = useOrders();
   const { removeWidget } = useWidgets();
   const [dialog, setDialog] = useState<OrdersDialogKind>(null);
   const [selected, setSelected] = useState<Order | null>(null);
@@ -136,5 +137,6 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     closeDialog,
     confirmDelete,
     confirmCancel,
+    refresh: refreshOrders,
   };
 };

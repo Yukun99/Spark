@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   cancelOrder as cancelOrderThunk,
+  fetchOrders,
   modifyOrder,
   placeOrder as placeOrderThunk,
   type Order,
@@ -14,6 +15,8 @@ export type UseOrdersResult = {
   placeOrder: (draft: OrderDraft) => void;
   modifyOrder: (id: string, changes: OrderChanges) => void;
   cancelOrder: (id: string) => void;
+  /** Reloads the list from the server, picking up simulated fills. */
+  refreshOrders: () => void;
 };
 
 /** Failures are reported through the notice snackbar by the thunks, so callers fire and forget. */
@@ -29,6 +32,7 @@ export const useOrders = (): UseOrdersResult => {
     [dispatch],
   );
   const cancel = useCallback((id: string) => void dispatch(cancelOrderThunk(id)), [dispatch]);
+  const refreshOrders = useCallback(() => void dispatch(fetchOrders()), [dispatch]);
 
-  return { orders, placeOrder, modifyOrder: modify, cancelOrder: cancel };
+  return { orders, placeOrder, modifyOrder: modify, cancelOrder: cancel, refreshOrders };
 };

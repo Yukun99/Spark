@@ -1,10 +1,12 @@
 import { ApiError } from '@/connections/api';
 import { hydrationFinished } from '@/store/authSlice';
+import { toggleEditMode } from '@/store/layoutSlice';
 import { toggleStreaming } from '@/store/settingsSlice';
 import { createAppStore } from '@/store/store';
 import { WIDGET_SYNC_DELAY_MS } from '@/store/syncListener';
 import { moveWidget, removeWidget } from '@/store/widgetsSlice';
 import { installFakeApi } from '@/test/fixtures/mockApi';
+import { sampleOrders } from '@/test/fixtures/orders';
 
 vi.mock('@/connections/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/connections/api')>()),
@@ -75,6 +77,18 @@ describe('syncListener', () => {
     await vi.advanceTimersByTimeAsync(WIDGET_SYNC_DELAY_MS);
     expect(store.getState().widgets.items).toEqual(before);
     expect(store.getState().notice.message).toBe('Internal server error');
+  });
+
+  it('refetches orders when leaving edit mode, not when entering it', async () => {
+    const fake = installFakeApi({ orders: sampleOrders() });
+    const store = hydratedStore();
+    store.dispatch(toggleEditMode());
+    await flush();
+    expect(fake.calls).toEqual([]);
+    store.dispatch(toggleEditMode());
+    await flush();
+    expect(fake.calls).toEqual([{ path: '/orders', request: {} }]);
+    expect(store.getState().orders.items).toEqual(sampleOrders());
   });
 
   it('signs out when the server no longer accepts the token', async () => {

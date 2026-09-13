@@ -31,11 +31,12 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
     closeDialog,
     confirmDelete,
     confirmCancel,
+    refresh,
   } = useOrdersWidget(widget);
 
   return (
     <>
-      <WidgetFrame widget={widget} name={title} onDelete={openDelete}>
+      <WidgetFrame widget={widget} name={title} onDelete={openDelete} onRefresh={refresh}>
         <WidgetLabel>{title}</WidgetLabel>
         <WidgetScrollArea>
           {rows.length === 0 ? (

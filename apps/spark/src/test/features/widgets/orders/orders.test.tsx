@@ -55,9 +55,10 @@ const placed = (draft: OrderDraft): Order => ({
 });
 
 const renderOrders = () => {
-  installFakeApi({ orders: sampleOrders() });
+  const fake = installFakeApi({ orders: sampleOrders() });
   const store = createAppStore();
   store.dispatch(replaceOrders(sampleOrders()));
+  fakeApi = fake;
   const Bound = () => {
     const widget = store.getState().widgets.items.find((item) => item.type === 'orders')!;
     if (widget.type !== 'orders') throw new Error('expected an orders widget');
@@ -70,6 +71,8 @@ const renderOrders = () => {
   );
   return store;
 };
+
+let fakeApi: ReturnType<typeof installFakeApi>;
 
 const rowCells = () =>
   screen.getAllByTestId('order-row').map((row) =>
@@ -293,6 +296,23 @@ describe('OrdersWidget', () => {
         status: 'pending',
       }),
     );
+  });
+
+  it('reloads the orders from the server on refresh, hiding the button in edit mode', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders();
+    const target = fakeApi.state.orders.find((order) => order.productId === 'SOL-USD')!;
+    Object.assign(target, { status: 'fulfilling', filledSize: 5 });
+    expect(rowCells().find((row) => row[0] === 'SOL-USD')?.[1]).toBe('Buypending0.00%');
+
+    await user.click(screen.getByRole('button', { name: 'Refresh orders' }));
+    await waitFor(() =>
+      expect(rowCells().find((row) => row[0] === 'SOL-USD')?.[1]).toBe('Buyfulfilling20.00%'),
+    );
+    expect(fakeApi.calls).toEqual([{ path: '/orders', request: {} }]);
+
+    await act(() => store.dispatch(toggleEditMode()));
+    expect(screen.queryByRole('button', { name: 'Refresh orders' })).not.toBeInTheDocument();
   });
 
   it('offers delete but no modify in edit mode', async () => {

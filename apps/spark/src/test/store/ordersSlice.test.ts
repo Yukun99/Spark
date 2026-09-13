@@ -1,6 +1,7 @@
 import { ApiError } from '@/connections/api';
 import {
   cancelOrder,
+  fetchOrders,
   modifyOrder,
   orderUpserted,
   ordersReducer,
@@ -100,6 +101,17 @@ describe('order thunks', () => {
     await pending;
     expect(store.getState().orders.items.find((order) => order.id === target.id)).toEqual(target);
     expect(store.getState().notice.message).toBe('Order is no longer open');
+  });
+
+  it('replaces the list on fetch and reports a failed fetch', async () => {
+    const { fake, store } = seededStore();
+    fake.state.orders[0] = { ...fake.state.orders[0], filledSize: 1, status: 'fulfilling' };
+    await store.dispatch(fetchOrders());
+    expect(store.getState().orders.items[0]).toMatchObject({ filledSize: 1, status: 'fulfilling' });
+
+    fake.failWith(new ApiError(500, 'Internal server error'));
+    await store.dispatch(fetchOrders());
+    expect(store.getState().notice.message).toBe('Internal server error');
   });
 
   it('clears the whole session on a 401', async () => {

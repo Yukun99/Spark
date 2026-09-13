@@ -12,6 +12,12 @@ Live URL: https://spark.yukunxu.com/api
 2. Grant the DB user `SELECT`, `INSERT`, `UPDATE`, `DELETE`.
 3. Add the three secrets in GitHub, push to `master`.
 
+## Mock Execution
+
+Open orders progress by wall-clock in 5 s steps whenever they are read (`Execution.php`):
+`pending` → `fulfilling` after one step, then market orders fill 30–60 % per step, limit 10–30 %,
+FOK all at once, until `fulfilled`. Existing databases need `migrations/2026-09-13-orders-ticked-at.sql`.
+
 ## Endpoints
 
 All bodies and responses are JSON. Everything except `/auth/register` and `/auth/login` needs

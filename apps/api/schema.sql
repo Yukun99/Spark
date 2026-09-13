@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS orders (
   status ENUM('pending', 'fulfilling', 'fulfilled', 'cancelled') NOT NULL DEFAULT 'pending',
   provider VARCHAR(32) NOT NULL,
   placed_at BIGINT UNSIGNED NOT NULL,
+  ticked_at BIGINT UNSIGNED NOT NULL,
   updated_at BIGINT UNSIGNED NULL,
   PRIMARY KEY (id),
   KEY ix_orders_user_placed (user_id, placed_at),

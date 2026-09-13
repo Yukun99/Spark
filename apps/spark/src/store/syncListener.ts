@@ -1,5 +1,7 @@
 import { apiFetch } from '@/connections/api';
 import { reportApiFailure } from '@/store/apiFailure';
+import { toggleEditMode } from '@/store/layoutSlice';
+import { fetchOrders } from '@/store/ordersSlice';
 import {
   cycleUpdateInterval,
   replaceSettings,
@@ -31,6 +33,15 @@ const isHydrated = (state: RootState) => state.auth.hydration === 'done';
 
 /** Layout before the current burst of edits; a failed put restores it, not just the last edit. */
 let burstOriginal: Widget[] | null = null;
+
+/** Leaving edit mode is a natural moment to pick up fills simulated meanwhile. */
+startListening({
+  actionCreator: toggleEditMode,
+  effect: (_, { dispatch, getState }) => {
+    const state = getState();
+    if (isHydrated(state) && !state.layout.editMode) void dispatch(fetchOrders());
+  },
+});
 
 startListening({
   matcher: isAnyOf(setUpdateInterval, cycleUpdateInterval, toggleStreaming),

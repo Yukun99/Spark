@@ -172,7 +172,10 @@ and writes `config.php` there from `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
 `apps/api` is a plain PHP 8.3 + PDO project (Nx project `api`, lint only) serving `/api/*` on the
 same host: username/password accounts with bearer tokens, then per-user orders, settings and
 widget layout. Endpoints and setup in `apps/api/README.md`; tables in `apps/api/schema.sql`. JSON
-shapes mirror the Redux slice types. The frontend calls it through `src/connections/api.ts`. Local
+shapes mirror the Redux slice types. `Execution.php` advances open orders by wall-clock in 5s
+steps whenever they are read (no daemon); the client refetches on load, on the orders widget's
+Refresh button and on leaving edit mode. `pnpm nx test api` runs plain-PHP asserts in
+`apps/api/tests/`. The frontend calls it through `src/connections/api.ts`. Local
 `config.php` is gitignored; the dev server always proxies `/api` to the live site, so local runs
 use the production database. Tests mock `apiFetch` with `src/test/fixtures/fakeApi.ts`.
 

@@ -59,7 +59,14 @@ const initialState: OrdersState = { items: [] };
 const selectOrder = (state: RootState, id: string) =>
   state.orders.items.find((order) => order.id === id);
 
-export const fetchOrders = createAsyncThunk('orders/fetch', () => apiFetch<Order[]>('/orders'));
+export const fetchOrders = createAsyncThunk('orders/fetch', async (_, { dispatch }) => {
+  try {
+    return await apiFetch<Order[]>('/orders');
+  } catch (error) {
+    reportApiFailure(dispatch, error, 'Could not refresh orders');
+    throw error;
+  }
+});
 
 export const placeOrder = createAsyncThunk(
   'orders/place',

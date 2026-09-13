@@ -6,9 +6,11 @@ const root = import.meta.dirname;
 const files = [
   'index.php',
   'config.example.php',
-  ...readdirSync(join(root, 'src'))
-    .filter((file) => file.endsWith('.php'))
-    .map((file) => join('src', file)),
+  ...['src', 'tests'].flatMap((dir) =>
+    readdirSync(join(root, dir))
+      .filter((file) => file.endsWith('.php'))
+      .map((file) => join(dir, file)),
+  ),
 ];
 
 let failed = false;
