@@ -1,6 +1,6 @@
 import { coinbaseFeed } from '@/connections/coinbase';
-import { useStreaming } from '@/hooks/useStreaming';
-import { useUpdateInterval } from '@/hooks/useUpdateInterval';
+import { useStreaming } from '@/common/hooks/useStreaming';
+import { useUpdateInterval } from '@/common/hooks/useUpdateInterval';
 import { useEffect } from 'react';
 
 /** Pushes the store's feed settings (update interval, streaming on/off) into the shared feed. */

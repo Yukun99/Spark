@@ -1,5 +1,5 @@
-import { ClearButton } from '@/components/buttons/clearButton';
-import { usePageBar } from '@/components/hooks/usePageBar';
+import { ClearButton } from '@/common/components/buttons/clearButton';
+import { usePageBar } from '@/common/components/hooks/usePageBar';
 import { gray } from '@/styles/palette';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import LastPageIcon from '@mui/icons-material/LastPage';

@@ -8,7 +8,7 @@ import {
   TRAY_ICON_PX,
 } from '@/features/edit/trayConfig';
 import { TILE_GAP_PX } from '@/features/grid/gridConfig';
-import { useEditMode } from '@/hooks/useEditMode';
+import { useEditMode } from '@/common/hooks/useEditMode';
 import { theme as colours } from '@/styles/palette';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';

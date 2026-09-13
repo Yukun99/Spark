@@ -1,4 +1,4 @@
-import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
+import { ConfirmDialog } from '@/common/components/dialogs/confirmDialog';
 import { useCoinbaseProducts } from '@/connections/hooks/useCoinbaseProducts';
 import { InstrumentSearchField } from '@/features/widgets/instrument/dialog/instrumentSearchField';
 import { useState } from 'react';

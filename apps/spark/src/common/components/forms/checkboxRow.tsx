@@ -1,6 +1,6 @@
-import { CAPTION_BLOCK_PX } from '@/components/forms/captionProps';
-import { focusLabelControl } from '@/components/forms/focusLabelControl';
-import { GROUP_LABEL_PX, OPTION_LABEL_PX } from '@/components/forms/radioRow';
+import { CAPTION_BLOCK_PX } from '@/common/components/forms/captionProps';
+import { focusLabelControl } from '@/common/components/forms/focusLabelControl';
+import { GROUP_LABEL_PX, OPTION_LABEL_PX } from '@/common/components/forms/radioRow';
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';

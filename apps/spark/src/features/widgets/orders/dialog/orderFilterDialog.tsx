@@ -1,8 +1,8 @@
-import { ClearButton } from '@/components/buttons/clearButton';
-import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
-import { captionProps } from '@/components/forms/captionProps';
-import { CheckboxRow } from '@/components/forms/checkboxRow';
-import { RadioRow } from '@/components/forms/radioRow';
+import { ClearButton } from '@/common/components/buttons/clearButton';
+import { ConfirmDialog } from '@/common/components/dialogs/confirmDialog';
+import { captionProps } from '@/common/components/forms/captionProps';
+import { CheckboxRow } from '@/common/components/forms/checkboxRow';
+import { RadioRow } from '@/common/components/forms/radioRow';
 import {
   ANY_SIDE,
   useOrderFilterDialog,

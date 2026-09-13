@@ -1,4 +1,4 @@
-import { BaseButton, type BaseButtonProps } from '@/components/buttons/baseButton';
+import { BaseButton, type BaseButtonProps } from '@/common/components/buttons/baseButton';
 
 export type OutlinedButtonProps = Omit<BaseButtonProps, 'variant'>;
 

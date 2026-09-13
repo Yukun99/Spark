@@ -7,7 +7,7 @@ import {
 } from '@/features/widgets/instrument/dialog/detailSections';
 import { roundSize, validateAmount } from '@/features/widgets/instrument/dialog/orderValidation';
 import { formatPrice } from '@/features/widgets/instrument/tickerFormat';
-import { useOrders } from '@/hooks/useOrders';
+import { useOrders } from '@/common/hooks/useOrders';
 import type { Order, OrderType, TimeInForce } from '@/store/ordersSlice';
 import { useCallback, useMemo, useState } from 'react';
 

@@ -1,4 +1,4 @@
-import { lazyComponent } from '@/components/lazyComponent';
+import { lazyComponent } from '@/common/components/lazyComponent';
 import type { InstrumentDialogProps } from '@/features/widgets/instrument/dialog/instrumentDialog';
 import type { InstrumentSearchDialogProps } from '@/features/widgets/instrument/dialog/instrumentSearchDialog';
 import type { PlaceOrderDialogProps } from '@/features/widgets/instrument/dialog/placeOrderDialog';

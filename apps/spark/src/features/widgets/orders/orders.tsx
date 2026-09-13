@@ -1,5 +1,5 @@
-import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
-import { PageBar } from '@/components/pageBar';
+import { LazyConfirmDialog } from '@/common/components/dialogs/lazyConfirmDialog';
+import { PageBar } from '@/common/components/pageBar';
 import { LIST_ROW_GAP_PX } from '@/features/widgets/hooks/usePageSize';
 import { LazyPlaceOrderDialog } from '@/features/widgets/instrument/dialog/lazyDialogs';
 import { LazyOrderFilterDialog } from '@/features/widgets/orders/dialog/lazyDialogs';

@@ -1,4 +1,4 @@
-import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
+import { TransactionTypeDisplay } from '@/common/components/transactionTypeDisplay';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import { ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
 import { useWatchlistRow } from '@/features/widgets/watchlist/hooks/useWatchlistRow';

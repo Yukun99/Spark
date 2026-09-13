@@ -1,4 +1,4 @@
-import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
+import { TransactionTypeDisplay } from '@/common/components/transactionTypeDisplay';
 import type { DetailSection } from '@/features/widgets/instrument/dialog/detailSections';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';

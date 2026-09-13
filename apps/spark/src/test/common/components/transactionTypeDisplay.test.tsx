@@ -1,4 +1,4 @@
-import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
+import { TransactionTypeDisplay } from '@/common/components/transactionTypeDisplay';
 import { trade } from '@/styles/palette';
 import { render, screen } from '@testing-library/react';
 

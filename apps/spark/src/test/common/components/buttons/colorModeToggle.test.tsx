@@ -1,4 +1,4 @@
-import { ColorModeToggle } from '@/components/buttons/colorModeToggle';
+import { ColorModeToggle } from '@/common/components/buttons/colorModeToggle';
 import { theme } from '@/styles/theme';
 import { ThemeProvider } from '@mui/material/styles';
 import { render, screen } from '@testing-library/react';

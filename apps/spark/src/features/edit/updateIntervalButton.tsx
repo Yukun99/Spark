@@ -1,6 +1,6 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import { HelpTooltip } from '@/features/edit/helpTooltip';
-import { useUpdateInterval } from '@/hooks/useUpdateInterval';
+import { useUpdateInterval } from '@/common/hooks/useUpdateInterval';
 import TimerIcon from '@mui/icons-material/Timer';
 
 const HELP_LINES = ['Adjust frequency of instrument information updates.'];

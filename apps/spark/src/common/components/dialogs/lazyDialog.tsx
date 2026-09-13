@@ -1,4 +1,4 @@
-import { lazyComponent, type ComponentLoader } from '@/components/lazyComponent';
+import { lazyComponent, type ComponentLoader } from '@/common/components/lazyComponent';
 import { useState } from 'react';
 
 /**

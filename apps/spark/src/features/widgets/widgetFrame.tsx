@@ -1,4 +1,4 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import { TILE_GAP_PX, TILE_RADIUS_PX } from '@/features/grid/gridConfig';
 import { GridWidget } from '@/features/grid/gridWidget';
 import { useDragTarget } from '@/features/grid/hooks/useDragTarget';
@@ -7,7 +7,7 @@ import { useWidgetDrag } from '@/features/widgets/hooks/useWidgetDrag';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { ResizeHandles } from '@/features/widgets/resizeHandles';
 import { LABEL_FONT_PX, LABEL_LINE_PX, WidgetLabel } from '@/features/widgets/widgetLabel';
-import { useEditMode } from '@/hooks/useEditMode';
+import { useEditMode } from '@/common/hooks/useEditMode';
 import type { Widget } from '@/store/widgetsSlice';
 import { theme as colours, gray } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';

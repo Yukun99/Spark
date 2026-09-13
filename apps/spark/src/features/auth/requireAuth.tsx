@@ -1,4 +1,4 @@
-import { FilledButton } from '@/components/buttons/filledButton';
+import { FilledButton } from '@/common/components/buttons/filledButton';
 import { useSession } from '@/features/auth/hooks/useSession';
 import { gray } from '@/styles/palette';
 import Stack from '@mui/material/Stack';

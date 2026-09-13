@@ -1,4 +1,4 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import type { CoinbaseProduct } from '@/connections/coinbase';
 import { filterProducts } from '@/features/widgets/instrument/dialog/instrumentSearchField';
 import type { ReorderHandleProps } from '@/features/widgets/watchlist/dialog/hooks/useRowReorder';

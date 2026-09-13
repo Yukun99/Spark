@@ -1,4 +1,4 @@
-import { PageBar } from '@/components/pageBar';
+import { PageBar } from '@/common/components/pageBar';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 

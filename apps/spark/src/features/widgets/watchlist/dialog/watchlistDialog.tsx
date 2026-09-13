@@ -1,4 +1,4 @@
-import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
+import { ConfirmDialog } from '@/common/components/dialogs/confirmDialog';
 import { useWatchlistDialog } from '@/features/widgets/watchlist/dialog/hooks/useWatchlistDialog';
 import { WatchlistRowField } from '@/features/widgets/watchlist/dialog/watchlistRowField';
 import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';

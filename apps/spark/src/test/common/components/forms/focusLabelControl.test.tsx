@@ -1,4 +1,4 @@
-import { RadioRow } from '@/components/forms/radioRow';
+import { RadioRow } from '@/common/components/forms/radioRow';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 

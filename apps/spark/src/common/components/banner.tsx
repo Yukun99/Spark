@@ -1,4 +1,4 @@
-import { ColorModeToggle } from '@/components/buttons/colorModeToggle';
+import { ColorModeToggle } from '@/common/components/buttons/colorModeToggle';
 import { AccountName, SignOutButton } from '@/features/auth/accountControls';
 import { BANNER_HEIGHT } from '@/features/grid/gridConfig';
 import { APP_TITLE, bannerTitleSx } from '@/styles/appShell';

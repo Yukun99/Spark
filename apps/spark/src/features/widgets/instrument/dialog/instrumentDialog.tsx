@@ -1,4 +1,4 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import type { TradeSide } from '@/connections/coinbase';
 import { DetailFields } from '@/features/widgets/instrument/dialog/detailFields';
 import { useInstrumentDialog } from '@/features/widgets/instrument/dialog/hooks/useInstrumentDialog';

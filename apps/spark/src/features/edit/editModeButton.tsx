@@ -1,6 +1,6 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import { HelpTooltip } from '@/features/edit/helpTooltip';
-import { useEditMode } from '@/hooks/useEditMode';
+import { useEditMode } from '@/common/hooks/useEditMode';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 

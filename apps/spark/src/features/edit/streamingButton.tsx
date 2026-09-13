@@ -1,6 +1,6 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import { HelpTooltip } from '@/features/edit/helpTooltip';
-import { useStreaming } from '@/hooks/useStreaming';
+import { useStreaming } from '@/common/hooks/useStreaming';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 

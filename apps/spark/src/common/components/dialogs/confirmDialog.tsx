@@ -1,5 +1,5 @@
-import { FilledButton } from '@/components/buttons/filledButton';
-import { OutlinedButton } from '@/components/buttons/outlinedButton';
+import { FilledButton } from '@/common/components/buttons/filledButton';
+import { OutlinedButton } from '@/common/components/buttons/outlinedButton';
 import Box from '@mui/material/Box';
 import Dialog, { type DialogProps } from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';

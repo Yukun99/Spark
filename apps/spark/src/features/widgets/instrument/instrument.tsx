@@ -1,5 +1,5 @@
-import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
-import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
+import { LazyConfirmDialog } from '@/common/components/dialogs/lazyConfirmDialog';
+import { TransactionTypeDisplay } from '@/common/components/transactionTypeDisplay';
 import { TradeButtons } from '@/features/widgets/instrument/tradeButtons';
 import {
   LazyInstrumentDialog,

@@ -1,5 +1,5 @@
-import { ClearButton } from '@/components/buttons/clearButton';
-import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
+import { ClearButton } from '@/common/components/buttons/clearButton';
+import { TransactionTypeDisplay } from '@/common/components/transactionTypeDisplay';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import type { OrderRow } from '@/features/widgets/orders/hooks/useOrdersWidget';
 import {

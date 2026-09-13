@@ -1,4 +1,4 @@
-import { buttonSx } from '@/components/buttons/buttonSx';
+import { buttonSx } from '@/common/components/buttons/buttonSx';
 import { gray } from '@/styles/palette';
 import Button, { type ButtonProps } from '@mui/material/Button';
 import Typography from '@mui/material/Typography';

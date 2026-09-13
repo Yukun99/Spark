@@ -6,7 +6,7 @@ import { roundSize } from '@/features/widgets/instrument/dialog/orderValidation'
 import type { PlaceOrderDialogProps } from '@/features/widgets/instrument/dialog/placeOrderDialog';
 import { formatPrice, formatSize } from '@/features/widgets/instrument/tickerFormat';
 import { formatDateTime, formatFill } from '@/features/widgets/orders/orderFormat';
-import { useOrders } from '@/hooks/useOrders';
+import { useOrders } from '@/common/hooks/useOrders';
 import {
   isOrderOpen,
   orderTouchedAt,

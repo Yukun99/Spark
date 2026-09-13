@@ -1,4 +1,4 @@
-import { FilledButton } from '@/components/buttons/filledButton';
+import { FilledButton } from '@/common/components/buttons/filledButton';
 import type { TradeSide } from '@/connections/coinbase';
 import { theme as colours, trade } from '@/styles/palette';
 import Box, { type BoxProps } from '@mui/material/Box';

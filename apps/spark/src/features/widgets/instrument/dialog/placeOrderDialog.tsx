@@ -1,6 +1,6 @@
-import { ConfirmDialog } from '@/components/dialogs/confirmDialog';
-import { CAPTION_BLOCK_PX, captionProps as baseCaptionProps } from '@/components/forms/captionProps';
-import { RadioRow } from '@/components/forms/radioRow';
+import { ConfirmDialog } from '@/common/components/dialogs/confirmDialog';
+import { CAPTION_BLOCK_PX, captionProps as baseCaptionProps } from '@/common/components/forms/captionProps';
+import { RadioRow } from '@/common/components/forms/radioRow';
 import type { TradeSide } from '@/connections/coinbase';
 import { DetailFields, FIELD_FONT_PX } from '@/features/widgets/instrument/dialog/detailFields';
 import {

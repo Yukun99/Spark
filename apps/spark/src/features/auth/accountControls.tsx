@@ -1,4 +1,4 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import { useAccountMenu } from '@/features/auth/hooks/useAccountMenu';
 import { gray } from '@/styles/palette';
 import LogoutIcon from '@mui/icons-material/Logout';

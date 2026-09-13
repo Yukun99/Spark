@@ -1,6 +1,6 @@
-import { ClearButton } from '@/components/buttons/clearButton';
-import { FilledButton } from '@/components/buttons/filledButton';
-import { captionProps } from '@/components/forms/captionProps';
+import { ClearButton } from '@/common/components/buttons/clearButton';
+import { FilledButton } from '@/common/components/buttons/filledButton';
+import { captionProps } from '@/common/components/forms/captionProps';
 import { FIELD_MAX, useLoginPage, type LoginMode } from '@/features/auth/hooks/useLoginPage';
 import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';

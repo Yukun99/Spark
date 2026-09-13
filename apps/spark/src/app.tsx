@@ -1,6 +1,6 @@
-import { Banner } from '@/components/banner';
-import { NoticeSnackbar } from '@/components/noticeSnackbar';
-import { PageContent } from '@/components/pageContent';
+import { Banner } from '@/common/components/banner';
+import { NoticeSnackbar } from '@/common/components/noticeSnackbar';
+import { PageContent } from '@/common/components/pageContent';
 import { useCoinbaseSettingsSync } from '@/connections/hooks/useCoinbaseSettingsSync';
 import { LoginPage } from '@/features/auth/loginPage';
 import { RequireAuth } from '@/features/auth/requireAuth';

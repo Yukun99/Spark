@@ -1,5 +1,5 @@
-import { CAPTION_BLOCK_PX } from '@/components/forms/captionProps';
-import { focusLabelControl } from '@/components/forms/focusLabelControl';
+import { CAPTION_BLOCK_PX } from '@/common/components/forms/captionProps';
+import { focusLabelControl } from '@/common/components/forms/focusLabelControl';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';

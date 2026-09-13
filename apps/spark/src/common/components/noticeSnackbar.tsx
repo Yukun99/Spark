@@ -1,4 +1,4 @@
-import { useNotice } from '@/components/hooks/useNotice';
+import { useNotice } from '@/common/components/hooks/useNotice';
 import { theme as colours, trade } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import Alert from '@mui/material/Alert';

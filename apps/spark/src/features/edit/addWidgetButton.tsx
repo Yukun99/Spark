@@ -1,4 +1,4 @@
-import { ClearButton } from '@/components/buttons/clearButton';
+import { ClearButton } from '@/common/components/buttons/clearButton';
 import { useSpawnDrag } from '@/features/edit/hooks/useSpawnDrag';
 import { SpawnGhost } from '@/features/edit/spawnGhost';
 import { HelpTooltip } from '@/features/edit/helpTooltip';

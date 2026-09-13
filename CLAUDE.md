@@ -31,11 +31,11 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 - Every colour in the app comes from `apps/spark/src/styles/palette.ts`. Never hardcode a hex/rgba
   in a component or style; add new colours to `palette.ts` first, then reference them.
 - Light/dark mode lives in `apps/spark/src/styles/theme.ts` (MUI `colorSchemes`). Defaults to the
-  OS preference; `useColorMode` (`src/hooks/useColorMode.ts`) toggles it and MUI persists the
+  OS preference; `useColorMode` (`src/common/components/buttons/hooks/useColorMode.ts`) toggles it and MUI persists the
   choice in localStorage. Light: page `gray[10]`, header cream. Dark: page `gray[80]`, header navy.
 - Buttons: use `OutlinedButton` (purple border, cream fill, navy text), `FilledButton` (purple
   fill, cream text) or `ClearButton` (no fill; navy text in light, cream in dark) from
-  `src/components/buttons/`. Their styles live in `theme.ts` (`MuiButton` overrides); don't restyle per
+  `src/common/components/buttons/`. Their styles live in `theme.ts` (`MuiButton` overrides); don't restyle per
   usage. Icons come from `@mui/icons-material`.
 - Mode-dependent colours: use `theme.applyStyles('dark', {...})` inside `sx`/style overrides,
   importing values from `palette.ts` rather than writing raw hex.
@@ -45,7 +45,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 - Startup: `src/styles/appShell.ts` builds the static banner plus one pulsing skeleton card per
   `SEED_WIDGETS` entry (HTML, critical CSS, colour-scheme script) that the `appShell` plugin in `vite.config.mts` injects into `index.html`, so the title
   paints before the bundle runs. Keep it in step with `Banner`, `PageContent` and `WidgetFrame`. Files it imports must use relative
-  paths (the Vite config has no `@/` alias). Dialogs load lazily (`src/components/lazyComponent.tsx`,
+  paths (the Vite config has no `@/` alias). Dialogs load lazily (`src/common/components/lazyComponent.tsx`,
   `dialogs/lazyDialog.tsx`, per-feature `lazyDialogs.ts`); tooltips stay eager because swapping
   in a lazy wrapper remounts the button and can drop a click.
 - Scrolling: `html`/`body` never scroll (`overflow: hidden` in `styles.css`). The only scroll
@@ -59,7 +59,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
 - Redux Toolkit store in `src/store/` (`store.ts`, one `<name>Slice.ts` per slice, typed
   `useAppDispatch`/`useAppSelector` in `hooks.ts`). Slices: `auth` (session + hydration status),
   `layout` (edit mode), `notice` (the one error snackbar), `settings` (update interval, streaming),
-  `widgets` (placed widgets), `orders` (`useOrders` in `src/hooks/` dispatches thunks that call the
+  `widgets` (placed widgets), `orders` (`useOrders` in `src/common/hooks/` dispatches thunks that call the
   API; edits and cancels apply optimistically and revert on failure). `syncListener.ts` (listener
   middleware) PUTs settings on every change and the widget layout 500ms after a burst of edits,
   only once `auth.hydration` is `done`; `hydrate.ts` loads orders/settings/widgets after sign-in
@@ -69,7 +69,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   `NoticeSnackbar` in `app.tsx` renders alerts.
 - Hooks live next to what they serve, in a `hooks/` subfolder of that feature, component or
   connection folder (e.g. `features/widgets/hooks/useWidgets.ts`). Only cross-cutting store hooks
-  (`useEditMode`, `useUpdateInterval`) sit in `src/hooks/`.
+  (`useEditMode`, `useUpdateInterval`) sit in `src/common/hooks/`.
 - Exchange access lives in `src/connections/` (`coinbase.tsx`: REST product list + one shared
   WebSocket ticker feed; `api.ts`: `apiFetch` for the Spark API with the bearer token from
   `localStorage['spark-token']`, errors as `ApiError`). The feed keeps latest ticks in a map and notifies subscribers on the
@@ -90,7 +90,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   ghost onto the grid via `useSpawnDrag`, update interval). `auth/` holds `RequireAuth` (route
   guard: restores the stored token, hydrates, else redirects to `/login`), `LoginPage` (`/login`
   and `/register`, same form) and the banner's account controls.
-- `src/components/` is for general-purpose UI only (banner, button variants, dialogs, page
+- `src/common/components/` is for general-purpose UI only (banner, button variants, dialogs, page
   chrome, `forms/` field helpers: `captionProps`, `RadioRow`, `CheckboxRow`). Anything tied to one feature (its buttons, dialogs, hooks) lives in that feature's
   folder. Styling in `src/styles/`.
 
@@ -187,8 +187,8 @@ use the production database. Tests mock `apiFetch` with `src/test/fixtures/fakeA
 
 - Path alias `@/*` maps to `apps/spark/src/*`. It is declared in `vite.config.mts`,
   `tsconfig.app.json` and `tsconfig.spec.json`; keep all three in sync if it changes.
-- Tests live under `src/test/`, mirroring the source path: `src/components/foo.tsx` is tested by
-  `src/test/components/foo.test.tsx`. They run in jsdom with `globals: true`, so `describe/it/expect`
+- Tests live under `src/test/`, mirroring the source path: `src/common/components/foo.tsx` is tested by
+  `src/test/common/components/foo.test.tsx`. They run in jsdom with `globals: true`, so `describe/it/expect`
   need no import. `@testing-library/react`, `user-event` and `jest-dom` (via `src/test/testSetup.ts`) are
   set up. Test files are excluded from `tsconfig.app.json` and typed via `tsconfig.spec.json`.
 - TypeScript is strict with `noUnusedLocals`, `noImplicitReturns`, `noImplicitOverride`; the app

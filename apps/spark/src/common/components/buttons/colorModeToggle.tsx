@@ -1,5 +1,5 @@
-import { ClearButton } from '@/components/buttons/clearButton';
-import { useColorMode } from '@/components/buttons/hooks/useColorMode';
+import { ClearButton } from '@/common/components/buttons/clearButton';
+import { useColorMode } from '@/common/components/buttons/hooks/useColorMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
