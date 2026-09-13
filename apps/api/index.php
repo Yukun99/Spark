@@ -14,6 +14,8 @@ foreach (['ApiError', 'Util', 'Http', 'Db', 'Validate', 'Router', 'Auth', 'Order
     require __DIR__ . "/src/$class.php";
 }
 
+// Shortest round-trip float output (77450.12, not 77450.1199999…) whatever the host php.ini says.
+ini_set('serialize_precision', '-1');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
