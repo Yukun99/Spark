@@ -3,13 +3,14 @@ import type { CoinbaseProduct } from '@/connections/coinbase';
 import { filterProducts } from '@/features/widgets/instrument/dialog/instrumentSearchField';
 import type { ReorderHandleProps } from '@/features/widgets/watchlist/dialog/hooks/useRowReorder';
 import type { WatchlistRow } from '@/features/widgets/watchlist/dialog/hooks/useWatchlistDialog';
-import { gray } from '@/styles/palette';
+import { gray, theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import type { Theme } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
 import type { CSSProperties, Ref } from 'react';
 
@@ -33,6 +34,12 @@ const REMOVE_ICON_PX = 16;
 const REMOVE_SLOT_PX = 28;
 const HANDLE_ICON_PX = 20;
 
+/** Dragged row in the dialog's paper colour so it covers the rows it passes over. */
+const draggedRowSx = (theme: Theme) => ({
+  bgcolor: colours.cream,
+  ...theme.applyStyles('dark', { bgcolor: colours.navy }),
+});
+
 /** Compact free-text instrument search; the typed text is kept so it can be flagged on blur. */
 export const WatchlistRowField = ({
   row,
@@ -54,7 +61,10 @@ export const WatchlistRowField = ({
       style={style}
       direction='row'
       spacing={0.5}
-      sx={[{ alignItems: 'center', borderRadius: 1 }, ...(dragging ? [shadowSx('md')] : [])]}
+      sx={[
+        { alignItems: 'center', borderRadius: 1 },
+        ...(dragging ? [shadowSx('md'), draggedRowSx] : []),
+      ]}
     >
       <Box
         aria-label={handle === null ? undefined : `Reorder ${row.productId ?? row.input}`}
