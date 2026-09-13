@@ -2,22 +2,11 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../src/Util.php';
-require __DIR__ . '/../src/Execution.php';
-
 use Spark\Api\Execution;
 
-$failures = 0;
+/** @var callable $check provided by run.php */
 
-/** Minimal assertion: prints the label and counts failures instead of stopping. */
-$check = function (string $label, mixed $actual, mixed $expected) use (&$failures): void {
-    if ($actual === $expected) {
-        echo "  ok   $label\n";
-        return;
-    }
-    $failures++;
-    echo "  FAIL $label\n       expected " . var_export($expected, true) . "\n       got      " . var_export($actual, true) . "\n";
-};
+echo "Execution::simulate\n";
 
 $order = fn(array $overrides = []): array => [
     'type' => 'limit',
@@ -29,8 +18,6 @@ $order = fn(array $overrides = []): array => [
 ];
 $always = fn(float $min, float $max): float => $max;
 $lowest = fn(float $min, float $max): float => $min;
-
-echo "Execution::simulate\n";
 
 $check('pending stays pending with no steps', Execution::simulate($order(), 0, $always), [
     'filled_size' => '0.0000000000',
@@ -73,6 +60,3 @@ $check('the random ratio is used within the type range', Execution::simulate(
     1,
     fn(float $min, float $max): float => ($min + $max) / 2,
 ), ['filled_size' => '2.0000000000', 'status' => 'fulfilling']);
-
-echo $failures === 0 ? "All passed\n" : "$failures failed\n";
-exit($failures === 0 ? 0 : 1);

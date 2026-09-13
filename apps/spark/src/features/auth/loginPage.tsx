@@ -1,7 +1,8 @@
 import { ClearButton } from '@/components/buttons/clearButton';
 import { FilledButton } from '@/components/buttons/filledButton';
+import { captionProps } from '@/components/forms/captionProps';
 import { useLoginPage, type LoginMode } from '@/features/auth/hooks/useLoginPage';
-import { gray, status, theme as colours } from '@/styles/palette';
+import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -16,24 +17,7 @@ export type LoginPageProps = {
 
 const CARD_WIDTH_PX = 360;
 const CARD_RADIUS_PX = 8;
-const CAPTION_FONT_PX = 10;
-const CAPTION_LINE_PX = 15;
-const CAPTION_GAP_PX = 3;
 const TITLE_FONT_PX = 20;
-
-/** Caption under a field, always rendered so the rows below never shift. */
-const captionProps = (error: string | null) => ({
-  formHelperText: {
-    sx: (theme: Theme) => ({
-      fontSize: CAPTION_FONT_PX,
-      lineHeight: `${CAPTION_LINE_PX}px`,
-      mt: `${CAPTION_GAP_PX}px`,
-      mx: 0,
-      color: error === null ? gray[50] : status.error.light,
-      ...theme.applyStyles('dark', { color: error === null ? gray[50] : status.error.dark }),
-    }),
-  },
-});
 
 const cardSx = [
   shadowSx('lg'),

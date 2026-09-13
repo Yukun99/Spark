@@ -29,7 +29,8 @@ All bodies and responses are JSON. Everything except `/auth/register` and `/auth
 | POST   | `/auth/login`         | `{username, password}` → `{token, user}`            |
 | POST   | `/auth/logout`        | → 204                                               |
 | GET    | `/auth/me`            | → `{id, username}`                                  |
-| GET    | `/orders`             | → `Order[]`                                         |
+| GET    | `/orders`             | → `Order[]`; optional query `productId`, `side`, `status` and `type` (comma lists), `minPrice`, `maxPrice`, `from`, `to` (epoch ms) |
+| GET    | `/orders/products`    | → `string[]` distinct product ids the user has ordered |
 | POST   | `/orders`             | `OrderDraft` → `Order` (201)                        |
 | PATCH  | `/orders/{id}`        | `OrderChanges` → `Order` (409 if not open)          |
 | POST   | `/orders/{id}/cancel` | → `Order` (409 if not open)                         |

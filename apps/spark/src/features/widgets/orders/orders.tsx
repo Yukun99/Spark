@@ -1,5 +1,6 @@
 import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
 import { LazyPlaceOrderDialog } from '@/features/widgets/instrument/dialog/lazyDialogs';
+import { LazyOrderFilterDialog } from '@/features/widgets/orders/dialog/lazyDialogs';
 import { useOrdersWidget } from '@/features/widgets/orders/hooks/useOrdersWidget';
 import { ORDERS_COLUMNS, OrdersHeader, OrdersRow } from '@/features/widgets/orders/ordersRow';
 import { STRIP_TEXT_PX } from '@/features/widgets/valueStrip';
@@ -22,22 +23,34 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
     rows,
     deleting,
     cancelling,
+    filtering,
+    filter,
+    filterActive,
     selected,
     orderForm,
     openDelete,
     openCopy,
     openEdit,
     openCancel,
+    openFilter,
     closeDialog,
     confirmDelete,
     confirmCancel,
+    applyFilter,
     refresh,
   } = useOrdersWidget(widget);
 
   return (
     <>
-      <WidgetFrame widget={widget} name={title} onDelete={openDelete} onRefresh={refresh}>
-        <WidgetLabel>{title}</WidgetLabel>
+      <WidgetFrame
+        widget={widget}
+        name={title}
+        onDelete={openDelete}
+        onRefresh={refresh}
+        onFilter={openFilter}
+        filterActive={filterActive}
+      >
+        <WidgetLabel caption={filterActive ? 'Filtered' : undefined}>{title}</WidgetLabel>
         <WidgetScrollArea>
           {rows.length === 0 ? (
             <Typography sx={{ fontSize: STRIP_TEXT_PX, color: gray[50], textAlign: 'center' }}>
@@ -77,6 +90,9 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
           `The ${selected.side} order for ${selected.productId} will be cancelled. Fulfilled amount will not be affected.`}
       </LazyConfirmDialog>
       {orderForm !== null && <LazyPlaceOrderDialog {...orderForm} onClose={closeDialog} />}
+      {filtering && (
+        <LazyOrderFilterDialog initial={filter} onApply={applyFilter} onClose={closeDialog} />
+      )}
     </>
   );
 };

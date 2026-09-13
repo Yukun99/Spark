@@ -10,7 +10,7 @@ use Spark\Api\Router;
 use Spark\Api\Settings;
 use Spark\Api\Widgets;
 
-foreach (['ApiError', 'Util', 'Http', 'Db', 'Validate', 'Router', 'Auth', 'Execution', 'Orders', 'Settings', 'Widgets'] as $class) {
+foreach (['ApiError', 'Util', 'Http', 'Db', 'Validate', 'Router', 'Auth', 'Execution', 'OrderFilter', 'Orders', 'Settings', 'Widgets'] as $class) {
     require __DIR__ . "/src/$class.php";
 }
 
@@ -25,6 +25,7 @@ $router->add('POST', '/auth/login', Auth::login(...));
 $router->add('POST', '/auth/logout', Auth::logout(...));
 $router->add('GET', '/auth/me', Auth::me(...));
 $router->add('GET', '/orders', Orders::list(...));
+$router->add('GET', '/orders/products', Orders::products(...));
 $router->add('POST', '/orders', Orders::create(...));
 $router->add('PATCH', '/orders/{id}', Orders::update(...));
 $router->add('POST', '/orders/{id}/cancel', Orders::cancel(...));

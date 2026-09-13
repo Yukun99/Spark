@@ -32,15 +32,36 @@ const DEFAULTS: FakeApiState = {
 
 let nextId = 0;
 
+/** Mirrors `OrderFilter::fromQuery` in apps/api: every param optional, lists comma-separated. */
+const filterOrders = (orders: Order[], query: URLSearchParams) => {
+  const list = (key: string) => query.get(key)?.split(',') ?? null;
+  const number = (key: string) => (query.has(key) ? Number(query.get(key)) : null);
+  const [productId, side, statuses, types] = [query.get('productId'), query.get('side'), list('status'), list('type')];
+  const [minPrice, maxPrice, from, to] = [number('minPrice'), number('maxPrice'), number('from'), number('to')];
+  return orders.filter(
+    (order) =>
+      (productId === null || order.productId === productId) &&
+      (side === null || order.side === side) &&
+      (statuses === null || statuses.includes(order.status)) &&
+      (types === null || types.includes(order.type)) &&
+      (minPrice === null || order.price >= minPrice) &&
+      (maxPrice === null || order.price <= maxPrice) &&
+      (from === null || order.placedAt >= from) &&
+      (to === null || order.placedAt <= to),
+  );
+};
+
 /** In-memory stand-in for `apps/api`, mirroring its routes, ids and status codes. */
 export const createFakeApi = (overrides: Partial<FakeApiState> = {}): FakeApi => {
   const state: FakeApiState = { ...DEFAULTS, ...overrides };
   const calls: FakeApi['calls'] = [];
   let failure: ApiError | null = null;
 
-  const route = (path: string, request: ApiRequest): unknown => {
+  const route = (fullPath: string, request: ApiRequest): unknown => {
     const method = request.method ?? 'GET';
     const body = request.body as never;
+    const [path, queryString] = fullPath.split('?');
+    const query = new URLSearchParams(queryString ?? '');
     const [, resource, id, action] = path.split('/');
     switch (resource) {
       case 'auth': {
@@ -50,7 +71,8 @@ export const createFakeApi = (overrides: Partial<FakeApiState> = {}): FakeApi =>
         return { token: state.token, user: { ...state.user, username } };
       }
       case 'orders': {
-        if (method === 'GET') return [...state.orders];
+        if (id === 'products') return [...new Set(state.orders.map((order) => order.productId))].sort();
+        if (method === 'GET') return filterOrders(state.orders, query);
         if (method === 'POST' && id === undefined) {
           const draft = body as OrderDraft;
           const order: Order = {

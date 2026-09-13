@@ -17,7 +17,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "php tests/executionTest.php",
+        "command": "php tests/run.php",
         "cwd": "apps/api"
       },
       "inputs": ["default"],

@@ -50,23 +50,66 @@ export const orderTouchedAt = (order: Pick<Order, 'placedAt' | 'updatedAt'>) =>
 export const isOrderOpen = (order: Pick<Order, 'status'>) =>
   order.status === 'pending' || order.status === 'fulfilling';
 
-export type OrdersState = {
-  items: Order[];
+/** Server-side filter for the list; unset fields don't filter. Times are epoch ms. */
+export type OrderFilter = {
+  productId?: string;
+  side?: TradeSide;
+  statuses?: OrderStatus[];
+  types?: OrderType[];
+  minPrice?: number;
+  maxPrice?: number;
+  from?: number;
+  to?: number;
 };
 
-const initialState: OrdersState = { items: [] };
+export const isOrderFilterActive = (filter: OrderFilter) =>
+  Object.values(filter).some((value) => value !== undefined);
+
+/** Query string for `GET /orders`, empty when nothing is set; the API does the filtering. */
+export const orderFilterQuery = (filter: OrderFilter): string => {
+  const params = new URLSearchParams();
+  if (filter.productId !== undefined) params.set('productId', filter.productId);
+  if (filter.side !== undefined) params.set('side', filter.side);
+  if (filter.statuses !== undefined && filter.statuses.length > 0) params.set('status', filter.statuses.join(','));
+  if (filter.types !== undefined && filter.types.length > 0) params.set('type', filter.types.join(','));
+  if (filter.minPrice !== undefined) params.set('minPrice', String(filter.minPrice));
+  if (filter.maxPrice !== undefined) params.set('maxPrice', String(filter.maxPrice));
+  if (filter.from !== undefined) params.set('from', String(filter.from));
+  if (filter.to !== undefined) params.set('to', String(filter.to));
+  const query = params.toString();
+  return query === '' ? '' : `?${query}`;
+};
+
+export type OrdersState = {
+  items: Order[];
+  filter: OrderFilter;
+};
+
+const initialState: OrdersState = { items: [], filter: {} };
 
 const selectOrder = (state: RootState, id: string) =>
   state.orders.items.find((order) => order.id === id);
 
-export const fetchOrders = createAsyncThunk('orders/fetch', async (_, { dispatch }) => {
-  try {
-    return await apiFetch<Order[]>('/orders');
-  } catch (error) {
-    reportApiFailure(dispatch, error, 'Could not refresh orders');
-    throw error;
-  }
-});
+/** Reloads the list with the stored filter applied server-side. */
+export const fetchOrders = createAsyncThunk<Order[], void, { state: RootState }>(
+  'orders/fetch',
+  async (_, { dispatch, getState }) => {
+    try {
+      return await apiFetch<Order[]>(`/orders${orderFilterQuery(getState().orders.filter)}`);
+    } catch (error) {
+      reportApiFailure(dispatch, error, 'Could not refresh orders');
+      throw error;
+    }
+  },
+);
+
+export const applyOrderFilter = createAsyncThunk<void, OrderFilter, { state: RootState }>(
+  'orders/applyFilter',
+  async (filter, { dispatch }) => {
+    dispatch(setOrderFilter(filter));
+    await dispatch(fetchOrders());
+  },
+);
 
 export const placeOrder = createAsyncThunk(
   'orders/place',
@@ -122,6 +165,9 @@ export const ordersSlice = createSlice({
     replaceOrders: (state, action: PayloadAction<Order[]>) => {
       state.items = action.payload;
     },
+    setOrderFilter: (state, action: PayloadAction<OrderFilter>) => {
+      state.filter = action.payload;
+    },
     /** Replaces the order with the same id in place, or appends it. */
     orderUpserted: (state, action: PayloadAction<Order>) => {
       const index = state.items.findIndex((order) => order.id === action.payload.id);
@@ -141,5 +187,5 @@ export const ordersSlice = createSlice({
   },
 });
 
-export const { replaceOrders, orderUpserted } = ordersSlice.actions;
+export const { replaceOrders, setOrderFilter, orderUpserted } = ordersSlice.actions;
 export const ordersReducer = ordersSlice.reducer;

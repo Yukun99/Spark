@@ -10,18 +10,32 @@ final class Orders
     public const SIDES = ['buy', 'sell'];
     public const TYPES = ['market', 'limit'];
     public const TIME_IN_FORCE = ['GTC', 'IOC', 'FOK'];
+    public const STATUSES = ['pending', 'fulfilling', 'fulfilled', 'cancelled'];
     public const OPEN_STATUSES = ['pending', 'fulfilling'];
     public const PRODUCT_ID_MAX = 20;
     public const PRODUCT_ID_PATTERN = '/^[A-Z0-9]{1,10}-[A-Z0-9]{1,10}$/';
     private const PROVIDER_MAX = 32;
     private const COLUMNS = 'id, product_id, side, type, time_in_force, price, size, filled_size, status, provider, placed_at, updated_at';
 
+    /** The user's orders, narrowed by the query string (see `OrderFilter`), oldest first. */
     public static function list(): void
     {
         $userId = Auth::requireUser();
+        $filter = OrderFilter::fromQuery($_GET);
         Execution::advance($userId);
-        $rows = Db::all('SELECT ' . self::COLUMNS . ' FROM orders WHERE user_id = ? ORDER BY placed_at, id', [$userId]);
+        $rows = Db::all(
+            'SELECT ' . self::COLUMNS . ' FROM orders WHERE user_id = ?' . $filter['where'] . ' ORDER BY placed_at, id',
+            [$userId, ...$filter['params']],
+        );
         Http::json(200, array_map(self::toJson(...), $rows));
+    }
+
+    /** Distinct instruments the user has ever ordered, for the filter dropdown. */
+    public static function products(): void
+    {
+        $userId = Auth::requireUser();
+        $rows = Db::all('SELECT DISTINCT product_id FROM orders WHERE user_id = ? ORDER BY product_id', [$userId]);
+        Http::json(200, array_column($rows, 'product_id'));
     }
 
     public static function create(): void

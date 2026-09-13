@@ -315,6 +315,37 @@ describe('OrdersWidget', () => {
     expect(screen.queryByRole('button', { name: 'Refresh orders' })).not.toBeInTheDocument();
   });
 
+  it('filters through the server from the filter dialog and shows the active state', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders();
+    const filterButton = screen.getByRole('button', { name: 'Filter orders' });
+    expect(filterButton).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
+
+    await user.click(filterButton);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Filter Orders');
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Cancelled' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(rowCells()).toHaveLength(1));
+    expect(rowCells()[0][0]).toBe('LTC-USD');
+    expect(store.getState().orders.filter).toEqual({ statuses: ['cancelled'] });
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?status=cancelled');
+    expect(screen.getByRole('button', { name: 'Filter orders' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Filtered')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Filter orders' }));
+    const reopened = await screen.findByRole('dialog');
+    expect(within(reopened).getByRole('checkbox', { name: 'Cancelled' })).toBeChecked();
+    await user.click(within(reopened).getByRole('button', { name: 'Clear filters' }));
+    expect(within(reopened).getByRole('checkbox', { name: 'Cancelled' })).not.toBeChecked();
+    await user.click(within(reopened).getByRole('button', { name: 'Confirm' }));
+    await waitFor(() => expect(rowCells()).toHaveLength(sampleOrders().length));
+    expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
+  });
+
   it('offers delete but no modify in edit mode', async () => {
     const user = userEvent.setup();
     const store = renderOrders();

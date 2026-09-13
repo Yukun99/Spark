@@ -6,7 +6,13 @@ import type { PlaceOrderDialogProps } from '@/features/widgets/instrument/dialog
 import { formatPrice, formatSize } from '@/features/widgets/instrument/tickerFormat';
 import { formatDateTime, formatFill } from '@/features/widgets/orders/orderFormat';
 import { useOrders } from '@/hooks/useOrders';
-import { isOrderOpen, orderTouchedAt, type Order, type OrderType } from '@/store/ordersSlice';
+import {
+  isOrderOpen,
+  orderTouchedAt,
+  type Order,
+  type OrderFilter,
+  type OrderType,
+} from '@/store/ordersSlice';
 import type { OrdersWidget } from '@/store/widgetsSlice';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -31,7 +37,7 @@ export type OrderRow = {
   order: Order;
 };
 
-type OrdersDialogKind = 'delete' | 'copy' | 'edit' | 'cancel' | null;
+type OrdersDialogKind = 'delete' | 'copy' | 'edit' | 'cancel' | 'filter' | null;
 
 /** Props for the order form the widget currently shows, minus its close handler. */
 export type OrderFormProps = Omit<PlaceOrderDialogProps, 'onClose'>;
@@ -41,6 +47,10 @@ export type UseOrdersWidgetResult = {
   rows: OrderRow[];
   deleting: boolean;
   cancelling: boolean;
+  filtering: boolean;
+  /** Filter currently applied on the server; prefills the filter dialog. */
+  filter: OrderFilter;
+  filterActive: boolean;
   /** Last order an action was opened on; stays set so a closing dialog keeps its text. */
   selected: Order | null;
   /** Set while copying or editing an order. */
@@ -49,9 +59,11 @@ export type UseOrdersWidgetResult = {
   openCopy: (row: OrderRow) => void;
   openEdit: (row: OrderRow) => void;
   openCancel: (row: OrderRow) => void;
+  openFilter: () => void;
   closeDialog: () => void;
   confirmDelete: () => void;
   confirmCancel: () => void;
+  applyFilter: (filter: OrderFilter) => void;
   refresh: () => void;
 };
 
@@ -89,7 +101,7 @@ const orderForm = (kind: OrdersDialogKind, order: Order): OrderFormProps | null 
 };
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
-  const { orders, cancelOrder, refreshOrders } = useOrders();
+  const { orders, cancelOrder, refreshOrders, filter, filterActive, applyFilter } = useOrders();
   const { removeWidget } = useWidgets();
   const [dialog, setDialog] = useState<OrdersDialogKind>(null);
   const [selected, setSelected] = useState<Order | null>(null);
@@ -107,7 +119,15 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     setSelected(row.order);
     setDialog('cancel');
   }, []);
+  const openFilter = useCallback(() => setDialog('filter'), []);
   const closeDialog = useCallback(() => setDialog(null), []);
+  const confirmFilter = useCallback(
+    (next: OrderFilter) => {
+      setDialog(null);
+      applyFilter(next);
+    },
+    [applyFilter],
+  );
   const confirmDelete = useCallback(() => {
     setDialog(null);
     removeWidget(widget.id);
@@ -128,15 +148,20 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     rows,
     deleting: dialog === 'delete',
     cancelling: dialog === 'cancel',
+    filtering: dialog === 'filter',
+    filter,
+    filterActive,
     selected,
     orderForm: form,
     openDelete,
     openCopy,
     openEdit,
     openCancel,
+    openFilter,
     closeDialog,
     confirmDelete,
     confirmCancel,
+    applyFilter: confirmFilter,
     refresh: refreshOrders,
   };
 };

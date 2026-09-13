@@ -13,6 +13,7 @@ import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Box from '@mui/material/Box';
@@ -29,6 +30,9 @@ export type WidgetFrameProps = {
   onExpand?: () => void;
   /** Refetches the widget's data; shows a corner button outside edit mode. */
   onRefresh?: () => void;
+  /** Opens a filter for the widget's data; the button turns purple while `filterActive`. */
+  onFilter?: () => void;
+  filterActive?: boolean;
   tickAt?: number;
   children: ReactNode;
 };
@@ -36,16 +40,30 @@ export type WidgetFrameProps = {
 type CornerButtonProps = {
   label: string;
   onClick: (event: MouseEvent) => void;
+  /** Slot from the right edge: 0 is the corner, 1 sits left of it. */
+  slot?: number;
+  active?: boolean;
   children: ReactNode;
 };
 
-/** Round icon button in the card's top-right corner, sized to the title line. */
-const CornerButton = ({ label, onClick, children }: CornerButtonProps) => (
+const CORNER_GAP_PX = 4;
+
+/** Round icon button along the card's top-right edge, sized to the title line. */
+const CornerButton = ({ label, onClick, slot = 0, active = false, children }: CornerButtonProps) => (
   <ClearButton
     rounded
     aria-label={label}
+    aria-pressed={active}
     onClick={onClick}
-    sx={{ position: 'absolute', top: 0, right: 0, p: 0, width: LABEL_LINE_PX, height: LABEL_LINE_PX }}
+    sx={{
+      position: 'absolute',
+      top: 0,
+      right: slot * (LABEL_LINE_PX + CORNER_GAP_PX),
+      p: 0,
+      width: LABEL_LINE_PX,
+      height: LABEL_LINE_PX,
+      ...(active && { color: colours.purple }),
+    }}
   >
     {children}
   </ClearButton>
@@ -64,6 +82,8 @@ export const WidgetFrame = ({
   onModify,
   onExpand,
   onRefresh,
+  onFilter,
+  filterActive = false,
   tickAt,
   children,
 }: WidgetFrameProps) => {
@@ -101,6 +121,13 @@ export const WidgetFrame = ({
       onRefresh?.();
     },
     [onRefresh],
+  );
+  const onFilterClick = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onFilter?.();
+    },
+    [onFilter],
   );
 
   return (
@@ -174,6 +201,16 @@ export const WidgetFrame = ({
             {onRefresh !== undefined && (
               <CornerButton label={`Refresh ${name.toLowerCase()}`} onClick={onRefreshClick}>
                 <RefreshIcon sx={{ fontSize: LABEL_FONT_PX }} />
+              </CornerButton>
+            )}
+            {onFilter !== undefined && (
+              <CornerButton
+                label={`Filter ${name.toLowerCase()}`}
+                onClick={onFilterClick}
+                slot={onRefresh === undefined ? 0 : 1}
+                active={filterActive}
+              >
+                <FilterListIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </CornerButton>
             )}
             {children}

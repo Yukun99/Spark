@@ -1,10 +1,13 @@
 import { ApiError } from '@/connections/api';
 import {
+  applyOrderFilter,
   cancelOrder,
   fetchOrders,
+  isOrderFilterActive,
   modifyOrder,
-  orderUpserted,
+  orderFilterQuery,
   ordersReducer,
+  orderUpserted,
   placeOrder,
   replaceOrders,
   type OrderDraft,
@@ -50,6 +53,42 @@ describe('ordersSlice reducers', () => {
     const edited = ordersReducer(two, orderUpserted({ ...first, price: 1 }));
     expect(edited.items).toHaveLength(2);
     expect(edited.items[0].price).toBe(1);
+  });
+});
+
+describe('order filter', () => {
+  it('serialises only the set fields, lists comma-joined', () => {
+    expect(orderFilterQuery({})).toBe('');
+    expect(isOrderFilterActive({})).toBe(false);
+    expect(orderFilterQuery({ statuses: [], types: [] })).toBe('');
+    const query = orderFilterQuery({
+      productId: 'BTC-USD',
+      side: 'buy',
+      statuses: ['pending', 'fulfilling'],
+      types: ['limit'],
+      minPrice: 1.5,
+      maxPrice: 100,
+      from: 1700000000000,
+      to: 1700000100000,
+    });
+    expect(query).toBe(
+      '?productId=BTC-USD&side=buy&status=pending%2Cfulfilling&type=limit&minPrice=1.5&maxPrice=100&from=1700000000000&to=1700000100000',
+    );
+    expect(isOrderFilterActive({ side: 'sell' })).toBe(true);
+  });
+
+  it('stores the filter and every later fetch sends it', async () => {
+    const { fake, store } = seededStore();
+    await store.dispatch(applyOrderFilter({ statuses: ['fulfilled'], side: 'sell' }));
+    expect(store.getState().orders.filter).toEqual({ statuses: ['fulfilled'], side: 'sell' });
+    expect(store.getState().orders.items.map((order) => order.productId)).toEqual(['XRP-USD', 'LINK-USD']);
+    expect(fake.calls.at(-1)?.path).toBe('/orders?side=sell&status=fulfilled');
+
+    await store.dispatch(fetchOrders());
+    expect(fake.calls.at(-1)?.path).toBe('/orders?side=sell&status=fulfilled');
+    await store.dispatch(applyOrderFilter({}));
+    expect(fake.calls.at(-1)?.path).toBe('/orders');
+    expect(store.getState().orders.items).toHaveLength(sampleOrders().length);
   });
 });
 

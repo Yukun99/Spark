@@ -1,5 +1,6 @@
 import { FilledButton } from '@/components/buttons/filledButton';
 import { OutlinedButton } from '@/components/buttons/outlinedButton';
+import Box from '@mui/material/Box';
 import Dialog, { type DialogProps } from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -19,8 +20,12 @@ export type ConfirmDialogProps = {
   paperSx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
   actionsSx?: SxProps<Theme>;
+  /** Icon button pinned to the title's top-right corner, e.g. a clear-form action. */
+  titleAction?: ReactNode;
   children?: ReactNode;
 };
+
+const TITLE_ACTION_SX = { position: 'absolute', top: 16, right: 24 } as const;
 
 const toArray = (sx: SxProps<Theme> | undefined) => (Array.isArray(sx) ? sx : [sx]);
 
@@ -35,6 +40,7 @@ export const ConfirmDialog = ({
   paperSx,
   contentSx,
   actionsSx,
+  titleAction,
   children,
 }: ConfirmDialogProps) => (
   <Dialog
@@ -44,7 +50,10 @@ export const ConfirmDialog = ({
     maxWidth={maxWidth}
     slotProps={{ paper: { sx: [{ maxHeight }, ...toArray(paperSx)] } }}
   >
-    <DialogTitle>{title}</DialogTitle>
+    <DialogTitle sx={{ position: 'relative' }}>
+      {title}
+      {titleAction !== undefined && <Box sx={TITLE_ACTION_SX}>{titleAction}</Box>}
+    </DialogTitle>
     <DialogContent sx={[{ '.MuiDialogTitle-root + &': { pt: 1 } }, ...toArray(contentSx)]}>
       {children}
     </DialogContent>

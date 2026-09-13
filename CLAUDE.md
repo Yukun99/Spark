@@ -91,7 +91,7 @@ It is also the onboarding doc for developers, so keep it readable by humans.
   guard: restores the stored token, hydrates, else redirects to `/login`), `LoginPage` (`/login`
   and `/register`, same form) and the banner's account controls.
 - `src/components/` is for general-purpose UI only (banner, button variants, dialogs, page
-  chrome). Anything tied to one feature (its buttons, dialogs, hooks) lives in that feature's
+  chrome, `forms/` field helpers: `captionProps`, `RadioRow`, `CheckboxRow`). Anything tied to one feature (its buttons, dialogs, hooks) lives in that feature's
   folder. Styling in `src/styles/`.
 
 ## Naming
@@ -174,8 +174,10 @@ same host: username/password accounts with bearer tokens, then per-user orders, 
 widget layout. Endpoints and setup in `apps/api/README.md`; tables in `apps/api/schema.sql`. JSON
 shapes mirror the Redux slice types. `Execution.php` advances open orders by wall-clock in 5s
 steps whenever they are read (no daemon); the client refetches on load, on the orders widget's
-Refresh button and on leaving edit mode. `pnpm nx test api` runs plain-PHP asserts in
-`apps/api/tests/`. The frontend calls it through `src/connections/api.ts`. Local
+Refresh button and on leaving edit mode. The orders widget's filter is applied server-side:
+`OrderFilter.php` turns `GET /orders` query params into SQL; the client only stores the filter
+(`orders.filter`) and serialises it (`orderFilterQuery`). `pnpm nx test api` runs plain-PHP asserts
+in `apps/api/tests/`. The frontend calls it through `src/connections/api.ts`. Local
 `config.php` is gitignored; the dev server always proxies `/api` to the live site, so local runs
 use the production database. Tests mock `apiFetch` with `src/test/fixtures/fakeApi.ts`.
 
