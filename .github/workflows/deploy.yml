@@ -29,6 +29,11 @@ jobs:
           node-version: 24.17.0
           cache: pnpm
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
@@ -37,6 +42,16 @@ jobs:
 
       - name: Build Project with Nx
         run: pnpm nx build spark
+
+      - name: Bundle API into Build
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          mkdir -p apps/spark/dist/api
+          cp -r apps/api/index.php apps/api/.htaccess apps/api/src apps/spark/dist/api/
+          php -r 'file_put_contents("apps/spark/dist/api/config.php", "<?php\n\ndeclare(strict_types=1);\n\nreturn " . var_export(["host" => "localhost", "name" => getenv("DB_NAME"), "user" => getenv("DB_USER"), "password" => getenv("DB_PASSWORD")], true) . ";\n");'
 
       - name: Deploy Build via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

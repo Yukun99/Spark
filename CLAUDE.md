@@ -132,6 +132,7 @@ pnpm nx preview spark      # serves the build on http://localhost:4300
 pnpm nx test spark         # Vitest (jsdom), single run (watch disabled in vite.config.mts)
 pnpm nx lint spark
 pnpm nx typecheck spark
+pnpm nx lint api           # php -l over apps/api; needs PHP on PATH
 pnpm nx run-many -t lint test typecheck build   # everything
 ```
 
@@ -152,7 +153,17 @@ so `pnpm exec vitest` at the root runs all projects.
 Pushing to `master` (or manual dispatch) runs `.github/workflows/deploy.yml`: lint,
 typecheck, test, build, then FTPS upload of `apps/spark/dist` to `~/public_html/website_896e8816`
 on the web host via `SamKirkland/FTP-Deploy-Action`. Secrets: `FTP_SERVER`, `FTP_USERNAME`,
-`FTP_PASSWORD`, `FTP_SERVER_DIR`.
+`FTP_PASSWORD`, `FTP_SERVER_DIR`. Before upload the workflow copies `apps/api` into `dist/api`
+and writes `config.php` there from `DB_NAME`, `DB_USER`, `DB_PASSWORD`.
+
+## API
+
+`apps/api` is a plain PHP 8.3 + PDO project (Nx project `api`, lint only) serving `/api/*` on the
+same host: username/password accounts with bearer tokens, then per-user orders, settings and
+widget layout. Endpoints and setup in `apps/api/README.md`; tables in `apps/api/schema.sql`. JSON
+shapes mirror the Redux slice types. The frontend does not call it yet. Local `config.php` is
+gitignored; there is no local PHP, so test against the deployed API (`SPARK_API_ORIGIN` proxies
+`/api` from the dev server).
 
 ## Conventions The Tooling Enforces
 

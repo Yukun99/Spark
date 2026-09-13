@@ -51,3 +51,5 @@ vitest.config.*.timestamp*
 # private Claude notes and assignment spec
 CLAUDE.local.md
 *.pdf
+# API DB credentials (CI writes this from secrets)
+apps/api/config.php

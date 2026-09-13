@@ -45,6 +45,10 @@ export default defineConfig(() => ({
   server: {
     port: 4301,
     host: 'localhost',
+    // No local PHP: set SPARK_API_ORIGIN=https://spark.yukunxu.com to proxy /api to the deployed API.
+    proxy: process.env.SPARK_API_ORIGIN
+      ? { '/api': { target: process.env.SPARK_API_ORIGIN, changeOrigin: true } }
+      : undefined,
   },
   preview: {
     port: 4300,
