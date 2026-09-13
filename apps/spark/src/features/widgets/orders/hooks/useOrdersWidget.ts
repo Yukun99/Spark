@@ -18,7 +18,7 @@ import type { OrdersWidget } from '@/store/widgetsSlice';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /** Header and row heights in px until the first real ones are measured. */
-const SIZE_ESTIMATE = { header: 21, row: 61 };
+const SIZE_ESTIMATE = { header: 21, row: 60 };
 
 /** Quiet spell after a resize before the page is refetched with the rows that now fit. */
 export const PAGE_SIZE_SETTLE_MS = 500;

@@ -33,7 +33,7 @@ describe('usePageSize', () => {
     expect(observe).toHaveBeenCalledWith(container);
     expect(result.current.pageSize).toBeNull();
 
-    height = 20 + 30 * 3 + 8 * 3 + 5;
+    height = 20 + (30 + 8) * 3 + 5;
     act(() => callback([], {} as ResizeObserver));
     expect(result.current.pageSize).toBe(3);
 

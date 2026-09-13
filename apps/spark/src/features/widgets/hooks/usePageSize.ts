@@ -21,8 +21,9 @@ export type UsePageSizeResult = {
   pageSize: number | null;
 };
 
+/** Each row is preceded by a gap (the first one after the header), so a row costs `row + gap`. */
 const rowsThatFit = (available: number, rowPx: number) =>
-  Math.max(1, Math.floor((available + LIST_ROW_GAP_PX) / (rowPx + LIST_ROW_GAP_PX)));
+  Math.max(1, Math.floor(available / (rowPx + LIST_ROW_GAP_PX)));
 
 /**
  * How many rows fit the container: remeasured whenever it resizes and after every render, so a
