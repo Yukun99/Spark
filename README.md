@@ -234,3 +234,31 @@ us to set the theming of the app (I really like dark mode, so that was one of th
 is for logging out. This also helped testing since it allowed me to create different users to test different issues,
 whether they are related to completely new users or very well used accounts, without resetting my progress in other
 accounts.
+
+# Challenges
+
+Honestly, most of the challenges here really stemmed from my own perfectionism and scope creep. But hey, I had time to burn during the weekend and it was an enjoyable project, so I'm happy to have embarked on it. The section specific challenges are outlined below. In general, most of the challenges I faced were actually in terms of optimising the frontend app, since there are actually a lot of moving parts and components to display, so making sure the site functions well on lower end devices took some work, given the requirements for the site to be able to display a sizeable amount of data at a frequent rate smoothly.
+
+One of the challenges plaguing the whole page was actually cutting down on loading times. As the saying goes, make it work, then make it fast. After completing the feature portion, I then decided to improve initial load times. The biggest solution here was, of course, lazy loading. By memoising components in places, and having lazy-load in others along with loading skeletons, the loading time on slow devices was cut from 13 seconds to 3 seconds. (Devtools 14x throttle, benchmarked to slow mobile devices) I was happy with the timing, so I stopped there.
+
+## Authentication
+
+To preface, this app is just a "dummy" app that will never see the light of day and does not really need too much focus on security per-se, since no personal data will be put on it anyway. (PLEASE do not use your actual passwords here???) However, I am still not really familiar with securing the whole fullstack chain, and I have done my best with what I do know in terms of maintaining a need-to-know basis for data sharing, and ensuring that the backend database is only accessible by the correctly authenticated user.
+
+However, the presence of this authentication portion itself also added complexity, since I would have to have workarounds for local testing. Luckily, this app is not too big, so deployments do not take too long.
+
+## Grid
+
+While I have worked on drag and drop solutions before, this was the first time I did something this ambitious. The saving grace was that instead of allowing the user to set the widgets to ANY size, I decided from the get-go to use a grid with fixed cells. This really helped with the complexity with implementing such a system, and I personally think it's more sleek and intuitive to use.
+
+## Instrument Widget
+
+This widget was actually fairly easy to implement, however making sure that it correctly displays on different monitor resolutions took some work. Given the time, I decided to cater to the most common resolutions, but if given more time I would not just want to fix it to display on more devices, but even figure out a mobile version.
+
+## Watchlist Widget
+
+The implementation here was greatly eased by prior work to polish the instrument widget. However, the flash that used to happen just once per widget now happens very frequently. To reduce the load on the browser, the solution was to use refs to render the flash, instead of the "React" way of causing redraws. This was quite a significant performance leap, allowing the delay from updates to the next page draw to drop from about 1 second to under our fastest refresh time of 250ms. Since I had never attempted this method of optimisation before, it was fun figuring out the mechanics and logic behind doing it.
+
+## Orders Widget
+
+The UI part of the orders widget was not difficult, as most the more "complex" logic was in the PHP code, which I do not know too well and mostly delegated to Claude anyway. However, I did enjoy the challenge of figuring out how to display the data points in a way that makes sense to the user, and is also intuitive for users who have used similar apps before, or even encountered similar table-related UI elements before.
