@@ -31,7 +31,11 @@ export type UseWidgetDragResult = {
   };
 };
 
-/** Pointer-drag a widget, report the hovered grid area, and snap to it on release. */
+/**
+ * Pointer-drag a widget, report the grid area under it, and snap to the nearest valid cell on
+ * release. The card may leave the grid; the hovered area then follows it out so placeholders
+ * reappear under cells it no longer covers.
+ */
 export const useWidgetDrag = ({
   layout,
   enabled,
@@ -45,15 +49,26 @@ export const useWidgetDrag = ({
   const [offset, setOffset] = useState(NO_OFFSET);
   const [dragging, setDragging] = useState(false);
 
+  /** Cell the card's top-left corner is nearest to; may lie outside the grid. */
+  const hoveredCell = useCallback(
+    ({ dx, dy, cellWidth, cellHeight }: DragOrigin): GridCell => ({
+      row: layout.row + Math.round(dy / cellHeight),
+      col: layout.col + Math.round(dx / cellWidth),
+    }),
+    [layout],
+  );
+
+  /** `hoveredCell` pulled back inside the grid, where the card lands on release. */
   const targetFor = useCallback(
-    ({ dx, dy, cellWidth, cellHeight }: DragOrigin): GridCell => {
+    (current: DragOrigin): GridCell => {
       const { rowSpan = 1, colSpan = 1 } = layout;
+      const { row, col } = hoveredCell(current);
       return {
-        row: clamp(layout.row + Math.round(dy / cellHeight), 1, GRID_ROWS - rowSpan + 1),
-        col: clamp(layout.col + Math.round(dx / cellWidth), 1, GRID_COLS - colSpan + 1),
+        row: clamp(row, 1, GRID_ROWS - rowSpan + 1),
+        col: clamp(col, 1, GRID_COLS - colSpan + 1),
       };
     },
-    [layout],
+    [hoveredCell, layout],
   );
 
   const onPointerDown = useCallback(
@@ -88,9 +103,9 @@ export const useWidgetDrag = ({
       current.dy = event.clientY - current.pointerY;
       if (Math.hypot(current.dx, current.dy) > DRAG_THRESHOLD_PX) moved.current = true;
       setOffset({ dx: current.dx, dy: current.dy });
-      onHover({ ...layout, ...targetFor(current) });
+      onHover({ ...layout, ...hoveredCell(current) });
     },
-    [layout, onHover, targetFor],
+    [hoveredCell, layout, onHover],
   );
 
   const finish = useCallback(() => {

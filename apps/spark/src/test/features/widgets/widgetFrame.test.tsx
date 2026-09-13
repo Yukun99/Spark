@@ -81,12 +81,20 @@ describe('WidgetFrame drag', () => {
     expect(frame).toHaveStyle({ transform: 'translate(0px, 0px)' });
   });
 
-  it('clamps the target to the grid bounds', () => {
+  it('lets the card leave the grid, uncovering its placeholders, and drops it at the nearest cell', () => {
     const { store, frame } = renderFrame();
+    const visiblePlaceholders = () =>
+      screen.getAllByTestId('grid-placeholder').filter((cell) => getComputedStyle(cell).opacity !== '0');
 
     fireEvent.pointerDown(frame, pointer(50, 50));
+    expect(visiblePlaceholders()).toHaveLength(GRID_ROWS * GRID_COLS - 1);
+    fireEvent.pointerMove(frame, pointer(50 - 20 * CELL, 50 - 20 * CELL));
+    expect(store.getState().layout.dragTarget).toMatchObject({ row: -19, col: -19 });
+    expect(frame).toHaveStyle({ transform: `translate(${-20 * CELL}px, ${-20 * CELL}px)` });
+    expect(visiblePlaceholders()).toHaveLength(GRID_ROWS * GRID_COLS);
+
     fireEvent.pointerMove(frame, pointer(50 + 20 * CELL, 50 + 20 * CELL));
-    expect(store.getState().layout.dragTarget).toMatchObject({ row: 3, col: 6 });
+    expect(store.getState().layout.dragTarget).toMatchObject({ row: 21, col: 21 });
     fireEvent.pointerUp(frame, pointer(50 + 20 * CELL, 50 + 20 * CELL));
     expect(store.getState().widgets.items[0].layout).toMatchObject({ row: 3, col: 6 });
   });
