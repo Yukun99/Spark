@@ -3,7 +3,6 @@ import { hydrateSession } from '@/store/hydrate';
 import { createAppStore } from '@/store/store';
 import { SEED_WIDGETS } from '@/store/widgetSeed';
 import { installFakeApi } from '@/test/fixtures/mockApi';
-import { sampleOrders } from '@/test/fixtures/orders';
 
 vi.mock('@/connections/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/connections/api')>()),
@@ -11,22 +10,18 @@ vi.mock('@/connections/api', async (importOriginal) => ({
 }));
 
 describe('hydrateSession', () => {
-  it('loads orders, settings and widgets, seeding the layout for a fresh account', async () => {
-    const fake = installFakeApi({
-      orders: sampleOrders(),
-      settings: { updateIntervalMs: 2000, streaming: false },
-    });
+  it('loads settings and widgets, seeding the layout for a fresh account', async () => {
+    const fake = installFakeApi({ settings: { updateIntervalMs: 2000, streaming: false } });
     const store = createAppStore();
     const pending = store.dispatch(hydrateSession());
     expect(store.getState().auth.hydration).toBe('loading');
     await pending;
 
     expect(store.getState().auth.hydration).toBe('done');
-    expect(store.getState().orders.items).toEqual(sampleOrders());
+    expect(store.getState().orders.items).toEqual([]);
     expect(store.getState().settings).toEqual({ updateIntervalMs: 2000, streaming: false });
     expect(store.getState().widgets.items).toEqual(SEED_WIDGETS);
     expect(fake.calls.map((call) => `${call.request.method ?? 'GET'} ${call.path}`)).toEqual([
-      'GET /orders',
       'GET /settings',
       'GET /widgets',
       'PUT /widgets',

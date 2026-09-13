@@ -1,6 +1,12 @@
 import { ApiError, apiFetch, type ApiRequest } from '@/connections/api';
 import type { User } from '@/store/authSlice';
-import { isOrderOpen, type Order, type OrderChanges, type OrderDraft } from '@/store/ordersSlice';
+import {
+  isOrderOpen,
+  type Order,
+  type OrderChanges,
+  type OrderDraft,
+  type OrdersPage,
+} from '@/store/ordersSlice';
 import type { SettingsState } from '@/store/settingsSlice';
 import type { Widget } from '@/store/widgetsSlice';
 
@@ -51,6 +57,18 @@ const filterOrders = (orders: Order[], query: URLSearchParams) => {
   );
 };
 
+/** Mirrors `Orders::list` + `Paging::fromQuery`: filter, newest first, then the page window. */
+const pageOrders = (orders: Order[], query: URLSearchParams): OrdersPage => {
+  const matching = filterOrders(orders, query).sort(
+    (a, b) => b.placedAt - a.placedAt || b.id.localeCompare(a.id),
+  );
+  const pageSize = Number(query.get('pageSize') ?? 10);
+  const pageCount = Math.max(1, Math.ceil(matching.length / pageSize));
+  const page = Math.min(Number(query.get('page') ?? 1), pageCount);
+  const start = (page - 1) * pageSize;
+  return { items: matching.slice(start, start + pageSize), page, pageCount, total: matching.length };
+};
+
 /** In-memory stand-in for `apps/api`, mirroring its routes, ids and status codes. */
 export const createFakeApi = (overrides: Partial<FakeApiState> = {}): FakeApi => {
   const state: FakeApiState = { ...DEFAULTS, ...overrides };
@@ -72,7 +90,7 @@ export const createFakeApi = (overrides: Partial<FakeApiState> = {}): FakeApi =>
       }
       case 'orders': {
         if (id === 'products') return [...new Set(state.orders.map((order) => order.productId))].sort();
-        if (method === 'GET') return filterOrders(state.orders, query);
+        if (method === 'GET') return pageOrders(state.orders, query);
         if (method === 'POST' && id === undefined) {
           const draft = body as OrderDraft;
           const order: Order = {

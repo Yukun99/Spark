@@ -1,4 +1,6 @@
 import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
+import { PageBar } from '@/components/pageBar';
+import { LIST_ROW_GAP_PX } from '@/features/widgets/hooks/usePageSize';
 import {
   LazyInstrumentDialog,
   LazyPlaceOrderDialog,
@@ -7,6 +9,7 @@ import { useWatchlist } from '@/features/widgets/watchlist/hooks/useWatchlist';
 import { LazyWatchlistDialog } from '@/features/widgets/watchlist/dialog/lazyDialogs';
 import { WatchlistHeader } from '@/features/widgets/watchlist/watchlistHeader';
 import { WATCHLIST_COLUMNS, WatchlistRow } from '@/features/widgets/watchlist/watchlistRow';
+import { STRIP_TEXT_PX } from '@/features/widgets/valueStrip';
 import { WidgetFrame } from '@/features/widgets/widgetFrame';
 import { WatchlistLabel } from '@/features/widgets/watchlist/watchlistLabel';
 import { WidgetScrollArea } from '@/features/widgets/widgetScrollArea';
@@ -23,6 +26,13 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
   const {
     title,
     productIds,
+    pageRows,
+    page,
+    pageCount,
+    setPage,
+    containerRef,
+    headerRef,
+    rowRef,
     dialog,
     detailsProductId,
     orderSide,
@@ -39,20 +49,26 @@ export const WatchlistWidget = ({ widget }: WatchlistWidgetProps) => {
     <>
       <WidgetFrame widget={widget} name={title} onDelete={openDelete} onModify={openModify}>
         <WatchlistLabel title={title} productIds={productIds} />
-        <WidgetScrollArea>
+        <WidgetScrollArea ref={containerRef}>
           {productIds.length === 0 ? (
-            <Typography sx={{ fontSize: 12, color: gray[50], textAlign: 'center' }}>
+            <Typography sx={{ fontSize: STRIP_TEXT_PX, color: gray[50], textAlign: 'center' }}>
               No instruments yet
             </Typography>
           ) : (
-            <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: 1 }}>
-              <WatchlistHeader />
-              {productIds.map((productId, index) => (
-                <WatchlistRow key={`${productId}-${index}`} productId={productId} onOpen={openDetails} />
+            <Box sx={{ display: 'grid', gridTemplateColumns: WATCHLIST_COLUMNS, rowGap: `${LIST_ROW_GAP_PX}px` }}>
+              <WatchlistHeader ref={headerRef} />
+              {pageRows.map(({ productId, index }, offset) => (
+                <WatchlistRow
+                  key={`${productId}-${index}`}
+                  ref={offset === 0 ? rowRef : undefined}
+                  productId={productId}
+                  onOpen={openDetails}
+                />
               ))}
             </Box>
           )}
         </WidgetScrollArea>
+        <PageBar page={page} pageCount={pageCount} onChange={setPage} />
       </WidgetFrame>
       <LazyConfirmDialog
         open={dialog === 'delete'}

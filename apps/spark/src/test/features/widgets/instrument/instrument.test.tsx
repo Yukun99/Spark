@@ -47,7 +47,7 @@ vi.mock('@/connections/coinbase', () => ({
 }));
 
 const renderWidget = () => {
-  installFakeApi();
+  const fake = installFakeApi();
   const store = createAppStore();
   const widget = store.getState().widgets.items[0];
   if (widget.type !== 'instrument') throw new Error('expected an instrument widget');
@@ -58,7 +58,7 @@ const renderWidget = () => {
       </WidgetGrid>
     </Provider>,
   );
-  return store;
+  return { store, fake };
 };
 
 describe('InstrumentWidget', () => {
@@ -75,7 +75,7 @@ describe('InstrumentWidget', () => {
 
   it('opens the Place Order dialog from BUY and stores the confirmed order', async () => {
     const user = userEvent.setup();
-    const store = renderWidget();
+    const { fake } = renderWidget();
     const buy = screen.getByRole('button', { name: 'BUY' });
     expect(buy).toHaveAttribute('data-side', 'buy');
     expect(screen.getByRole('button', { name: 'SELL' })).toHaveAttribute('data-side', 'sell');
@@ -90,7 +90,7 @@ describe('InstrumentWidget', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await waitFor(() =>
-      expect(store.getState().orders.items.at(-1)).toEqual(
+      expect(fake.state.orders.at(-1)).toEqual(
         expect.objectContaining({ productId: 'BTC-USD', side: 'buy', price: 101, size: 2 }),
       ),
     );
@@ -146,7 +146,7 @@ describe('InstrumentWidget', () => {
 
   it('replaces content with the name and actions in edit mode, and deletes after confirming', async () => {
     const user = userEvent.setup();
-    const store = renderWidget();
+    const { store } = renderWidget();
     store.dispatch(toggleEditMode());
 
     expect(await screen.findByRole('button', { name: 'Delete widget' })).toBeInTheDocument();

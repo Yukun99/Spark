@@ -2,7 +2,6 @@ import { ApiError, apiFetch, clearToken, writeToken } from '@/connections/api';
 import { RequireAuth } from '@/features/auth/requireAuth';
 import { createAppStore } from '@/store/store';
 import { installFakeApi } from '@/test/fixtures/mockApi';
-import { sampleOrders } from '@/test/fixtures/orders';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
@@ -45,12 +44,12 @@ describe('RequireAuth', () => {
   });
 
   it('hydrates a stored session before showing the app', async () => {
-    const fake = installFakeApi({ orders: sampleOrders() });
+    const fake = installFakeApi({ settings: { updateIntervalMs: 2000, streaming: false } });
     writeToken('stored');
     const store = renderGuarded();
     expect(screen.queryByText('dashboard')).not.toBeInTheDocument();
     expect(await screen.findByText('dashboard')).toBeInTheDocument();
-    expect(store.getState().orders.items).toEqual(sampleOrders());
+    expect(store.getState().settings).toEqual({ updateIntervalMs: 2000, streaming: false });
     expect(fake.calls[0]).toEqual({ path: '/auth/me', request: {} });
   });
 
@@ -59,7 +58,7 @@ describe('RequireAuth', () => {
     const fake = installFakeApi();
     writeToken('stored');
     vi.mocked(apiFetch).mockImplementation((async (path, request) => {
-      if (path === '/orders') throw new ApiError(500, 'Internal server error');
+      if (path === '/settings') throw new ApiError(500, 'Internal server error');
       return fake.handle(path, request);
     }) as typeof apiFetch);
     const store = renderGuarded();

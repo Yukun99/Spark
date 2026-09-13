@@ -11,10 +11,11 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 export type OrdersRowProps = {
   row: OrderRow;
+  ref?: Ref<HTMLDivElement>;
   onCopy: (row: OrderRow) => void;
   onEdit: (row: OrderRow) => void;
   onCancel: (row: OrderRow) => void;
@@ -100,9 +101,11 @@ const ActionButton = ({ label, disabled, onClick, children }: ActionButtonProps)
 
 const HEADINGS = ['Instrument', 'Status', 'Price', 'Fulfilment', 'Submission Time', 'Actions'] as const;
 
+export type OrdersHeaderProps = { ref?: Ref<HTMLDivElement> };
+
 /** Column titles above the order rows, padded like a row so they line up with its cells. */
-export const OrdersHeader = () => (
-  <Box sx={{ ...rowSx, px: 1 }}>
+export const OrdersHeader = ({ ref }: OrdersHeaderProps) => (
+  <Box ref={ref} sx={{ ...rowSx, px: 1 }}>
     {HEADINGS.map((heading) => (
       <Typography key={heading} sx={stripHeadingSx}>
         {heading}
@@ -112,8 +115,12 @@ export const OrdersHeader = () => (
 );
 
 /** One order on a tinted strip; its cells sit on the parent grid so columns line up. */
-export const OrdersRow = ({ row, onCopy, onEdit, onCancel }: OrdersRowProps) => (
-  <ValueStrip data-testid='order-row' sx={{ ...rowSx, position: 'relative', overflow: 'hidden' }}>
+export const OrdersRow = ({ row, ref, onCopy, onEdit, onCancel }: OrdersRowProps) => (
+  <ValueStrip
+    ref={ref}
+    data-testid='order-row'
+    sx={{ ...rowSx, position: 'relative', overflow: 'hidden' }}
+  >
     {row.glowAt !== undefined && <FreshnessGlow tickAt={row.glowAt} />}
     <ValueChip sx={chipSx}>{row.instrument}</ValueChip>
     <Box sx={multilineCellSx}>

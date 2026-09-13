@@ -1,5 +1,6 @@
 import type { TradeSide } from '@/connections/coinbase';
 import { GLOW_FADE_MS } from '@/features/widgets/freshnessGlow';
+import { usePageSize, type UsePageSizeResult } from '@/features/widgets/hooks/usePageSize';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import { roundSize } from '@/features/widgets/instrument/dialog/orderValidation';
 import type { PlaceOrderDialogProps } from '@/features/widgets/instrument/dialog/placeOrderDialog';
@@ -14,7 +15,13 @@ import {
   type OrderType,
 } from '@/store/ordersSlice';
 import type { OrdersWidget } from '@/store/widgetsSlice';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+/** Header and row heights in px until the first real ones are measured. */
+const SIZE_ESTIMATE = { header: 21, row: 61 };
+
+/** Quiet spell after a resize before the page is refetched with the rows that now fit. */
+export const PAGE_SIZE_SETTLE_MS = 500;
 
 /** One table row; cells are plaintext until the columns get their final formatting. */
 export type OrderRow = {
@@ -42,9 +49,16 @@ type OrdersDialogKind = 'delete' | 'copy' | 'edit' | 'cancel' | 'filter' | null;
 /** Props for the order form the widget currently shows, minus its close handler. */
 export type OrderFormProps = Omit<PlaceOrderDialogProps, 'onClose'>;
 
-export type UseOrdersWidgetResult = {
+export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'headerRef' | 'rowRef'> & {
+  /** Widget name for the frame's button labels. */
+  name: string;
+  /** Card title: the name with the number of orders matching the filter. */
   title: string;
+  /** The current page, newest first. */
   rows: OrderRow[];
+  page: number;
+  pageCount: number;
+  goToPage: (page: number) => void;
   deleting: boolean;
   cancelling: boolean;
   filtering: boolean;
@@ -101,8 +115,32 @@ const orderForm = (kind: OrdersDialogKind, order: Order): OrderFormProps | null 
 };
 
 export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => {
-  const { orders, cancelOrder, refreshOrders, filter, filterActive, applyFilter } = useOrders();
+  const {
+    orders,
+    page,
+    pageCount,
+    total,
+    goToPage,
+    setPageSize,
+    cancelOrder,
+    refreshOrders,
+    filter,
+    filterActive,
+    applyFilter,
+  } = useOrders();
   const { removeWidget } = useWidgets();
+  const { containerRef, headerRef, rowRef, pageSize } = usePageSize({ estimate: SIZE_ESTIMATE });
+  const measured = useRef(false);
+  useEffect(() => {
+    if (pageSize === null) return;
+    if (!measured.current) {
+      measured.current = true;
+      setPageSize(pageSize);
+      return;
+    }
+    const timer = setTimeout(() => setPageSize(pageSize), PAGE_SIZE_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [pageSize, setPageSize]);
   const [dialog, setDialog] = useState<OrdersDialogKind>(null);
   const [selected, setSelected] = useState<Order | null>(null);
 
@@ -137,15 +175,22 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     if (selected !== null) cancelOrder(selected.id);
   }, [cancelOrder, selected]);
 
-  const rows = useMemo(() => [...orders].reverse().map(orderRow), [orders]);
+  const rows = useMemo(() => orders.map(orderRow), [orders]);
   const form = useMemo(
     () => (selected === null ? null : orderForm(dialog, selected)),
     [dialog, selected],
   );
 
   return {
-    title: 'Orders',
+    name: 'Orders',
+    title: `Orders (${total})`,
     rows,
+    page,
+    pageCount,
+    goToPage,
+    containerRef,
+    headerRef,
+    rowRef,
     deleting: dialog === 'delete',
     cancelling: dialog === 'cancel',
     filtering: dialog === 'filter',

@@ -4,10 +4,10 @@ import type {
   OrderTemplate,
 } from '@/features/widgets/instrument/dialog/hooks/usePlaceOrderDialog';
 import { PlaceOrderDialog } from '@/features/widgets/instrument/dialog/placeOrderDialog';
-import { replaceOrders, type Order } from '@/store/ordersSlice';
+import type { Order } from '@/store/ordersSlice';
 import { createAppStore } from '@/store/store';
 import { installFakeApi } from '@/test/fixtures/mockApi';
-import { sampleOrders } from '@/test/fixtures/orders';
+import { sampleOrders, seedOrders } from '@/test/fixtures/orders';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
@@ -67,7 +67,7 @@ const renderDialog = (
 ) => {
   installFakeApi({ orders: sampleOrders() });
   const store = createAppStore();
-  store.dispatch(replaceOrders(sampleOrders()));
+  seedOrders(store);
   const onClose = vi.fn();
   const { unmount } = render(
     <Provider store={store}>
@@ -204,14 +204,14 @@ describe('PlaceOrderDialog', () => {
   it('stores the order on confirm and closes; cancel stores nothing', async () => {
     const user = userEvent.setup();
     const { store, onClose } = renderDialog('sell');
-    const seeded = store.getState().orders.items.length;
+    const seeded = store.getState().orders.total;
     await user.type(field('Size'), '0.25');
     await user.click(screen.getByRole('radio', { name: 'IOC' }));
     await user.click(confirmButton());
 
     expect(onClose).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(store.getState().orders.items).toHaveLength(seeded + 1));
-    expect(store.getState().orders.items.at(-1)).toEqual(
+    await waitFor(() => expect(store.getState().orders.total).toBe(seeded + 1));
+    expect(store.getState().orders.items[0]).toEqual(
       expect.objectContaining({
         productId: 'BTC-USD',
         side: 'sell',
@@ -225,6 +225,6 @@ describe('PlaceOrderDialog', () => {
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalledTimes(2);
-    expect(store.getState().orders.items).toHaveLength(seeded + 1);
+    expect(store.getState().orders.total).toBe(seeded + 1);
   });
 });

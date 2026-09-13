@@ -1,10 +1,10 @@
 import type { Ticker } from '@/connections/coinbase';
 import { OrdersWidget } from '@/features/widgets/orders/orders';
 import { toggleEditMode } from '@/store/layoutSlice';
-import { orderUpserted, replaceOrders, type Order, type OrderDraft } from '@/store/ordersSlice';
-import { createAppStore } from '@/store/store';
+import { placeOrder, type OrderDraft } from '@/store/ordersSlice';
+import { createAppStore, type AppStore } from '@/store/store';
 import { installFakeApi } from '@/test/fixtures/mockApi';
-import { sampleOrders } from '@/test/fixtures/orders';
+import { manyOrders, sampleOrders, seedOrders } from '@/test/fixtures/orders';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
@@ -44,20 +44,13 @@ vi.mock('@/connections/coinbase', () => ({
   },
 }));
 
-/** Builds the order the server would return for a draft placed now. */
-let placedCount = 0;
-const placed = (draft: OrderDraft): Order => ({
-  ...draft,
-  id: `placed-${placedCount++}`,
-  filledSize: 0,
-  status: 'pending',
-  placedAt: Date.now(),
-});
+/** Places an order through the store, which reloads the page with it on top. */
+const place = (store: AppStore, draft: OrderDraft) => act(() => store.dispatch(placeOrder(draft)));
 
-const renderOrders = () => {
-  const fake = installFakeApi({ orders: sampleOrders() });
+const renderOrders = (orders = sampleOrders()) => {
+  const fake = installFakeApi({ orders });
   const store = createAppStore();
-  store.dispatch(replaceOrders(sampleOrders()));
+  seedOrders(store);
   fakeApi = fake;
   const Bound = () => {
     const widget = store.getState().widgets.items.find((item) => item.type === 'orders')!;
@@ -86,17 +79,23 @@ const rowGlows = () =>
     .getAllByTestId('order-row')
     .map((row) => row.querySelector('[data-testid="freshness-glow"]') !== null);
 
+const pageField = () => screen.getByRole('textbox', { name: 'Page' });
+const pageButton = (name: string) => screen.getByRole('button', { name });
+
 describe('OrdersWidget', () => {
-  it('has a header and a row per stored order, newest first', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('has a header and a row per order on the page, newest first', () => {
     const store = renderOrders();
     const seeded = store.getState().orders.items;
-    expect(screen.getByText('Orders')).toBeInTheDocument();
+    expect(screen.getByText('Orders (10)')).toBeInTheDocument();
     for (const heading of ['Instrument', 'Status', 'Price', 'Fulfilment', 'Submission Time', 'Actions']) {
       expect(screen.getByText(heading)).toBeInTheDocument();
     }
     const rows = rowCells();
     expect(rows).toHaveLength(seeded.length);
-    expect(rows[0][0]).toBe(seeded.at(-1)!.productId);
+    expect(rows[0][0]).toBe(seeded[0].productId);
+    expect(rows[0][0]).toBe('LTC-USD');
     expect(rows).toContainEqual([
       'ETH-USD',
       'Sellfulfilling37.50%',
@@ -107,9 +106,9 @@ describe('OrdersWidget', () => {
     ]);
   });
 
-  it('adds placed orders on top as pending with nothing filled', () => {
+  it('adds placed orders on top as pending with nothing filled', async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2026, 8, 12, 10, 30, 0));
+    vi.setSystemTime(new Date(2026, 8, 13, 10, 30, 0));
     const store = renderOrders();
     const draft = {
       productId: 'BTC-USD',
@@ -120,19 +119,18 @@ describe('OrdersWidget', () => {
       size: 2,
       provider: 'Coinbase',
     } as const;
-    act(() => {
-      store.dispatch(orderUpserted(placed(draft)));
-      store.dispatch(orderUpserted(placed({ ...draft, productId: 'ETH-USD', side: 'sell', size: 0.25 })));
-    });
+    await place(store, draft);
+    await place(store, { ...draft, productId: 'ETH-USD', side: 'sell', size: 0.25 });
 
     const rows = rowCells();
     expect(rows).toHaveLength(store.getState().orders.items.length);
+    expect(screen.getByText('Orders (12)')).toBeInTheDocument();
     expect(rows[0]).toEqual([
       'ETH-USD',
       'Sellpending0.00%',
       'market100.50',
       'Coinbase0 / 0.25',
-      '12/09/2026, 10:30:00',
+      '13/09/2026, 10:30:00',
       '',
     ]);
     expect(rows[1]).toEqual([
@@ -140,29 +138,22 @@ describe('OrdersWidget', () => {
       'Buypending0.00%',
       'market100.50',
       'Coinbase0 / 2',
-      '12/09/2026, 10:30:00',
+      '13/09/2026, 10:30:00',
       '',
     ]);
-    vi.useRealTimers();
   });
 
-  it('flashes only the orders placed just now', () => {
+  it('flashes only the orders placed just now', async () => {
     const store = renderOrders();
     expect(rowGlows()).not.toContain(true);
-    act(() => {
-      store.dispatch(
-        orderUpserted(
-          placed({
-            productId: 'BTC-USD',
-            side: 'buy',
-            type: 'market',
-            timeInForce: 'GTC',
-            price: 1,
-            size: 1,
-            provider: 'Coinbase',
-          }),
-        ),
-      );
+    await place(store, {
+      productId: 'BTC-USD',
+      side: 'buy',
+      type: 'market',
+      timeInForce: 'GTC',
+      price: 1,
+      size: 1,
+      provider: 'Coinbase',
     });
     const glows = rowGlows();
     expect(glows[0]).toBe(true);
@@ -279,11 +270,11 @@ describe('OrdersWidget', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Size' })).toHaveValue('2');
     expect(within(dialog).getByRole('textbox', { name: 'Provider' })).toHaveValue('Coinbase');
 
-    const count = store.getState().orders.items.length;
+    const count = store.getState().orders.total;
     await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    await waitFor(() => expect(store.getState().orders.items).toHaveLength(count + 1));
-    expect(store.getState().orders.items.at(-1)).toEqual(
+    await waitFor(() => expect(store.getState().orders.total).toBe(count + 1));
+    expect(store.getState().orders.items[0]).toEqual(
       expect.objectContaining({
         productId: source.productId,
         side: source.side,
@@ -309,7 +300,7 @@ describe('OrdersWidget', () => {
     await waitFor(() =>
       expect(rowCells().find((row) => row[0] === 'SOL-USD')?.[1]).toBe('Buyfulfilling20.00%'),
     );
-    expect(fakeApi.calls).toEqual([{ path: '/orders', request: {} }]);
+    expect(fakeApi.calls).toEqual([{ path: '/orders?page=1&pageSize=10', request: {} }]);
 
     await act(() => store.dispatch(toggleEditMode()));
     expect(screen.queryByRole('button', { name: 'Refresh orders' })).not.toBeInTheDocument();
@@ -332,7 +323,7 @@ describe('OrdersWidget', () => {
     await waitFor(() => expect(rowCells()).toHaveLength(1));
     expect(rowCells()[0][0]).toBe('LTC-USD');
     expect(store.getState().orders.filter).toEqual({ statuses: ['cancelled'] });
-    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?status=cancelled');
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&status=cancelled');
     expect(screen.getByRole('button', { name: 'Filter orders' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Filtered')).toBeInTheDocument();
 
@@ -344,6 +335,53 @@ describe('OrdersWidget', () => {
     await user.click(within(reopened).getByRole('button', { name: 'Confirm' }));
     await waitFor(() => expect(rowCells()).toHaveLength(sampleOrders().length));
     expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
+  });
+
+  it('pages through the server with the page bar, accepting only pages in range', async () => {
+    const user = userEvent.setup();
+    const store = renderOrders(manyOrders(25));
+    await user.click(pageButton('Refresh orders'));
+    await waitFor(() => expect(screen.getByText('Orders (25)')).toBeInTheDocument());
+    expect(screen.getByText('/ 3')).toBeInTheDocument();
+    expect(pageField()).toHaveValue('1');
+    expect(pageButton('First page')).toBeDisabled();
+    expect(pageButton('Previous page')).toBeDisabled();
+    expect(rowCells()).toHaveLength(10);
+    expect(rowCells()[0][0]).toBe(store.getState().orders.items[0].productId);
+
+    await user.click(pageButton('Next page'));
+    await waitFor(() => expect(pageField()).toHaveValue('2'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=2&pageSize=10');
+    await user.click(pageButton('Last page'));
+    await waitFor(() => expect(pageField()).toHaveValue('3'));
+    expect(rowCells()).toHaveLength(5);
+    expect(pageButton('Next page')).toBeDisabled();
+    expect(pageButton('Last page')).toBeDisabled();
+    await user.click(pageButton('Previous page'));
+    await waitFor(() => expect(pageField()).toHaveValue('2'));
+    await user.click(pageButton('First page'));
+    await waitFor(() => expect(pageField()).toHaveValue('1'));
+
+    await user.click(pageField());
+    await user.keyboard('4');
+    expect(pageField()).toHaveValue('1');
+    await user.keyboard('{Backspace}3{Enter}');
+    await waitFor(() => expect(pageField()).toHaveValue('3'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=3&pageSize=10');
+    expect(store.getState().orders.page).toBe(3);
+
+    const calls = fakeApi.calls.length;
+    await user.click(pageButton('Refresh orders'));
+    await waitFor(() => expect(fakeApi.calls).toHaveLength(calls + 1));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=3&pageSize=10');
+
+    await user.click(pageButton('Filter orders'));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Cancelled' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+    await waitFor(() => expect(pageField()).toHaveValue('1'));
+    expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&status=cancelled');
+    expect(screen.getByText('/ 1')).toBeInTheDocument();
   });
 
   it('offers delete but no modify in edit mode', async () => {

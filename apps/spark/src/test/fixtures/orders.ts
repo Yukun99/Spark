@@ -1,4 +1,5 @@
-import type { Order } from '@/store/ordersSlice';
+import { fetchOrders, setOrdersPageSize, type Order, type OrdersPage } from '@/store/ordersSlice';
+import type { AppStore } from '@/store/store';
 
 const PLACED_AT = Date.UTC(2026, 8, 12, 9, 0, 0);
 const MINUTE_MS = 60_000;
@@ -18,7 +19,7 @@ const SAMPLES: SampleOrder[] = [
   { productId: 'LTC-USD', side: 'buy', type: 'limit', timeInForce: 'GTC', price: 68.2, size: 10, filledSize: 3, status: 'cancelled' },
 ];
 
-/** Orders across instruments and fill states, one minute apart, as a server would return them. */
+/** Orders across instruments and fill states, one minute apart, oldest first. */
 export const sampleOrders = (): Order[] =>
   SAMPLES.map((order, index) => ({
     ...order,
@@ -26,3 +27,28 @@ export const sampleOrders = (): Order[] =>
     provider: 'Coinbase',
     placedAt: PLACED_AT + index * MINUTE_MS,
   }));
+
+/** `count` orders cycling through the samples, one minute apart, oldest first. */
+export const manyOrders = (count: number): Order[] =>
+  Array.from({ length: count }, (_, index) => ({
+    ...SAMPLES[index % SAMPLES.length],
+    id: `many-${index}`,
+    provider: 'Coinbase',
+    placedAt: PLACED_AT + index * MINUTE_MS,
+  }));
+
+export const SEED_PAGE_SIZE = 10;
+
+/** The single page the server would return for `sampleOrders`, newest first. */
+export const sampleOrdersPage = (): OrdersPage => ({
+  items: sampleOrders().reverse(),
+  page: 1,
+  pageCount: 1,
+  total: SAMPLES.length,
+});
+
+/** Loads `sampleOrdersPage` into the store at once, as if the widget had already fetched it. */
+export const seedOrders = (store: AppStore) => {
+  store.dispatch(setOrdersPageSize(SEED_PAGE_SIZE));
+  store.dispatch(fetchOrders.fulfilled(sampleOrdersPage(), 'seed'));
+};

@@ -80,22 +80,49 @@ export const orderFilterQuery = (filter: OrderFilter): string => {
   return query === '' ? '' : `?${query}`;
 };
 
-export type OrdersState = {
+/** Query string for `GET /orders`: the page window first, then the filter. */
+export const ordersQuery = (filter: OrderFilter, page: number, pageSize: number): string =>
+  `?page=${page}&pageSize=${pageSize}${orderFilterQuery(filter).replace('?', '&')}`;
+
+/** One page of orders as `GET /orders` returns it, newest first. */
+export type OrdersPage = {
   items: Order[];
-  filter: OrderFilter;
+  page: number;
+  pageCount: number;
+  total: number;
 };
 
-const initialState: OrdersState = { items: [], filter: {} };
+export type OrdersState = {
+  /** The current page only. */
+  items: Order[];
+  filter: OrderFilter;
+  page: number;
+  /** Rows that fit the orders widget; null until it has measured itself, so nothing is fetched. */
+  pageSize: number | null;
+  pageCount: number;
+  total: number;
+};
+
+const initialState: OrdersState = {
+  items: [],
+  filter: {},
+  page: 1,
+  pageSize: null,
+  pageCount: 1,
+  total: 0,
+};
 
 const selectOrder = (state: RootState, id: string) =>
   state.orders.items.find((order) => order.id === id);
 
-/** Reloads the list with the stored filter applied server-side. */
-export const fetchOrders = createAsyncThunk<Order[], void, { state: RootState }>(
+/** Reloads the current page with the stored filter applied server-side; waits for a page size. */
+export const fetchOrders = createAsyncThunk<OrdersPage | null, void, { state: RootState }>(
   'orders/fetch',
   async (_, { dispatch, getState }) => {
+    const { filter, page, pageSize } = getState().orders;
+    if (pageSize === null) return null;
     try {
-      return await apiFetch<Order[]>(`/orders${orderFilterQuery(getState().orders.filter)}`);
+      return await apiFetch<OrdersPage>(`/orders${ordersQuery(filter, page, pageSize)}`);
     } catch (error) {
       reportApiFailure(dispatch, error, 'Could not refresh orders');
       throw error;
@@ -103,19 +130,42 @@ export const fetchOrders = createAsyncThunk<Order[], void, { state: RootState }>
   },
 );
 
+/** Stores the filter and starts over from the first page, so the page can't be out of range. */
 export const applyOrderFilter = createAsyncThunk<void, OrderFilter, { state: RootState }>(
   'orders/applyFilter',
   async (filter, { dispatch }) => {
     dispatch(setOrderFilter(filter));
+    dispatch(setOrdersPage(1));
     await dispatch(fetchOrders());
   },
 );
 
-export const placeOrder = createAsyncThunk(
+export const goToOrdersPage = createAsyncThunk<void, number, { state: RootState }>(
+  'orders/goToPage',
+  async (page, { dispatch }) => {
+    dispatch(setOrdersPage(page));
+    await dispatch(fetchOrders());
+  },
+);
+
+/** Refetches with the rows that now fit; a repeat of the current size is a no-op. */
+export const resizeOrdersPage = createAsyncThunk<void, number, { state: RootState }>(
+  'orders/resizePage',
+  async (pageSize, { dispatch, getState }) => {
+    if (getState().orders.pageSize === pageSize) return;
+    dispatch(setOrdersPageSize(pageSize));
+    await dispatch(fetchOrders());
+  },
+);
+
+/** A new order lands at the top of page 1 and shifts the rest, so the page is reloaded. */
+export const placeOrder = createAsyncThunk<Order, OrderDraft, { state: RootState }>(
   'orders/place',
   async (draft: OrderDraft, { dispatch }) => {
     try {
-      return await apiFetch<Order>('/orders', { method: 'POST', body: draft });
+      const order = await apiFetch<Order>('/orders', { method: 'POST', body: draft });
+      await dispatch(fetchOrders());
+      return order;
     } catch (error) {
       reportApiFailure(dispatch, error, 'Could not place the order');
       throw error;
@@ -162,24 +212,28 @@ export const ordersSlice = createSlice({
   name: 'orders',
   initialState,
   reducers: {
-    replaceOrders: (state, action: PayloadAction<Order[]>) => {
-      state.items = action.payload;
-    },
     setOrderFilter: (state, action: PayloadAction<OrderFilter>) => {
       state.filter = action.payload;
     },
-    /** Replaces the order with the same id in place, or appends it. */
+    setOrdersPage: (state, action: PayloadAction<number>) => {
+      state.page = action.payload;
+    },
+    setOrdersPageSize: (state, action: PayloadAction<number>) => {
+      state.pageSize = action.payload;
+    },
+    /** Replaces the order with the same id in place; orders on other pages are left alone. */
     orderUpserted: (state, action: PayloadAction<Order>) => {
       const index = state.items.findIndex((order) => order.id === action.payload.id);
-      if (index === -1) state.items.push(action.payload);
-      else state.items[index] = action.payload;
+      if (index !== -1) state.items[index] = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchOrders.fulfilled, (state, action) => {
-      state.items = action.payload;
+      if (action.payload === null) return;
+      const { items, page, pageCount, total } = action.payload;
+      Object.assign(state, { items, page, pageCount, total });
     });
-    for (const thunk of [placeOrder, modifyOrder, cancelOrder]) {
+    for (const thunk of [modifyOrder, cancelOrder]) {
       builder.addCase(thunk.fulfilled, (state, action) => {
         ordersSlice.caseReducers.orderUpserted(state, orderUpserted(action.payload));
       });
@@ -187,5 +241,5 @@ export const ordersSlice = createSlice({
   },
 });
 
-export const { replaceOrders, setOrderFilter, orderUpserted } = ordersSlice.actions;
+export const { setOrderFilter, setOrdersPage, setOrdersPageSize, orderUpserted } = ordersSlice.actions;
 export const ordersReducer = ordersSlice.reducer;

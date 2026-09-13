@@ -10,7 +10,7 @@ use Spark\Api\Router;
 use Spark\Api\Settings;
 use Spark\Api\Widgets;
 
-foreach (['ApiError', 'Util', 'Http', 'Db', 'Validate', 'Router', 'Auth', 'Execution', 'OrderFilter', 'Orders', 'Settings', 'Widgets'] as $class) {
+foreach (['ApiError', 'Util', 'Http', 'Db', 'Validate', 'Router', 'Auth', 'Execution', 'OrderFilter', 'Paging', 'Orders', 'Settings', 'Widgets'] as $class) {
     require __DIR__ . "/src/$class.php";
 }
 

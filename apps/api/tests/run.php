@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 // Plain-PHP test runner: each *Test.php file uses `$check(label, actual, expected)`.
 
-foreach (['ApiError', 'Util', 'Execution', 'Orders', 'OrderFilter'] as $class) {
+foreach (['ApiError', 'Util', 'Execution', 'Orders', 'OrderFilter', 'Paging'] as $class) {
     require __DIR__ . "/../src/$class.php";
 }
 

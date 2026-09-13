@@ -29,7 +29,7 @@ All bodies and responses are JSON. Everything except `/auth/register` and `/auth
 | POST   | `/auth/login`         | `{username, password}` → `{token, user}`            |
 | POST   | `/auth/logout`        | → 204                                               |
 | GET    | `/auth/me`            | → `{id, username}`                                  |
-| GET    | `/orders`             | → `Order[]`; optional query `productId`, `side`, `status` and `type` (comma lists), `minPrice`, `maxPrice`, `from`, `to` (epoch ms) |
+| GET    | `/orders`             | → `OrdersPage` `{ items: Order[], page, pageCount, total }`, newest first; optional query `page` (default 1, clamped), `pageSize` (default 10, max 200), and filters `productId`, `side`, `status` and `type` (comma lists), `minPrice`, `maxPrice`, `from`, `to` (epoch ms), applied before paging |
 | GET    | `/orders/products`    | → `string[]` distinct product ids the user has ordered |
 | POST   | `/orders`             | `OrderDraft` → `Order` (201)                        |
 | PATCH  | `/orders/{id}`        | `OrderChanges` → `Order` (409 if not open)          |

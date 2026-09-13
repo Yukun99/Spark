@@ -1,7 +1,6 @@
 import { apiFetch } from '@/connections/api';
 import { reportApiFailure } from '@/store/apiFailure';
 import { hydrationFailed, hydrationFinished, hydrationStarted } from '@/store/authSlice';
-import { replaceOrders, type Order } from '@/store/ordersSlice';
 import { replaceSettings, type SettingsState } from '@/store/settingsSlice';
 import { SEED_WIDGETS } from '@/store/widgetSeed';
 import { replaceWidgets, type Widget } from '@/store/widgetsSlice';
@@ -15,16 +14,17 @@ const loadWidgets = async () => {
     : apiFetch<Widget[]>('/widgets', { method: 'PUT', body: SEED_WIDGETS });
 };
 
-/** Pulls the signed-in user's data into the store; sync listeners stay quiet until it is done. */
+/**
+ * Pulls the signed-in user's settings and layout into the store; sync listeners stay quiet until
+ * it is done. Orders load once the orders widget knows how many rows fit.
+ */
 export const hydrateSession = createAsyncThunk('auth/hydrate', async (_, { dispatch }) => {
   dispatch(hydrationStarted());
   try {
-    const [orders, settings, widgets] = await Promise.all([
-      apiFetch<Order[]>('/orders'),
+    const [settings, widgets] = await Promise.all([
       apiFetch<SettingsState>('/settings'),
       loadWidgets(),
     ]);
-    dispatch(replaceOrders(orders));
     dispatch(replaceSettings(settings));
     dispatch(replaceWidgets(widgets));
     dispatch(hydrationFinished());

@@ -3,9 +3,11 @@ import {
   applyOrderFilter,
   cancelOrder as cancelOrderThunk,
   fetchOrders,
+  goToOrdersPage,
   isOrderFilterActive,
   modifyOrder,
   placeOrder as placeOrderThunk,
+  resizeOrdersPage,
   type Order,
   type OrderChanges,
   type OrderDraft,
@@ -14,7 +16,15 @@ import {
 import { useCallback } from 'react';
 
 export type UseOrdersResult = {
+  /** The current page, newest first. */
   orders: Order[];
+  page: number;
+  pageCount: number;
+  total: number;
+  /** Loads another page through the server. */
+  goToPage: (page: number) => void;
+  /** Tells the store how many rows fit; the list reloads when that changes. */
+  setPageSize: (pageSize: number) => void;
   placeOrder: (draft: OrderDraft) => void;
   modifyOrder: (id: string, changes: OrderChanges) => void;
   cancelOrder: (id: string) => void;
@@ -30,6 +40,9 @@ export type UseOrdersResult = {
 export const useOrders = (): UseOrdersResult => {
   const orders = useAppSelector((state) => state.orders.items);
   const filter = useAppSelector((state) => state.orders.filter);
+  const page = useAppSelector((state) => state.orders.page);
+  const pageCount = useAppSelector((state) => state.orders.pageCount);
+  const total = useAppSelector((state) => state.orders.total);
   const dispatch = useAppDispatch();
   const placeOrder = useCallback(
     (draft: OrderDraft) => void dispatch(placeOrderThunk(draft)),
@@ -41,6 +54,11 @@ export const useOrders = (): UseOrdersResult => {
   );
   const cancel = useCallback((id: string) => void dispatch(cancelOrderThunk(id)), [dispatch]);
   const refreshOrders = useCallback(() => void dispatch(fetchOrders()), [dispatch]);
+  const goToPage = useCallback((next: number) => void dispatch(goToOrdersPage(next)), [dispatch]);
+  const setPageSize = useCallback(
+    (pageSize: number) => void dispatch(resizeOrdersPage(pageSize)),
+    [dispatch],
+  );
   const applyFilter = useCallback(
     (next: OrderFilter) => void dispatch(applyOrderFilter(next)),
     [dispatch],
@@ -48,6 +66,11 @@ export const useOrders = (): UseOrdersResult => {
 
   return {
     orders,
+    page,
+    pageCount,
+    total,
+    goToPage,
+    setPageSize,
     placeOrder,
     modifyOrder: modify,
     cancelOrder: cancel,

@@ -5,10 +5,11 @@ import { useWatchlistRow } from '@/features/widgets/watchlist/hooks/useWatchlist
 import { EMPTY } from '@/features/widgets/instrument/tickerFormat';
 import { gray } from '@/styles/palette';
 import Box from '@mui/material/Box';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, type Ref } from 'react';
 
 export type WatchlistRowProps = {
   productId: string;
+  ref?: Ref<HTMLDivElement>;
   onOpen: (productId: string) => void;
 };
 
@@ -47,12 +48,13 @@ export const WatchlistDivider = () => (
  * Clicking the row opens that instrument's details. Renders once: ticks are written into the
  * cells through refs by `useWatchlistRow`, never through a re-render.
  */
-export const WatchlistRow = memo(({ productId, onOpen }: WatchlistRowProps) => {
+export const WatchlistRow = memo(({ productId, ref, onOpen }: WatchlistRowProps) => {
   const { bidRef, askRef, priceRef, sizeRef, glowRef } = useWatchlistRow(productId);
   const onClick = useCallback(() => onOpen(productId), [onOpen, productId]);
 
   return (
     <ValueStrip
+      ref={ref}
       data-testid='watchlist-row'
       aria-label={`${productId} details`}
       onClick={onClick}

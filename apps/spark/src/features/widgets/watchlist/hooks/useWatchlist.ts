@@ -1,13 +1,23 @@
 import type { TradeSide } from '@/connections/coinbase';
+import { usePageSize, type UsePageSizeResult } from '@/features/widgets/hooks/usePageSize';
 import { useWidgets } from '@/features/widgets/hooks/useWidgets';
 import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 type WatchlistDialogKind = 'delete' | 'modify' | null;
 
-export type UseWatchlistResult = {
+/** Header and row heights in px until the first real ones are measured. */
+const SIZE_ESTIMATE = { header: 21, row: 34 };
+
+export type UseWatchlistResult = Pick<UsePageSizeResult, 'containerRef' | 'headerRef' | 'rowRef'> & {
   title: string;
+  /** Every instrument, for the last-refresh caption. */
   productIds: string[];
+  /** Instruments on the current page, with the index of each in `productIds`. */
+  pageRows: { productId: string; index: number }[];
+  page: number;
+  pageCount: number;
+  setPage: (page: number) => void;
   dialog: WatchlistDialogKind;
   detailsProductId: string | null;
   /** Set while the order dialog replaces the details dialog for `detailsProductId`. */
@@ -26,6 +36,20 @@ export const useWatchlist = (widget: WatchlistWidget): UseWatchlistResult => {
   const [dialog, setDialog] = useState<WatchlistDialogKind>(null);
   const [detailsProductId, setDetailsProductId] = useState<string | null>(null);
   const [orderSide, setOrderSide] = useState<TradeSide | null>(null);
+  const [page, setPage] = useState(1);
+  const { containerRef, headerRef, rowRef, pageSize } = usePageSize({ estimate: SIZE_ESTIMATE });
+
+  const { productIds } = widget;
+  const rowsPerPage = pageSize ?? 1;
+  const pageCount = Math.max(1, Math.ceil(productIds.length / rowsPerPage));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    return productIds.slice(start, start + rowsPerPage).map((productId, offset) => ({
+      productId,
+      index: start + offset,
+    }));
+  }, [currentPage, productIds, rowsPerPage]);
 
   const openDelete = useCallback(() => setDialog('delete'), []);
   const openModify = useCallback(() => setDialog('modify'), []);
@@ -49,8 +73,15 @@ export const useWatchlist = (widget: WatchlistWidget): UseWatchlistResult => {
   );
 
   return {
-    title: `${widget.name} (${widget.productIds.length})`,
-    productIds: widget.productIds,
+    title: `${widget.name} (${productIds.length})`,
+    productIds,
+    pageRows,
+    page: currentPage,
+    pageCount,
+    setPage,
+    containerRef,
+    headerRef,
+    rowRef,
     dialog,
     detailsProductId,
     orderSide,

@@ -4,9 +4,10 @@ import { toggleEditMode } from '@/store/layoutSlice';
 import { toggleStreaming } from '@/store/settingsSlice';
 import { createAppStore } from '@/store/store';
 import { WIDGET_SYNC_DELAY_MS } from '@/store/syncListener';
+import { setOrdersPageSize } from '@/store/ordersSlice';
 import { moveWidget, removeWidget } from '@/store/widgetsSlice';
 import { installFakeApi } from '@/test/fixtures/mockApi';
-import { sampleOrders } from '@/test/fixtures/orders';
+import { sampleOrders, sampleOrdersPage } from '@/test/fixtures/orders';
 
 vi.mock('@/connections/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/connections/api')>()),
@@ -79,16 +80,26 @@ describe('syncListener', () => {
     expect(store.getState().notice.message).toBe('Internal server error');
   });
 
-  it('refetches orders when leaving edit mode, not when entering it', async () => {
+  it('refetches the orders page when leaving edit mode, not when entering it', async () => {
     const fake = installFakeApi({ orders: sampleOrders() });
     const store = hydratedStore();
+    store.dispatch(setOrdersPageSize(10));
     store.dispatch(toggleEditMode());
     await flush();
     expect(fake.calls).toEqual([]);
     store.dispatch(toggleEditMode());
     await flush();
-    expect(fake.calls).toEqual([{ path: '/orders', request: {} }]);
-    expect(store.getState().orders.items).toEqual(sampleOrders());
+    expect(fake.calls).toEqual([{ path: '/orders?page=1&pageSize=10', request: {} }]);
+    expect(store.getState().orders.items).toEqual(sampleOrdersPage().items);
+  });
+
+  it('does not fetch orders before the widget has reported a page size', async () => {
+    const fake = installFakeApi({ orders: sampleOrders() });
+    const store = hydratedStore();
+    store.dispatch(toggleEditMode());
+    store.dispatch(toggleEditMode());
+    await flush();
+    expect(fake.calls).toEqual([]);
   });
 
   it('signs out when the server no longer accepts the token', async () => {

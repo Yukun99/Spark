@@ -1,4 +1,6 @@
 import { LazyConfirmDialog } from '@/components/dialogs/lazyConfirmDialog';
+import { PageBar } from '@/components/pageBar';
+import { LIST_ROW_GAP_PX } from '@/features/widgets/hooks/usePageSize';
 import { LazyPlaceOrderDialog } from '@/features/widgets/instrument/dialog/lazyDialogs';
 import { LazyOrderFilterDialog } from '@/features/widgets/orders/dialog/lazyDialogs';
 import { useOrdersWidget } from '@/features/widgets/orders/hooks/useOrdersWidget';
@@ -19,8 +21,15 @@ export type OrdersWidgetProps = {
 /** Placed orders as a table, newest first. */
 export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
   const {
+    name,
     title,
     rows,
+    page,
+    pageCount,
+    goToPage,
+    containerRef,
+    headerRef,
+    rowRef,
     deleting,
     cancelling,
     filtering,
@@ -44,24 +53,25 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
     <>
       <WidgetFrame
         widget={widget}
-        name={title}
+        name={name}
         onDelete={openDelete}
         onRefresh={refresh}
         onFilter={openFilter}
         filterActive={filterActive}
       >
         <WidgetLabel caption={filterActive ? 'Filtered' : undefined}>{title}</WidgetLabel>
-        <WidgetScrollArea>
+        <WidgetScrollArea ref={containerRef}>
           {rows.length === 0 ? (
             <Typography sx={{ fontSize: STRIP_TEXT_PX, color: gray[50], textAlign: 'center' }}>
               No orders yet
             </Typography>
           ) : (
-            <Box sx={{ display: 'grid', gridTemplateColumns: ORDERS_COLUMNS, rowGap: 1 }}>
-              <OrdersHeader />
-              {rows.map((row) => (
+            <Box sx={{ display: 'grid', gridTemplateColumns: ORDERS_COLUMNS, rowGap: `${LIST_ROW_GAP_PX}px` }}>
+              <OrdersHeader ref={headerRef} />
+              {rows.map((row, index) => (
                 <OrdersRow
                   key={row.key}
+                  ref={index === 0 ? rowRef : undefined}
                   row={row}
                   onCopy={openCopy}
                   onEdit={openEdit}
@@ -71,6 +81,7 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
             </Box>
           )}
         </WidgetScrollArea>
+        <PageBar page={page} pageCount={pageCount} onChange={goToPage} />
       </WidgetFrame>
       <LazyConfirmDialog
         open={deleting}

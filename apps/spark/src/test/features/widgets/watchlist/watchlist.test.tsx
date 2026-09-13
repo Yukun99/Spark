@@ -92,6 +92,29 @@ describe('WatchlistWidget', () => {
     ]);
   });
 
+  it('pages the instruments client-side, counting all of them in the title', async () => {
+    const user = userEvent.setup();
+    const ids = Array.from({ length: 12 }, (_, index) => `C${index}-USD`);
+    renderWatchlist(ids);
+    expect(screen.getByText('Watchlist (12)')).toBeInTheDocument();
+    expect(screen.getByText('/ 2')).toBeInTheDocument();
+    expect(screen.getAllByTestId('watchlist-row')).toHaveLength(10);
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }));
+    const rows = screen.getAllByTestId('watchlist-row');
+    expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual(['C10-USD details', 'C11-USD details']);
+    expect(screen.getByRole('textbox', { name: 'Page' })).toHaveValue('2');
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
+
+    await user.click(screen.getByRole('textbox', { name: 'Page' }));
+    await user.keyboard('3');
+    expect(screen.getByRole('textbox', { name: 'Page' })).toHaveValue('2');
+    await user.keyboard('{Backspace}1');
+    await user.tab();
+    expect(screen.getAllByTestId('watchlist-row')).toHaveLength(10);
+  });
+
   it('opens the instrument details when a row is clicked', async () => {
     const user = userEvent.setup();
     renderWatchlist(['BTC-USD', 'ETH-USD']);
