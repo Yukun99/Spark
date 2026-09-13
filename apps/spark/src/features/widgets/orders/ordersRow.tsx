@@ -2,7 +2,12 @@ import { ClearButton } from '@/components/buttons/clearButton';
 import { TransactionTypeDisplay } from '@/components/transactionTypeDisplay';
 import { FreshnessGlow } from '@/features/widgets/freshnessGlow';
 import type { OrderRow } from '@/features/widgets/orders/hooks/useOrdersWidget';
-import { STRIP_TEXT_PX, stripHeadingSx, ValueChip, ValueStrip } from '@/features/widgets/valueStrip';
+import {
+  STRIP_TEXT_PX,
+  stripHeadingSx,
+  ValueChip,
+  ValueStrip,
+} from '@/features/widgets/valueStrip';
 import type { OrderSort, OrderSortColumn, SortDirection } from '@/store/ordersSlice';
 import { theme as colours, gray } from '@/styles/palette';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -70,8 +75,8 @@ const FillBar = ({ fraction }: FillBarProps) => (
       height: FILL_BAR_PX,
       borderRadius: FILL_BAR_PX / 2,
       overflow: 'hidden',
-      bgcolor: colours.navy,
-      ...theme.applyStyles('dark', { bgcolor: colours.cream }),
+      bgcolor: colours.cream,
+      ...theme.applyStyles('dark', { bgcolor: colours.navy }),
     })}
   >
     <Box
@@ -158,7 +163,10 @@ const SortGlyph = ({ direction }: SortGlyphProps) => (
     {direction !== 'desc' && <ArrowDropUpIcon sx={{ fontSize: SORT_ICON_PX }} />}
     {direction !== 'asc' && (
       <ArrowDropDownIcon
-        sx={{ fontSize: SORT_ICON_PX, ...(direction === null && { mt: `${-SORT_STACK_OVERLAP_PX}px` }) }}
+        sx={{
+          fontSize: SORT_ICON_PX,
+          ...(direction === null && { mt: `${-SORT_STACK_OVERLAP_PX}px` }),
+        }}
       />
     )}
   </Box>
