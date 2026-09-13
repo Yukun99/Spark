@@ -54,6 +54,28 @@ describe('LoginPage', () => {
     expect(submit).toBeEnabled();
   });
 
+  it('drops typed spaces with a warning and caps both fields at 32 characters', async () => {
+    const user = userEvent.setup();
+    renderAt('/login');
+    expect(field('Username')).toHaveAttribute('maxlength', '32');
+    expect(field('Password')).toHaveAttribute('maxlength', '32');
+
+    await user.type(field('Username'), 'yukun ');
+    expect(field('Username')).toHaveValue('yukun');
+    expect(screen.getByText('Spaces are not allowed')).toBeInTheDocument();
+    await user.type(field('Username'), 'x');
+    expect(field('Username')).toHaveValue('yukunx');
+    expect(screen.queryByText('Spaces are not allowed')).not.toBeInTheDocument();
+
+    await user.type(field('Password'), 'pass word ');
+    expect(field('Password')).toHaveValue('password');
+    expect(screen.getByText('Spaces are not allowed')).toBeInTheDocument();
+    await user.paste('12345678901234567890123456789');
+    expect(field('Password')).toHaveValue('password123456789012345678901234');
+    expect(screen.queryByText('Spaces are not allowed')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled();
+  });
+
   it('signs in, stores the token and moves to the dashboard', async () => {
     const user = userEvent.setup();
     const store = renderAt('/login');

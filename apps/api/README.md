@@ -17,7 +17,8 @@ Live URL: https://spark.yukunxu.com/api
 Open orders progress by wall-clock in 5 s steps whenever they are read (`Execution.php`):
 `pending` → `fulfilling` after one step, then market orders fill 30–60 % per step, limit 10–30 %,
 FOK all at once, until `fulfilled`. Existing databases need `migrations/2026-09-13-orders-ticked-at.sql`
-and `migrations/2026-09-13-orders-seq.sql` (insertion order, the sort tiebreak).
+and `migrations/2026-09-13-orders-seq.sql` (insertion order, the sort tiebreak), plus
+`migrations/2026-09-13-users-username-check.sql` (username format enforced by the table).
 
 ## Endpoints
 
@@ -26,7 +27,7 @@ All bodies and responses are JSON. Everything except `/auth/register` and `/auth
 
 | Method | Path                  | Body → Response                                     |
 |--------|-----------------------|-----------------------------------------------------|
-| POST   | `/auth/register`      | `{username, password}` → `{token, user}` (201)      |
+| POST   | `/auth/register`      | `{username, password}` → `{token, user}` (201); username 3–32 letters/digits/underscores, password 8–32 characters, no spaces in either |
 | POST   | `/auth/login`         | `{username, password}` → `{token, user}`            |
 | POST   | `/auth/logout`        | → 204                                               |
 | GET    | `/auth/me`            | → `{id, username}`                                  |

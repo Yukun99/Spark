@@ -11,8 +11,7 @@ final class Auth
     private const USERNAME_MAX = 32;
     private const USERNAME_PATTERN = '/^[A-Za-z0-9_]{3,32}$/';
     private const PASSWORD_MIN = 8;
-    /** bcrypt ignores anything past 72 bytes. */
-    private const PASSWORD_MAX = 72;
+    private const PASSWORD_MAX = 32;
 
     public static function register(): void
     {
@@ -83,12 +82,20 @@ final class Auth
     {
         $body = Http::body();
         $username = Validate::string($body, 'username', self::USERNAME_MAX, self::USERNAME_PATTERN);
-        $password = $body['password'] ?? null;
+        return [$username, self::password($body['password'] ?? null)];
+    }
+
+    /** 8 to 32 bytes with no whitespace, mirroring the login form. */
+    public static function password(mixed $password): string
+    {
         $length = is_string($password) ? strlen($password) : 0;
         if ($length < self::PASSWORD_MIN || $length > self::PASSWORD_MAX) {
             throw new ApiError(400, sprintf('password must be %d to %d characters', self::PASSWORD_MIN, self::PASSWORD_MAX));
         }
-        return [$username, $password];
+        if (preg_match('/\s/', $password)) {
+            throw new ApiError(400, 'password cannot contain spaces');
+        }
+        return $password;
     }
 
     private static function session(int $userId, string $username): array

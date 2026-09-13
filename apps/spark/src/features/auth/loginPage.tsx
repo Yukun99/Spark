@@ -1,7 +1,7 @@
 import { ClearButton } from '@/components/buttons/clearButton';
 import { FilledButton } from '@/components/buttons/filledButton';
 import { captionProps } from '@/components/forms/captionProps';
-import { useLoginPage, type LoginMode } from '@/features/auth/hooks/useLoginPage';
+import { FIELD_MAX, useLoginPage, type LoginMode } from '@/features/auth/hooks/useLoginPage';
 import { theme as colours } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import Box from '@mui/material/Box';
@@ -67,7 +67,10 @@ export const LoginPage = ({ mode }: LoginPageProps) => {
           onChange={(event) => setUsername(event.target.value)}
           error={usernameError !== null}
           helperText={usernameError ?? ' '}
-          slotProps={{ ...captionProps(usernameError), htmlInput: { autoComplete: 'username' } }}
+          slotProps={{
+            ...captionProps(usernameError),
+            htmlInput: { autoComplete: 'username', maxLength: FIELD_MAX },
+          }}
           autoFocus
           size='small'
         />
@@ -80,7 +83,10 @@ export const LoginPage = ({ mode }: LoginPageProps) => {
           helperText={passwordError ?? ' '}
           slotProps={{
             ...captionProps(passwordError),
-            htmlInput: { autoComplete: mode === 'login' ? 'current-password' : 'new-password' },
+            htmlInput: {
+              autoComplete: mode === 'login' ? 'current-password' : 'new-password',
+              maxLength: FIELD_MAX,
+            },
           }}
           size='small'
         />
@@ -94,7 +100,7 @@ export const LoginPage = ({ mode }: LoginPageProps) => {
             helperText={confirmPasswordError ?? ' '}
             slotProps={{
               ...captionProps(confirmPasswordError),
-              htmlInput: { autoComplete: 'new-password' },
+              htmlInput: { autoComplete: 'new-password', maxLength: FIELD_MAX },
             }}
             size='small'
           />

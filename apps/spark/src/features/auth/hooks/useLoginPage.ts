@@ -2,7 +2,7 @@ import { useSession } from '@/features/auth/hooks/useSession';
 import { login, register } from '@/store/authSlice';
 import { useAppDispatch } from '@/store/hooks';
 import { showNotice } from '@/store/noticeSlice';
-import { useCallback, useState, type FormEvent } from 'react';
+import { useCallback, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export type LoginMode = 'login' | 'register';
@@ -34,9 +34,11 @@ export type UseLoginPageResult = {
 };
 
 /** Mirrors the API's rules so a bad value never leaves the browser. */
-const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,32}$/;
+export const FIELD_MAX = 32;
+const USERNAME_MIN = 3;
+const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/;
 const PASSWORD_MIN = 8;
-const PASSWORD_MAX = 72;
+const SPACE_ERROR = 'Spaces are not allowed';
 
 const COPY = {
   login: {
@@ -55,15 +57,29 @@ const COPY = {
   },
 } as const;
 
-export const validateUsername = (username: string) =>
-  USERNAME_PATTERN.test(username) ? null : '3 to 32 letters, digits or underscores';
+export const validateUsername = (username: string) => {
+  if (username.length > FIELD_MAX) return `At most ${FIELD_MAX} characters`;
+  if (username.length < USERNAME_MIN || !USERNAME_PATTERN.test(username)) {
+    return `${USERNAME_MIN} to ${FIELD_MAX} letters, digits or underscores`;
+  }
+  return null;
+};
 
 export const validatePassword = (password: string) => {
   const bytes = new TextEncoder().encode(password).length;
   if (bytes < PASSWORD_MIN) return `At least ${PASSWORD_MIN} characters`;
-  if (bytes > PASSWORD_MAX) return `At most ${PASSWORD_MAX} characters`;
+  if (bytes > FIELD_MAX) return `At most ${FIELD_MAX} characters`;
   return null;
 };
+
+/** Drops spaces from typed or pasted input; `spaced` says whether any were dropped. */
+const stripSpaces = (value: string) => {
+  const stripped = value.replace(/\s/g, '');
+  return { stripped, spaced: stripped !== value };
+};
+
+type Field = 'username' | 'password' | 'confirm';
+const untouched: Record<Field, boolean> = { username: false, password: false, confirm: false };
 
 export const useLoginPage = ({ mode }: UseLoginPageParams): UseLoginPageResult => {
   const { status } = useSession();
@@ -72,21 +88,23 @@ export const useLoginPage = ({ mode }: UseLoginPageParams): UseLoginPageResult =
   const [username, setUsernameState] = useState('');
   const [password, setPasswordState] = useState('');
   const [confirmPassword, setConfirmPasswordState] = useState('');
-  const [touched, setTouched] = useState({ username: false, password: false, confirm: false });
+  const [touched, setTouched] = useState(untouched);
+  /** Fields whose last edit contained a space; the warning shows until the next clean edit. */
+  const [spaced, setSpaced] = useState(untouched);
   const [submitting, setSubmitting] = useState(false);
 
-  const setUsername = useCallback((value: string) => {
-    setTouched((prev) => ({ ...prev, username: true }));
-    setUsernameState(value);
-  }, []);
-  const setPassword = useCallback((value: string) => {
-    setTouched((prev) => ({ ...prev, password: true }));
-    setPasswordState(value);
-  }, []);
-  const setConfirmPassword = useCallback((value: string) => {
-    setTouched((prev) => ({ ...prev, confirm: true }));
-    setConfirmPasswordState(value);
-  }, []);
+  const setter = useCallback(
+    (field: Field, set: (value: string) => void) => (value: string) => {
+      const next = stripSpaces(value);
+      setTouched((prev) => ({ ...prev, [field]: true }));
+      setSpaced((prev) => ({ ...prev, [field]: next.spaced }));
+      set(next.stripped);
+    },
+    [],
+  );
+  const setUsername = useMemo(() => setter('username', setUsernameState), [setter]);
+  const setPassword = useMemo(() => setter('password', setPasswordState), [setter]);
+  const setConfirmPassword = useMemo(() => setter('confirm', setConfirmPasswordState), [setter]);
 
   const usernameInvalid = validateUsername(username);
   const passwordInvalid = validatePassword(password);
@@ -123,9 +141,9 @@ export const useLoginPage = ({ mode }: UseLoginPageParams): UseLoginPageResult =
     setUsername,
     setPassword,
     setConfirmPassword,
-    usernameError: touched.username ? usernameInvalid : null,
-    passwordError: touched.password ? passwordInvalid : null,
-    confirmPasswordError: touched.confirm ? confirmInvalid : null,
+    usernameError: spaced.username ? SPACE_ERROR : touched.username ? usernameInvalid : null,
+    passwordError: spaced.password ? SPACE_ERROR : touched.password ? passwordInvalid : null,
+    confirmPasswordError: spaced.confirm ? SPACE_ERROR : touched.confirm ? confirmInvalid : null,
     submitting,
     canSubmit,
     signedIn: status === 'signedIn',
