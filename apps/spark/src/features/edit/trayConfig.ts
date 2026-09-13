@@ -1,5 +1,5 @@
 // Relative import: `appShell.ts` pulls this into the Vite config, where the `@/` alias is absent.
-import { TILE_GAP_PX } from '../grid/gridConfig';
+import { TILE_GAP_PX } from '../grid/gridConfig.ts';
 
 /** Icon size for the buttons in the edit tray; smaller than the 24px save button icon. */
 export const TRAY_ICON_PX = 20;

@@ -3,7 +3,12 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite';
 // noinspection ES6PreferShortImport
-import { appShellCss, appShellHtml, colorSchemeScript, shellModeScript } from './src/styles/appShell';
+import {
+  appShellCss,
+  appShellHtml,
+  colorSchemeScript,
+  shellModeScript,
+} from './src/styles/appShell.ts';
 
 const DISPLAY_FONT_FILE = /source-serif-4-latin-wght-normal.*\.woff2$/;
 

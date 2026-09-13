@@ -1,6 +1,6 @@
 // Relative imports: this file is bundled into the Vite config, which has no `@/` alias.
 // noinspection ES6PreferShortImport
-import { ACTION_COLUMN_WIDTH_PX } from '../features/edit/trayConfig';
+import { ACTION_COLUMN_WIDTH_PX } from '../features/edit/trayConfig.ts';
 // noinspection ES6PreferShortImport
 import {
   BANNER_HEIGHT,
@@ -8,12 +8,12 @@ import {
   GRID_ROWS,
   TILE_GAP_PX,
   TILE_RADIUS_PX,
-} from '../features/grid/gridConfig';
+} from '../features/grid/gridConfig.ts';
 // noinspection ES6PreferShortImport
-import { SEED_WIDGETS } from '../store/widgetSeed';
-import { fonts } from './fonts';
-import { gray, theme as colours } from './palette';
-import { shadows } from './shadows';
+import { SEED_WIDGETS } from '../store/widgetSeed.ts';
+import { fonts } from './fonts.ts';
+import { gray, theme as colours } from './palette.ts';
+import { shadows } from './shadows.ts';
 
 export const APP_TITLE = 'Trading App';
 

@@ -1,6 +1,6 @@
 // Relative, type-only import: `appShell.ts` pulls this file into the Vite config, which has no
 // `@/` alias and must not bundle Redux Toolkit.
-import type { Widget } from './widgetsSlice';
+import type { Widget } from './widgetsSlice.ts';
 
 export const DEFAULT_PRODUCT_ID = 'BTC-USD';
 export const DEFAULT_WATCHLIST_NAME = 'Watchlist';
