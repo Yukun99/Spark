@@ -21,7 +21,10 @@ describe('WidgetGrid', () => {
         <GridWidget layout={{ row: 1, col: 1, colSpan: 2 }} />
       </WidgetGrid>,
     );
-    expect(screen.getAllByTestId('grid-placeholder')).toHaveLength(GRID_ROWS * GRID_COLS - 2);
+    const placeholders = screen.getAllByTestId('grid-placeholder');
+    expect(placeholders).toHaveLength(GRID_ROWS * GRID_COLS - 2);
+    expect(placeholders[0]).toHaveTextContent('No Widget Here!');
+    expect(placeholders[0].querySelector('svg')).toHaveAttribute('data-testid', 'DeveloperBoardOffIcon');
   });
 
   it('places a widget on the requested cells', () => {
