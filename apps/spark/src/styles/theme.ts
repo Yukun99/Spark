@@ -1,10 +1,19 @@
 import { fonts } from '@/styles/fonts';
 import { gray, theme as colours } from '@/styles/palette';
-import { createTheme } from '@mui/material/styles';
+import { createTheme, type Theme } from '@mui/material/styles';
+import '@mui/x-date-pickers/themeAugmentation';
 
 const primary = { main: colours.purple, contrastText: colours.cream };
 const common = { black: colours.black, white: colours.white };
 const DIALOG_BACKDROP_BLUR_PX = 4;
+
+/** Focused outline in the theme's text colour; `outline` is the notched-outline class of the input. */
+const focusedOutline =
+  (outline: string) =>
+  ({ theme }: { theme: Theme }) => ({
+    [`&.Mui-focused:not(.Mui-error) .${outline}`]: { borderColor: colours.navy },
+    ...theme.applyStyles('dark', { [`&.Mui-focused:not(.Mui-error) .${outline}`]: { borderColor: colours.cream } }),
+  });
 
 export const theme = createTheme({
   cssVariables: { colorSchemeSelector: 'data-mui-color-scheme' },
@@ -45,14 +54,10 @@ export const theme = createTheme({
     },
     // Focused fields and group labels use the theme's text colour so focus is unmistakable.
     MuiOutlinedInput: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: colours.navy },
-          ...theme.applyStyles('dark', {
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: colours.cream },
-          }),
-        }),
-      },
+      styleOverrides: { root: focusedOutline('MuiOutlinedInput-notchedOutline') },
+    },
+    MuiPickersOutlinedInput: {
+      styleOverrides: { root: focusedOutline('MuiPickersOutlinedInput-notchedOutline') },
     },
     MuiFormLabel: {
       styleOverrides: {
