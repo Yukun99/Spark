@@ -68,7 +68,7 @@ const TYPE_RANK = ['limit', 'market'];
 /** Mirrors `OrderSort::KEYS`: ascending keys per column; the direction flips them all. */
 const SORT_KEYS: Record<OrderSortColumn, SortKey[]> = {
   instrument: [(order) => order.productId],
-  status: [fill, (order) => ORDER_STATUSES.indexOf(order.status)],
+  status: [(order) => ORDER_STATUSES.indexOf(order.status), fill],
   price: [(order) => order.price, (order) => TYPE_RANK.indexOf(order.type)],
   fulfilment: [fill, (order) => order.size, (order) => order.provider],
   placedAt: [(order) => order.placedAt],

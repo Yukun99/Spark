@@ -9,7 +9,7 @@ import { ResizeHandles } from '@/features/widgets/resizeHandles';
 import { LABEL_FONT_PX, LABEL_LINE_PX, WidgetLabel } from '@/features/widgets/widgetLabel';
 import { useEditMode } from '@/hooks/useEditMode';
 import type { Widget } from '@/store/widgetsSlice';
-import { theme as colours } from '@/styles/palette';
+import { theme as colours, gray } from '@/styles/palette';
 import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
@@ -19,6 +19,7 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import type { Theme } from '@mui/material/styles';
 import { useCallback, type MouseEvent, type ReactNode } from 'react';
 
 const CARD_PADDING_PX = 16;
@@ -31,10 +32,12 @@ export type WidgetFrameProps = {
   onExpand?: () => void;
   /** Refetches the widget's data; shows a corner button outside edit mode. */
   onRefresh?: () => void;
-  /** Opens a filter for the widget's data. */
+  /** Opens a filter for the widget's data; the button keeps the text colour while `filterActive`. */
   onFilter?: () => void;
-  /** Clears the widget's column sort; its button sits left of the filter button. */
+  filterActive?: boolean;
+  /** Clears the widget's column sort; its button sits left of the filter button, lit while `sortActive`. */
   onClearSort?: () => void;
+  sortActive?: boolean;
   tickAt?: number;
   children: ReactNode;
 };
@@ -44,25 +47,41 @@ type CornerButtonProps = {
   onClick: (event: MouseEvent) => void;
   /** Slot from the right edge: 0 is the corner, 1 sits left of it. */
   slot?: number;
+  /** Set when the button's feature is in use; undefined for plain actions. */
+  active?: boolean;
   children: ReactNode;
 };
 
 const CORNER_GAP_PX = 4;
 
+/** Gray at rest, the theme's text colour on hover or while active (dark overrides win over plain `sx`). */
+const cornerColourSx = (active: boolean) => (theme: Theme) => ({
+  color: active ? colours.navy : gray[50],
+  '&:hover': { color: colours.navy },
+  ...theme.applyStyles('dark', {
+    color: active ? colours.cream : gray[50],
+    '&:hover': { color: colours.cream },
+  }),
+});
+
 /** Round icon button along the card's top-right edge, sized to the title line. */
-const CornerButton = ({ label, onClick, slot = 0, children }: CornerButtonProps) => (
+const CornerButton = ({ label, onClick, slot = 0, active, children }: CornerButtonProps) => (
   <ClearButton
     rounded
     aria-label={label}
+    aria-pressed={active}
     onClick={onClick}
-    sx={{
-      position: 'absolute',
-      top: 0,
-      right: slot * (LABEL_LINE_PX + CORNER_GAP_PX),
-      p: 0,
-      width: LABEL_LINE_PX,
-      height: LABEL_LINE_PX,
-    }}
+    sx={[
+      cornerColourSx(active === true),
+      {
+        position: 'absolute',
+        top: 0,
+        right: slot * (LABEL_LINE_PX + CORNER_GAP_PX),
+        p: 0,
+        width: LABEL_LINE_PX,
+        height: LABEL_LINE_PX,
+      },
+    ]}
   >
     {children}
   </ClearButton>
@@ -82,7 +101,9 @@ export const WidgetFrame = ({
   onExpand,
   onRefresh,
   onFilter,
+  filterActive = false,
   onClearSort,
+  sortActive = false,
   tickAt,
   children,
 }: WidgetFrameProps) => {
@@ -216,12 +237,18 @@ export const WidgetFrame = ({
                 label={`Filter ${name.toLowerCase()}`}
                 onClick={onFilterClick}
                 slot={filterSlot}
+                active={filterActive}
               >
                 <FilterAltIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </CornerButton>
             )}
             {onClearSort !== undefined && (
-              <CornerButton label='Cancel sort' onClick={onClearSortClick} slot={clearSortSlot}>
+              <CornerButton
+                label='Cancel sort'
+                onClick={onClearSortClick}
+                slot={clearSortSlot}
+                active={sortActive}
+              >
                 <FilterListOffIcon sx={{ fontSize: LABEL_FONT_PX }} />
               </CornerButton>
             )}

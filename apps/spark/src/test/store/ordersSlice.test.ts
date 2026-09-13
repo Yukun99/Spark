@@ -195,9 +195,9 @@ describe('order sort', () => {
     expect(await sorted('price', 'asc')).toEqual(['DOGE-USD', 'ADA-USD', 'XRP-USD', 'DOT-USD', 'AVAX-USD', 'LINK-USD', 'LTC-USD', 'SOL-USD', 'ETH-USD', 'BTC-USD']);
     expect(await sorted('placedAt', 'asc')).toEqual(orders.map((order) => order.productId));
     expect(fake.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=placedAt&direction=asc');
-    // 0% filled: SOL, ADA, DOT (pending, pending, fulfilling), ties by insertion order.
-    expect((await sorted('status', 'asc')).slice(0, 3)).toEqual(['SOL-USD', 'ADA-USD', 'DOT-USD']);
-    expect((await sorted('status', 'desc')).slice(0, 3)).toEqual(['LINK-USD', 'XRP-USD', 'BTC-USD']);
+    // pending first (SOL, ADA by insertion), then fulfilling by fill share (DOT 0%, ETH 37.5%, ...).
+    expect((await sorted('status', 'asc')).slice(0, 4)).toEqual(['SOL-USD', 'ADA-USD', 'DOT-USD', 'DOGE-USD']);
+    expect((await sorted('status', 'desc')).slice(0, 4)).toEqual(['LTC-USD', 'LINK-USD', 'XRP-USD', 'BTC-USD']);
     // 0% filled: DOT (size 300), ADA (800), SOL (25) → smaller total first.
     expect((await sorted('fulfilment', 'asc')).slice(0, 3)).toEqual(['SOL-USD', 'DOT-USD', 'ADA-USD']);
     expect((await sorted('fulfilment', 'desc')).slice(0, 3)).toEqual(['XRP-USD', 'LINK-USD', 'BTC-USD']);

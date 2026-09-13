@@ -56,8 +56,6 @@ export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'he
   name: string;
   /** Card title: the name with the number of orders matching the filter. */
   title: string;
-  /** Small line under the title naming the active filter and sort, if any. */
-  caption?: string;
   /** The current page in the server's order. */
   rows: OrderRow[];
   page: number;
@@ -68,6 +66,7 @@ export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'he
   filtering: boolean;
   /** Filter currently applied on the server; prefills the filter dialog. */
   filter: OrderFilter;
+  filterActive: boolean;
   /** Column sort applied on the server; null shows newest first. */
   sort: OrderSort | null;
   /** Last order an action was opened on; stays set so a closing dialog keeps its text. */
@@ -87,12 +86,6 @@ export type UseOrdersWidgetResult = Pick<UsePageSizeResult, 'containerRef' | 'he
   sortBy: (column: OrderSortColumn) => void;
   clearSort: () => void;
   refresh: () => void;
-};
-
-const captionFor = (filterActive: boolean, sorted: boolean) => {
-  if (filterActive && sorted) return 'Filtered, sorted';
-  if (filterActive) return 'Filtered';
-  return sorted ? 'Sorted' : undefined;
 };
 
 const glowAt = (order: Order) => {
@@ -201,7 +194,6 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
   return {
     name: 'Orders',
     title: `Orders (${total})`,
-    caption: captionFor(filterActive, sort !== null),
     rows,
     page,
     pageCount,
@@ -213,6 +205,7 @@ export const useOrdersWidget = (widget: OrdersWidget): UseOrdersWidgetResult => 
     cancelling: dialog === 'cancel',
     filtering: dialog === 'filter',
     filter,
+    filterActive,
     sort,
     selected,
     orderForm: form,

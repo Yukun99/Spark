@@ -310,7 +310,7 @@ describe('OrdersWidget', () => {
     const user = userEvent.setup();
     const store = renderOrders();
     const filterButton = screen.getByRole('button', { name: 'Filter orders' });
-    expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
+    expect(filterButton).toHaveAttribute('aria-pressed', 'false');
 
     await user.click(filterButton);
     const dialog = await screen.findByRole('dialog');
@@ -323,7 +323,7 @@ describe('OrdersWidget', () => {
     expect(rowCells()[0][0]).toBe('LTC-USD');
     expect(store.getState().orders.filter).toEqual({ statuses: ['cancelled'] });
     expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&status=cancelled');
-    expect(screen.getByText('Filtered')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter orders' })).toHaveAttribute('aria-pressed', 'true');
 
     await user.click(screen.getByRole('button', { name: 'Filter orders' }));
     const reopened = await screen.findByRole('dialog');
@@ -332,7 +332,7 @@ describe('OrdersWidget', () => {
     expect(within(reopened).getByRole('checkbox', { name: 'Cancelled' })).not.toBeChecked();
     await user.click(within(reopened).getByRole('button', { name: 'Confirm' }));
     await waitFor(() => expect(rowCells()).toHaveLength(sampleOrders().length));
-    expect(screen.queryByText('Filtered')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter orders' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('sorts through the server by clicking a heading: ascending, descending, off', async () => {
@@ -346,14 +346,15 @@ describe('OrdersWidget', () => {
       expect(glyphs(heading(name))).toEqual(['ArrowDropUpIcon', 'ArrowDropDownIcon']);
     }
     expect(screen.queryByRole('button', { name: 'Actions' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Sorted')).not.toBeInTheDocument();
+    expect(pageButton('Cancel sort')).toHaveAttribute('aria-pressed', 'false');
+    expect(pageButton('Refresh orders')).not.toHaveAttribute('aria-pressed');
 
     await user.click(heading('Instrument'));
     await waitFor(() => expect(rowCells()[0][0]).toBe('ADA-USD'));
     expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10&sort=instrument&direction=asc');
     expect(heading('Instrument')).toHaveAttribute('aria-sort', 'ascending');
     expect(glyphs(heading('Instrument'))).toEqual(['ArrowDropUpIcon']);
-    expect(screen.getByText('Sorted')).toBeInTheDocument();
+    expect(pageButton('Cancel sort')).toHaveAttribute('aria-pressed', 'true');
 
     await user.click(heading('Instrument'));
     await waitFor(() => expect(rowCells()[0][0]).toBe('XRP-USD'));
@@ -373,7 +374,7 @@ describe('OrdersWidget', () => {
     await waitFor(() => expect(rowCells()[0][0]).toBe('LTC-USD'));
     expect(fakeApi.calls.at(-1)?.path).toBe('/orders?page=1&pageSize=10');
     expect(heading('Price')).toHaveAttribute('aria-sort', 'none');
-    expect(screen.queryByText('Sorted')).not.toBeInTheDocument();
+    expect(pageButton('Cancel sort')).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('clears the sort from the corner button, going back to the first page', async () => {

@@ -20,7 +20,7 @@ final class OrderSort
     /** Sort keys per column in ascending order; the direction flips every key. */
     private const KEYS = [
         'instrument' => ['product_id'],
-        'status' => [self::FILL, self::STATUS_RANK],
+        'status' => [self::STATUS_RANK, self::FILL],
         'price' => ['price', self::TYPE_RANK],
         'fulfilment' => [self::FILL, 'size', 'provider'],
         'placedAt' => ['placed_at'],

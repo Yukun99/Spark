@@ -118,17 +118,20 @@ const HEADINGS: Heading[] = [
 /** Heading line height in px; the sort buttons match it so the header keeps its height. */
 const HEADING_LINE_PX = Math.round(stripHeadingSx.fontSize * 1.5);
 const SORT_ICON_PX = STRIP_TEXT_PX + 4;
-/** Overlap that puts the down arrow's glyph right under the up arrow's; glyphs fill only the middle of the icon box. */
-const SORT_STACK_OVERLAP_PX = (SORT_ICON_PX * 19) / 24;
+const SORT_ARROW_GAP_PX = 2;
+/** Pulls the down arrow up so its glyph sits `SORT_ARROW_GAP_PX` under the up arrow's; the glyphs are 4/24 of the box apart when the boxes coincide. */
+const SORT_STACK_OVERLAP_PX = (SORT_ICON_PX * 20) / 24 - SORT_ARROW_GAP_PX;
 
-const sortButtonSx = {
+/** Heading colour in both modes; the button's own dark-mode text colour would win otherwise. */
+const sortButtonSx = (theme: Theme) => ({
   ...stripHeadingSx,
   p: 0,
   minHeight: 0,
   lineHeight: `${HEADING_LINE_PX}px`,
   justifySelf: 'start',
   gap: 0.25,
-} as const;
+  ...theme.applyStyles('dark', { color: stripHeadingSx.color }),
+});
 
 /** Sorted column in the theme's text colour, like a focused field, plus an underline. */
 const activeSortSx = (theme: Theme) => ({

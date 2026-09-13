@@ -23,7 +23,6 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
   const {
     name,
     title,
-    caption,
     rows,
     page,
     pageCount,
@@ -35,6 +34,7 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
     cancelling,
     filtering,
     filter,
+    filterActive,
     sort,
     selected,
     orderForm,
@@ -60,9 +60,11 @@ export const OrdersWidget = ({ widget }: OrdersWidgetProps) => {
         onDelete={openDelete}
         onRefresh={refresh}
         onFilter={openFilter}
+        filterActive={filterActive}
         onClearSort={clearSort}
+        sortActive={sort !== null}
       >
-        <WidgetLabel caption={caption}>{title}</WidgetLabel>
+        <WidgetLabel>{title}</WidgetLabel>
         <WidgetScrollArea ref={containerRef}>
           {rows.length === 0 ? (
             <Typography sx={{ fontSize: STRIP_TEXT_PX, color: gray[50], textAlign: 'center' }}>

@@ -27,8 +27,8 @@ $check('blank values count as unset', OrderSort::fromQuery(['sort' => '', 'direc
 $check('direction alone changes nothing', OrderSort::fromQuery(['direction' => 'desc']), 'ORDER BY placed_at DESC, seq DESC');
 $check('instrument defaults to ascending', OrderSort::fromQuery(['sort' => 'instrument']), 'ORDER BY product_id ASC, seq ASC');
 $check('instrument descending', OrderSort::fromQuery(['sort' => 'instrument', 'direction' => 'desc']), 'ORDER BY product_id DESC, seq DESC');
-$check('status: fill share, then status order', OrderSort::fromQuery(['sort' => 'status', 'direction' => 'asc']), "ORDER BY $fill ASC, $statusRank ASC, seq ASC");
-$check('status descending flips every key', OrderSort::fromQuery(['sort' => 'status', 'direction' => 'desc']), "ORDER BY $fill DESC, $statusRank DESC, seq DESC");
+$check('status: status order, then fill share', OrderSort::fromQuery(['sort' => 'status', 'direction' => 'asc']), "ORDER BY $statusRank ASC, $fill ASC, seq ASC");
+$check('status descending flips every key', OrderSort::fromQuery(['sort' => 'status', 'direction' => 'desc']), "ORDER BY $statusRank DESC, $fill DESC, seq DESC");
 $check('price: price, then limit before market', OrderSort::fromQuery(['sort' => 'price']), "ORDER BY price ASC, $typeRank ASC, seq ASC");
 $check('fulfilment: fill share, size, provider', OrderSort::fromQuery(['sort' => 'fulfilment']), "ORDER BY $fill ASC, size ASC, provider ASC, seq ASC");
 $check('fulfilment descending', OrderSort::fromQuery(['sort' => 'fulfilment', 'direction' => 'desc']), "ORDER BY $fill DESC, size DESC, provider DESC, seq DESC");
