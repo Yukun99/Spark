@@ -61,7 +61,7 @@ const multilineCellSx = {
 
 type FillBarProps = { fraction: number };
 
-/** Thin track in the opposite theme colour with the filled share in the card colour. */
+/** Thin track in the opposite theme colour with the filled share in purple. */
 const FillBar = ({ fraction }: FillBarProps) => (
   <Box
     role='progressbar'
@@ -75,13 +75,12 @@ const FillBar = ({ fraction }: FillBarProps) => (
     })}
   >
     <Box
-      sx={(theme) => ({
+      sx={{
         height: FILL_BAR_PX,
         borderRadius: FILL_BAR_PX / 2,
         width: `${fraction * 100}%`,
-        bgcolor: colours.cream,
-        ...theme.applyStyles('dark', { bgcolor: colours.navy }),
-      })}
+        bgcolor: colours.purple,
+      }}
     />
   </Box>
 );
