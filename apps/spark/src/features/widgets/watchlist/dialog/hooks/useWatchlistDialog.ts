@@ -5,6 +5,7 @@ import {
 } from '@/connections/hooks/useCoinbaseProducts';
 import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';
 import { useRowReorder, type ReorderHandleProps } from '@/features/widgets/watchlist/dialog/hooks/useRowReorder';
+import { revealInScroller } from '@/features/widgets/watchlist/dialog/scrollReveal';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 
 export type WatchlistRow = {
@@ -145,7 +146,8 @@ export const useWatchlistDialog = ({
   const previousCount = useRef(rows.length);
   useEffect(() => {
     if (rows.length > previousCount.current) {
-      rowElement(rows.length - 1)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      const element = rowElement(rows.length - 1);
+      if (element !== undefined) revealInScroller(element);
     }
     previousCount.current = rows.length;
   }, [rowElement, rows.length]);

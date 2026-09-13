@@ -181,16 +181,32 @@ describe('WatchlistWidget', () => {
 
   it('scrolls the new blank row into view once the last one is filled', async () => {
     const user = userEvent.setup();
-    const scrollIntoView = vi.fn();
-    Element.prototype.scrollIntoView = scrollIntoView;
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(performance.now() + 1000);
+      return 0;
+    });
     const { rows } = await openDialog(user, ['BTC-USD']);
-    expect(scrollIntoView).not.toHaveBeenCalled();
-
-    await user.type(rows()[1], 'eth');
-    await user.click(await screen.findByRole('option', { name: 'ETH-USD' }));
-    expect(rows()).toHaveLength(3);
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView.mock.instances[0]).toContainElement(rows()[2]);
+    const scroller = rows()[0].closest('[data-overlayscrollbars-initialize]') as HTMLElement;
+    scroller.style.overflowY = 'auto';
+    const VIEW_PX = 100;
+    const ROW_PX = 40;
+    const ROW_GAP_PX = 4;
+    // Rows are laid out 44px apart from the top of a 100px viewport; the third row overflows it.
+    const rects = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this === scroller) return { top: 0, bottom: VIEW_PX } as DOMRect;
+      const index = rows().findIndex((combobox) => combobox.closest('.MuiStack-root') === this);
+      const top = index * (ROW_PX + ROW_GAP_PX) - scroller.scrollTop;
+      return { top, bottom: top + ROW_PX } as DOMRect;
+    });
+    try {
+      await user.type(rows()[1], 'eth');
+      await user.click(await screen.findByRole('option', { name: 'ETH-USD' }));
+      expect(rows()).toHaveLength(3);
+      expect(scroller.scrollTop).toBe(2 * (ROW_PX + ROW_GAP_PX) + ROW_PX - VIEW_PX);
+    } finally {
+      rects.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('reorders instruments by dragging their handles; the blank row has none', async () => {

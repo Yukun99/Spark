@@ -1,3 +1,4 @@
+import { scrollParent } from '@/features/widgets/watchlist/dialog/scrollReveal';
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 
 export type UseRowReorderParams = {
@@ -31,15 +32,6 @@ const SHIFT_TRANSITION = 'transform 150ms ease';
 /** Band inside the scroll container's edges where dragging scrolls it. */
 const SCROLL_EDGE_PX = 32;
 const SCROLL_MAX_PX_PER_FRAME = 12;
-
-/** Nearest ancestor that scrolls vertically, if any. */
-const scrollParent = (element: HTMLElement | null | undefined): HTMLElement | null => {
-  for (let node = element?.parentElement ?? null; node !== null; node = node.parentElement) {
-    const { overflowY } = getComputedStyle(node);
-    if (overflowY === 'auto' || overflowY === 'scroll') return node;
-  }
-  return null;
-};
 
 /** Scroll speed for a pointer at `clientY`: negative near the top edge, positive near the bottom. */
 const scrollSpeed = (scroller: HTMLElement, clientY: number) => {
