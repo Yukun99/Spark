@@ -5,7 +5,7 @@ import {
 } from '@/connections/hooks/useCoinbaseProducts';
 import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';
 import { useRowReorder, type ReorderHandleProps } from '@/features/widgets/watchlist/dialog/hooks/useRowReorder';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 
 export type WatchlistRow = {
   key: number;
@@ -34,6 +34,8 @@ export type UseWatchlistDialogResult = UseCoinbaseProductsResult & {
   handleFor: (index: number) => ReorderHandleProps | null;
   /** Index of the row being dragged, or null. */
   dragging: number | null;
+  /** Transform that moves the row with the pointer or slides it out of the way during a drag. */
+  rowStyle: (index: number) => CSSProperties | undefined;
   canConfirm: boolean;
   confirm: () => void;
 };
@@ -133,7 +135,7 @@ export const useWatchlistDialog = ({
     [rows],
   );
   const filledCount = rows.length - 1;
-  const { dragging, handleProps } = useRowReorder({ rowElement, count: filledCount, onMove: moveRow });
+  const { dragging, handleProps, rowStyle } = useRowReorder({ rowElement, count: filledCount, onMove: moveRow });
   const handleFor = useCallback(
     (index: number) => (index < filledCount ? handleProps(index) : null),
     [filledCount, handleProps],
@@ -170,6 +172,7 @@ export const useWatchlistDialog = ({
     registerRow,
     handleFor,
     dragging,
+    rowStyle,
     canConfirm,
     confirm,
   };

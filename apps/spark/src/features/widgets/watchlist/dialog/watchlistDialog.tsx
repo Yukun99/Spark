@@ -34,6 +34,7 @@ export const WatchlistDialog = ({ widget, onConfirm, onCancel }: WatchlistDialog
     registerRow,
     handleFor,
     dragging,
+    rowStyle,
     canConfirm,
     confirm,
   } = useWatchlistDialog({ widget, onConfirm });
@@ -68,6 +69,7 @@ export const WatchlistDialog = ({ widget, onConfirm, onCancel }: WatchlistDialog
             <WatchlistRowField
               key={row.key}
               ref={registerRow(row.key)}
+              style={rowStyle(index)}
               row={row}
               handle={handleFor(index)}
               dragging={dragging === index}

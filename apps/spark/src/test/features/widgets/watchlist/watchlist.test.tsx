@@ -203,22 +203,27 @@ describe('WatchlistWidget', () => {
 
     const ROW_PX = 40;
     const rowOf = (combobox: HTMLElement) => combobox.closest('[class*="MuiStack-root"]') as HTMLElement;
-    const layoutRows = () =>
-      rows().forEach((combobox, index) => {
-        vi.spyOn(rowOf(combobox), 'getBoundingClientRect').mockReturnValue({
-          top: index * ROW_PX,
-          bottom: (index + 1) * ROW_PX,
-        } as DOMRect);
-      });
-    layoutRows();
+    const values = () => rows().map((combobox) => (combobox as HTMLInputElement).value);
+    rows().forEach((combobox, index) => {
+      vi.spyOn(rowOf(combobox), 'getBoundingClientRect').mockReturnValue({
+        top: index * ROW_PX,
+        bottom: (index + 1) * ROW_PX,
+      } as DOMRect);
+    });
 
     fireEvent.pointerDown(handle('BTC-USD'), { button: 0, pointerId: 1, clientY: 20 });
     fireEvent.pointerMove(handle('BTC-USD'), { pointerId: 1, clientY: 60 });
-    expect(rows().map((combobox) => (combobox as HTMLInputElement).value)).toEqual(['ETH-USD', 'BTC-USD', 'SOL-USD', '']);
-    layoutRows();
+    expect(values()).toEqual(['BTC-USD', 'ETH-USD', 'SOL-USD', '']);
+    expect(rowOf(rows()[0])).toHaveStyle({ transform: 'translateY(40px)' });
+    expect(rowOf(rows()[1])).toHaveStyle({ transform: `translateY(${-ROW_PX}px)` });
+    expect(rowOf(rows()[2])).not.toHaveStyle({ transform: `translateY(${-ROW_PX}px)` });
+
     fireEvent.pointerMove(handle('BTC-USD'), { pointerId: 1, clientY: 500 });
-    expect(rows().map((combobox) => (combobox as HTMLInputElement).value)).toEqual(['ETH-USD', 'SOL-USD', 'BTC-USD', '']);
+    expect(rowOf(rows()[0])).toHaveStyle({ transform: `translateY(${2 * ROW_PX}px)` });
+    expect(rowOf(rows()[2])).toHaveStyle({ transform: `translateY(${-ROW_PX}px)` });
     fireEvent.pointerUp(handle('BTC-USD'), { pointerId: 1, clientY: 500 });
+    expect(values()).toEqual(['ETH-USD', 'SOL-USD', 'BTC-USD', '']);
+    expect(rowOf(rows()[0]).style.transform).toBe('');
 
     await user.click(confirm());
     expect(store.getState().widgets.items.find((item) => item.id === id)).toMatchObject({

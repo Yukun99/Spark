@@ -11,11 +11,12 @@ import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import type { Ref } from 'react';
+import type { CSSProperties, Ref } from 'react';
 
 export type WatchlistRowFieldProps = {
   row: WatchlistRow;
   ref?: Ref<HTMLDivElement>;
+  style?: CSSProperties;
   /** Drag handle handlers; omitted on the trailing blank row, which keeps the slot for alignment. */
   handle: ReorderHandleProps | null;
   dragging: boolean;
@@ -36,6 +37,7 @@ const HANDLE_ICON_PX = 20;
 export const WatchlistRowField = ({
   row,
   ref,
+  style,
   handle,
   dragging,
   products,
@@ -49,6 +51,7 @@ export const WatchlistRowField = ({
   return (
     <Stack
       ref={ref}
+      style={style}
       direction='row'
       spacing={0.5}
       sx={[{ alignItems: 'center', borderRadius: 1 }, ...(dragging ? [shadowSx('md')] : [])]}
