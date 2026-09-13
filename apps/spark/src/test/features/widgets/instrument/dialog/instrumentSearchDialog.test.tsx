@@ -46,6 +46,8 @@ describe('InstrumentSearchDialog', () => {
     const { onConfirm } = renderDialog();
 
     expect(await screen.findByRole('combobox')).toHaveValue('BTC-USD');
+    expect(screen.getByRole('combobox')).toHaveFocus();
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Confirm' }));
     expect(onConfirm).toHaveBeenCalledWith('BTC-USD');
   });

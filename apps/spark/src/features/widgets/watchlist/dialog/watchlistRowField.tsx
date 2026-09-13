@@ -1,15 +1,24 @@
 import { ClearButton } from '@/components/buttons/clearButton';
 import type { CoinbaseProduct } from '@/connections/coinbase';
 import { filterProducts } from '@/features/widgets/instrument/dialog/instrumentSearchField';
+import type { ReorderHandleProps } from '@/features/widgets/watchlist/dialog/hooks/useRowReorder';
 import type { WatchlistRow } from '@/features/widgets/watchlist/dialog/hooks/useWatchlistDialog';
+import { gray } from '@/styles/palette';
+import { shadowSx } from '@/styles/shadows';
 import CloseIcon from '@mui/icons-material/Close';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import type { Ref } from 'react';
 
 export type WatchlistRowFieldProps = {
   row: WatchlistRow;
+  ref?: Ref<HTMLDivElement>;
+  /** Drag handle handlers; omitted on the trailing blank row, which keeps the slot for alignment. */
+  handle: ReorderHandleProps | null;
+  dragging: boolean;
   products: CoinbaseProduct[];
   loading: boolean;
   error: string | null;
@@ -21,10 +30,14 @@ export type WatchlistRowFieldProps = {
 
 const REMOVE_ICON_PX = 16;
 const REMOVE_SLOT_PX = 28;
+const HANDLE_ICON_PX = 20;
 
 /** Compact free-text instrument search; the typed text is kept so it can be flagged on blur. */
 export const WatchlistRowField = ({
   row,
+  ref,
+  handle,
+  dragging,
   products,
   loading,
   error,
@@ -34,7 +47,27 @@ export const WatchlistRowField = ({
   onRemove,
 }: WatchlistRowFieldProps) => {
   return (
-    <Stack direction='row' spacing={0.5} sx={{ alignItems: 'center' }}>
+    <Stack
+      ref={ref}
+      direction='row'
+      spacing={0.5}
+      sx={[{ alignItems: 'center', borderRadius: 1 }, ...(dragging ? [shadowSx('md')] : [])]}
+    >
+      <Box
+        aria-label={handle === null ? undefined : `Reorder ${row.productId ?? row.input}`}
+        role={handle === null ? undefined : 'button'}
+        {...handle}
+        sx={{
+          width: HANDLE_ICON_PX,
+          flexShrink: 0,
+          display: 'flex',
+          color: gray[50],
+          cursor: handle === null ? undefined : dragging ? 'grabbing' : 'grab',
+          touchAction: 'none',
+        }}
+      >
+        {handle !== null && <DragIndicatorIcon sx={{ fontSize: HANDLE_ICON_PX }} />}
+      </Box>
       <Autocomplete
         freeSolo
         forcePopupIcon

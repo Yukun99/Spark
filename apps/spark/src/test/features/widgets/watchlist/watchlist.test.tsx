@@ -4,7 +4,7 @@ import { WatchlistWidget } from '@/features/widgets/watchlist/watchlist';
 import { toggleEditMode } from '@/store/layoutSlice';
 import { createAppStore } from '@/store/store';
 import { addWidget, removeWidget, setWatchlist } from '@/store/widgetsSlice';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -176,6 +176,53 @@ describe('WatchlistWidget', () => {
     expect(store.getState().widgets.items.find((item) => item.id === id)).toMatchObject({
       name: 'Majors',
       productIds: ['BTC-USD', 'ETH-USD'],
+    });
+  });
+
+  it('scrolls the new blank row into view once the last one is filled', async () => {
+    const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    const { rows } = await openDialog(user, ['BTC-USD']);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    await user.type(rows()[1], 'eth');
+    await user.click(await screen.findByRole('option', { name: 'ETH-USD' }));
+    expect(rows()).toHaveLength(3);
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.instances[0]).toContainElement(rows()[2]);
+  });
+
+  it('reorders instruments by dragging their handles; the blank row has none', async () => {
+    const user = userEvent.setup();
+    HTMLElement.prototype.setPointerCapture = vi.fn();
+    HTMLElement.prototype.releasePointerCapture = vi.fn();
+    const { store, id, dialog, rows, confirm } = await openDialog(user, ['BTC-USD', 'ETH-USD', 'SOL-USD']);
+    const handle = (name: string) => within(dialog).getByRole('button', { name: `Reorder ${name}` });
+    expect(within(dialog).getAllByRole('button', { name: /^Reorder / })).toHaveLength(3);
+
+    const ROW_PX = 40;
+    const rowOf = (combobox: HTMLElement) => combobox.closest('[class*="MuiStack-root"]') as HTMLElement;
+    const layoutRows = () =>
+      rows().forEach((combobox, index) => {
+        vi.spyOn(rowOf(combobox), 'getBoundingClientRect').mockReturnValue({
+          top: index * ROW_PX,
+          bottom: (index + 1) * ROW_PX,
+        } as DOMRect);
+      });
+    layoutRows();
+
+    fireEvent.pointerDown(handle('BTC-USD'), { button: 0, pointerId: 1, clientY: 20 });
+    fireEvent.pointerMove(handle('BTC-USD'), { pointerId: 1, clientY: 60 });
+    expect(rows().map((combobox) => (combobox as HTMLInputElement).value)).toEqual(['ETH-USD', 'BTC-USD', 'SOL-USD', '']);
+    layoutRows();
+    fireEvent.pointerMove(handle('BTC-USD'), { pointerId: 1, clientY: 500 });
+    expect(rows().map((combobox) => (combobox as HTMLInputElement).value)).toEqual(['ETH-USD', 'SOL-USD', 'BTC-USD', '']);
+    fireEvent.pointerUp(handle('BTC-USD'), { pointerId: 1, clientY: 500 });
+
+    await user.click(confirm());
+    expect(store.getState().widgets.items.find((item) => item.id === id)).toMatchObject({
+      productIds: ['ETH-USD', 'SOL-USD', 'BTC-USD'],
     });
   });
 

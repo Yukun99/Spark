@@ -22,7 +22,7 @@ export const filterProducts = (
   return options.filter((product) => product.id.startsWith(query)).slice(0, MAX_SUGGESTIONS);
 };
 
-/** Full-width prefix search over Coinbase products, selecting one product id. */
+/** Full-width prefix search over Coinbase products, selecting one product id; the list opens on typing. */
 export const InstrumentSearchField = ({
   products,
   loading,
@@ -36,7 +36,6 @@ export const InstrumentSearchField = ({
   return (
     <Autocomplete
       autoHighlight
-      openOnFocus
       fullWidth
       options={products}
       loading={loading}

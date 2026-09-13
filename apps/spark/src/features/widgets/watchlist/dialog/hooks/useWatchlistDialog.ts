@@ -4,7 +4,8 @@ import {
   type UseCoinbaseProductsResult,
 } from '@/connections/hooks/useCoinbaseProducts';
 import type { WatchlistSettings, WatchlistWidget } from '@/store/widgetsSlice';
-import { useCallback, useRef, useState } from 'react';
+import { useRowReorder, type ReorderHandleProps } from '@/features/widgets/watchlist/dialog/hooks/useRowReorder';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type WatchlistRow = {
   key: number;
@@ -27,6 +28,12 @@ export type UseWatchlistDialogResult = UseCoinbaseProductsResult & {
   selectRow: (index: number, productId: string) => void;
   blurRow: (index: number) => void;
   removeRow: (index: number) => void;
+  /** Callback ref for the row's root element, used for reordering and scrolling. */
+  registerRow: (key: number) => (element: HTMLElement | null) => void;
+  /** Pointer handlers for the row's drag handle; null for the trailing blank row. */
+  handleFor: (index: number) => ReorderHandleProps | null;
+  /** Index of the row being dragged, or null. */
+  dragging: number | null;
   canConfirm: boolean;
   confirm: () => void;
 };
@@ -99,6 +106,47 @@ export const useWatchlistDialog = ({
     (index: number) => update((current) => current.filter((_, i) => i !== index)),
     [update],
   );
+  const moveRow = useCallback(
+    (from: number, to: number) =>
+      update((current) => {
+        const next = [...current];
+        const [row] = next.splice(from, 1);
+        next.splice(to, 0, row);
+        return next;
+      }),
+    [update],
+  );
+
+  const rowElements = useRef(new Map<number, HTMLElement>());
+  const registerRow = useCallback(
+    (key: number) => (element: HTMLElement | null) => {
+      if (element === null) rowElements.current.delete(key);
+      else rowElements.current.set(key, element);
+    },
+    [],
+  );
+  const rowElement = useCallback(
+    (index: number) => {
+      const row = rows[index];
+      return row === undefined ? undefined : rowElements.current.get(row.key);
+    },
+    [rows],
+  );
+  const filledCount = rows.length - 1;
+  const { dragging, handleProps } = useRowReorder({ rowElement, count: filledCount, onMove: moveRow });
+  const handleFor = useCallback(
+    (index: number) => (index < filledCount ? handleProps(index) : null),
+    [filledCount, handleProps],
+  );
+
+  // A new blank row appears once the last one is filled; bring it into view.
+  const previousCount = useRef(rows.length);
+  useEffect(() => {
+    if (rows.length > previousCount.current) {
+      rowElement(rows.length - 1)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+    }
+    previousCount.current = rows.length;
+  }, [rowElement, rows.length]);
 
   const canConfirm =
     name.trim().length > 0 && rows.every((row) => row.productId !== null || isBlank(row));
@@ -119,6 +167,9 @@ export const useWatchlistDialog = ({
     selectRow,
     blurRow,
     removeRow,
+    registerRow,
+    handleFor,
+    dragging,
     canConfirm,
     confirm,
   };
