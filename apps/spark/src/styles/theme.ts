@@ -43,6 +43,25 @@ export const theme = createTheme({
         }),
       },
     },
+    // Focused fields and group labels use the theme's text colour so focus is unmistakable.
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: colours.navy },
+          ...theme.applyStyles('dark', {
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: colours.cream },
+          }),
+        }),
+      },
+    },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          '&.Mui-focused': { color: colours.navy },
+          ...theme.applyStyles('dark', { '&.Mui-focused': { color: colours.cream } }),
+        }),
+      },
+    },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {

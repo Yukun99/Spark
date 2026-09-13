@@ -1,4 +1,5 @@
 import { CAPTION_BLOCK_PX } from '@/components/forms/captionProps';
+import { focusLabelControl } from '@/components/forms/focusLabelControl';
 import { GROUP_LABEL_PX, OPTION_LABEL_PX } from '@/components/forms/radioRow';
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
@@ -28,6 +29,7 @@ export const CheckboxRow = <T extends string>({
       {options.map((option) => (
         <FormControlLabel
           key={option}
+          onMouseDown={focusLabelControl}
           control={
             <Checkbox size='small' checked={values.includes(option)} onChange={() => onToggle(option)} />
           }

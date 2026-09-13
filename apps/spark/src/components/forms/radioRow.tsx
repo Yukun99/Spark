@@ -1,4 +1,5 @@
 import { CAPTION_BLOCK_PX } from '@/components/forms/captionProps';
+import { focusLabelControl } from '@/components/forms/focusLabelControl';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormLabel from '@mui/material/FormLabel';
@@ -30,6 +31,7 @@ export const RadioRow = <T extends string>({
       {options.map((option) => (
         <FormControlLabel
           key={option}
+          onMouseDown={focusLabelControl}
           value={option}
           control={<Radio size='small' />}
           label={labels?.[option] ?? option}
