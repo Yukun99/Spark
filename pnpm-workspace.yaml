@@ -6,3 +6,7 @@ allowBuilds:
   nx: true
   '@swc/core': true
   esbuild: true
+
+# GHSA-7w5x-hrqm-74c2: nx pins smol-toml 1.6.1; drop once nx ships >=1.7.1
+overrides:
+  smol-toml: ">=1.7.1"

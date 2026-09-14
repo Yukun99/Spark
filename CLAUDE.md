@@ -180,8 +180,8 @@ Refresh button and on leaving edit mode. The orders widget's filter is applied s
 `OrderSort.php` whitelists `sort`/`direction` into an `ORDER BY` (final tiebreak `seq`, the
 insertion order), the client stores `orders.sort` and clicking a header cycles asc → desc → off.
 `pnpm nx test api` runs plain-PHP asserts in `apps/api/tests/`. The frontend calls it through `src/connections/api.ts`. Local
-`config.php` is gitignored; the dev server always proxies `/api` to the live site, so local runs
-use the production database. Tests mock `apiFetch` with `src/test/fixtures/fakeApi.ts`.
+`config.php` is gitignored; the dev server proxies `/api` to the live site (production database)
+unless `SPARK_API_URL` in `apps/spark/.env.local` points it at a local `php -S` (see the API README). Tests mock `apiFetch` with `src/test/fixtures/fakeApi.ts`.
 
 ## Conventions The Tooling Enforces
 

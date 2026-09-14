@@ -4,6 +4,28 @@ This repository contains the code for the web assignment portion of the Spark Sy
 tracking/trading app, built using React, Nx, Vite and Redux. Api requests to both my own database/backend logic and
 Coinbase power the data displayed. Try it out [here](https://spark.yukunxu.com)!
 
+Installation requirements:
+1. Oracle MySQL
+2. PHP 8.3 or higher
+3. pnpm
+
+Local setup instructions (once):
+1. Uncomment `extension=pdo_mysql` in `php.ini`
+2. Setup MySQL
+   * `mysqld --initialize-insecure --datadir=<dir>`
+   * `mysqld --datadir=<dir>` (keep running for the next step)
+3. Set up database tables
+   * `mysql -u root -p -e "CREATE DATABASE yukunxuc_spark"`
+   * `mysql -u root -p yukunxuc_spark < apps/api/schema.sql`
+4. Copy `apps/api/config.example.php` to `apps/api/config.php`, fill in localhost database credentials
+5. Copy `apps/spark/.env.example` to `apps/spark/.env.local` to proxy `/api` to localhost:8000
+6. `pnpm install`
+
+Local run instructions (every start):
+1. Run `mysqld --datadir=<dir>` (skip if done in setup instructions above)
+2. Run `php -S localhost:8000 -t apps/api apps/api/index.php`
+3. Run `pnpm nx dev spark` and open http://localhost:4301
+
 # Design
 
 From the get go, I decided I wanted the page to be a grid that can be completely customised by the user, with different

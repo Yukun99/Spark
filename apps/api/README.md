@@ -12,6 +12,15 @@ Live URL: https://spark.yukunxu.com/api
 2. Grant the DB user `SELECT`, `INSERT`, `UPDATE`, `DELETE`.
 3. Add the three secrets in GitHub, push to `master`.
 
+## Run Locally
+
+1. Enable `extension=pdo_mysql` in `php.ini`. Install MySQL and make sure `mysqld` is running (a zip/winget
+   install needs `mysqld --initialize-insecure --datadir=<dir>` once, then `mysqld --datadir=<dir>`), then
+   create the DB and run `schema.sql`.
+2. Copy `config.example.php` to `config.php` with the local credentials.
+3. `php -S localhost:8000 -t apps/api apps/api/index.php` from the repo root.
+4. Copy `apps/spark/.env.example` to `.env.local`; the Vite dev proxy then sends `/api` there.
+
 ## Mock Execution
 
 Open orders progress by wall-clock in 5 s steps whenever they are read (`Execution.php`):

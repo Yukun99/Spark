@@ -53,3 +53,7 @@ CLAUDE.local.md
 *.pdf
 # API DB credentials (CI writes this from secrets)
 apps/api/config.php
+# local overrides (Vite env, dev API target)
+.env.local
+.env.*.local
+apps/api/config.live.php

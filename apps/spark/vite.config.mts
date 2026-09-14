@@ -1,7 +1,7 @@
 /// <reference types='vitest' />
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
-import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite';
 // noinspection ES6PreferShortImport
 import {
   appShellCss,
@@ -45,14 +45,22 @@ const appShell = (): Plugin => ({
   },
 });
 
-export default defineConfig(() => ({
+const LIVE_API = 'https://spark.yukunxu.com';
+
+/** Dev-only `/api` proxy: `SPARK_API_URL` in `.env.local` (gitignored) points it at a local
+ * `php -S` server, whose routes sit at the root; otherwise the deployed API and its database. */
+const apiProxy = (localApi: string | undefined) =>
+  localApi
+    ? { target: localApi, changeOrigin: true, rewrite: (path: string) => path.replace(/^\/api/, '') }
+    : { target: LIVE_API, changeOrigin: true };
+
+export default defineConfig(({ mode }) => ({
   root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/spark',
   server: {
     port: 4301,
     host: 'localhost',
-    // No local PHP: /api goes to the deployed API and its database.
-    proxy: { '/api': { target: 'https://spark.yukunxu.com', changeOrigin: true } },
+    proxy: { '/api': apiProxy(loadEnv(mode, import.meta.dirname, 'SPARK_').SPARK_API_URL) },
   },
   preview: {
     port: 4300,
