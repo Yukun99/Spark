@@ -2,7 +2,7 @@
 
 This repository contains the code for the web assignment portion of the Spark Systems job application. It is a Crypto
 tracking/trading app, built using React, Nx, Vite and Redux. Api requests to both my own database/backend logic and
-Coinbase power the data displayed.
+Coinbase power the data displayed. Try it out [here](https://spark.yukunxu.com)!
 
 # Design
 
