@@ -1,6 +1,6 @@
 import { EditModeButton } from '@/features/edit/editModeButton';
 import { createAppStore } from '@/store/store';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 
@@ -14,8 +14,8 @@ describe('EditModeButton', () => {
       </Provider>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Enter edit mode' }));
-    expect(store.getState().layout.editMode).toBe(true);
-    expect(screen.getByRole('button', { name: 'Save layout' })).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Enter edit mode' }));
+    await waitFor(() => expect(store.getState().layout.editMode).toBe(true));
+    expect(await screen.findByRole('button', { name: 'Save layout' })).toBeInTheDocument();
   });
 });
